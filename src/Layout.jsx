@@ -92,7 +92,7 @@ export default function Layout() {
                                 alt="NBA Playoffs Logo"
                                 className="h-10"
                             />
-                            <div className="text-xs text-gray-500">2025 Prediction Game</div>
+                            <div className="text-xs text-gray-500"> Prediction Game</div>
                         </Link>
                         <Button
                             variant="ghost"
@@ -140,8 +140,8 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("Dashboard")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Dashboard"
-                                    ? "bg-blue-50 text-blue-700"
-                                    : "text-gray-700 hover:bg-gray-100"
+                                ? "bg-blue-50 text-blue-700"
+                                : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
                         >
@@ -151,8 +151,8 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("Predictions")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Predictions"
-                                    ? "bg-blue-50 text-blue-700"
-                                    : "text-gray-700 hover:bg-gray-100"
+                                ? "bg-blue-50 text-blue-700"
+                                : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
                         >
@@ -162,8 +162,8 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("AllPredictions")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "AllPredictions"
-                                    ? "bg-blue-50 text-blue-700"
-                                    : "text-gray-700 hover:bg-gray-100"
+                                ? "bg-blue-50 text-blue-700"
+                                : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
                         >
@@ -173,8 +173,8 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("Leaderboard")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Leaderboard"
-                                    ? "bg-blue-50 text-blue-700"
-                                    : "text-gray-700 hover:bg-gray-100"
+                                ? "bg-blue-50 text-blue-700"
+                                : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
                         >
@@ -184,8 +184,8 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("Rules")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Rules"
-                                    ? "bg-blue-50 text-blue-700"
-                                    : "text-gray-700 hover:bg-gray-100"
+                                ? "bg-blue-50 text-blue-700"
+                                : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
                         >
@@ -196,8 +196,8 @@ export default function Layout() {
                             <Link
                                 to={createPageUrl("Admin")}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Admin"
-                                        ? "bg-blue-50 text-blue-700"
-                                        : "text-gray-700 hover:bg-gray-100"
+                                    ? "bg-blue-50 text-blue-700"
+                                    : "text-gray-700 hover:bg-gray-100"
                                     }`}
                                 onClick={() => setSidebarOpen(false)}
                             >
