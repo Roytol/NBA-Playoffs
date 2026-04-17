@@ -1,11 +1,11 @@
 
 import React from "react";
-import { Series, Prediction, User, Leaderboard } from "@/lib/db";
+import { Series, Prediction, User } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import SeriesCard from "../components/dashboard/SeriesCard";
 import { ChampionPick, FinalsMVPPick } from "../components/dashboard/PrePlayoffPicks";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Trophy, RefreshCw, Radio } from "lucide-react";
+import { AlertTriangle, Trophy, RefreshCw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNbaSync } from "@/hooks/useNbaSync";
 import { useLiveScores } from "@/hooks/useLiveScores";

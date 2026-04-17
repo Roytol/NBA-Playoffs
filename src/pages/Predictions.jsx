@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Prediction, Series, User, Settings, Leaderboard } from "@/lib/db";
+import { Prediction, Series, User, Settings } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";

@@ -1,5 +1,5 @@
 import React from "react";
-import { User, Leaderboard, Settings, Prediction } from "@/lib/db";
+import { User, Leaderboard, Settings } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
