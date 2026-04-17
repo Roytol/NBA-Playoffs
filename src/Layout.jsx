@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { User, Prediction, Leaderboard } from "@/lib/db";
+import { User, Prediction, Settings } from "@/lib/db";
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
@@ -15,6 +15,7 @@ export default function Layout() {
     const [sidebarOpen, setSidebarOpen] = React.useState(false);
     const [user, setUser] = React.useState(null);
     const [userScore, setUserScore] = React.useState(0);
+    const [activeSeason, setActiveSeason] = React.useState("");
 
     React.useEffect(() => {
         checkUser();
@@ -40,6 +41,9 @@ export default function Layout() {
                 const totalPoints = predictions.reduce((sum, p) => sum + (p.points_earned || 0), 0);
                 setUserScore(totalPoints);
             }
+            // Load active season for sidebar subtitle
+            const seasonSetting = await Settings.filter({ setting_name: "active_season" });
+            if (seasonSetting.length > 0) setActiveSeason(seasonSetting[0].setting_value);
         } catch (error) {
             console.error("Auth error:", error);
             setUser(null);
@@ -92,7 +96,7 @@ export default function Layout() {
                                 alt="NBA Playoffs Logo"
                                 className="h-10"
                             />
-                            <div className="text-xs text-gray-500"> Prediction Game</div>
+                            <div className="text-xs text-gray-500">{activeSeason ? `${activeSeason} Prediction Game` : "Prediction Game"}</div>
                         </Link>
                         <Button
                             variant="ghost"
