@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,10 @@ import { User, Prediction, Leaderboard } from "@/lib/db";
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
-export default function Layout({ children, currentPageName }) {
+export default function Layout() {
+    const location = useLocation();
+    const currentPageName = location.pathname.substring(1) || "Dashboard";
+
     const [sidebarOpen, setSidebarOpen] = React.useState(false);
     const [user, setUser] = React.useState(null);
     const [userScore, setUserScore] = React.useState(0);
@@ -259,7 +262,7 @@ export default function Layout({ children, currentPageName }) {
 
                 {/* Main content area */}
                 <main className="flex-1 overflow-y-auto">
-                    {children}
+                    <Outlet />
                 </main>
             </div>
         </div>
