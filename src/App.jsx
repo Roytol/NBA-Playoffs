@@ -12,7 +12,14 @@ import Rules from './pages/Rules';
 import Admin from './pages/Admin';
 import AllPredictions from './pages/AllPredictions';
 import UserPredictions from './pages/UserPredictions';
-// Add page imports here
+import Layout from './Layout';
+import Login from './pages/Login';
+
+const PageWrapper = ({ component: Component, pageName }) => (
+    <Layout currentPageName={pageName}>
+        <Component />
+    </Layout>
+);
 
 const AuthenticatedApp = () => {
     const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -27,7 +34,7 @@ const AuthenticatedApp = () => {
     }
 
     // Handle authentication errors
-    if (authError) {
+    if (authError && window.location.pathname !== '/login') {
         if (authError.type === 'user_not_registered') {
             return <UserNotRegisteredError />;
         } else if (authError.type === 'auth_required') {
@@ -40,16 +47,17 @@ const AuthenticatedApp = () => {
     // Render the main app
     return (
         <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/Dashboard" element={<Dashboard />} />
-            <Route path="/Predictions" element={<Predictions />} />
-            <Route path="/Leaderboard" element={<Leaderboard />} />
-            <Route path="/Rules" element={<Rules />} />
-            <Route path="/Admin" element={<Admin />} />
-            <Route path="/AllPredictions" element={<AllPredictions />} />
-            <Route path="/UserPredictions" element={<UserPredictions />} />
-            {/* Add your page Route elements here */}
-            <Route path="*" element={<PageNotFound />} />
+            <Route path="/" element={<PageWrapper component={Dashboard} pageName="Dashboard" />} />
+            <Route path="/Dashboard" element={<PageWrapper component={Dashboard} pageName="Dashboard" />} />
+            <Route path="/Predictions" element={<PageWrapper component={Predictions} pageName="Predictions" />} />
+            <Route path="/Leaderboard" element={<PageWrapper component={Leaderboard} pageName="Leaderboard" />} />
+            <Route path="/Rules" element={<PageWrapper component={Rules} pageName="Rules" />} />
+            <Route path="/Admin" element={<PageWrapper component={Admin} pageName="Admin" />} />
+            <Route path="/AllPredictions" element={<PageWrapper component={AllPredictions} pageName="AllPredictions" />} />
+            <Route path="/UserPredictions" element={<PageWrapper component={UserPredictions} pageName="UserPredictions" />} />
+            {/* The login page does not get the nav bar layout */}
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<PageWrapper component={PageNotFound} pageName="404" />} />
         </Routes>
     );
 };

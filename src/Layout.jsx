@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { User, Prediction, Leaderboard } from "@/entities/all";
+import { User, Prediction, Leaderboard } from "@/lib/db";
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 

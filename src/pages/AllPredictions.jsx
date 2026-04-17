@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Series, Prediction, User, Settings, Leaderboard } from "@/entities/all";
+import { Series, Prediction, User, Settings, Leaderboard } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

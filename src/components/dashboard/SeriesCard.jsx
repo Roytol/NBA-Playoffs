@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trophy, Clock, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
-import { Prediction, User } from "@/entities/all";
+import { Prediction, User } from "@/lib/db";
 import TeamLogo from "../common/TeamLogo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 

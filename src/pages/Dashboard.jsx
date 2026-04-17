@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Series, Prediction, User, Leaderboard } from "@/entities/all";
+import { Series, Prediction, User, Leaderboard } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import SeriesCard from "../components/dashboard/SeriesCard";
 import { ChampionPick, FinalsMVPPick } from "../components/dashboard/PrePlayoffPicks";
@@ -171,6 +171,7 @@ export default function Dashboard() {
             <AnimatePresence>
                 {!user && (
                     <motion.div
+                        key="login-prompt"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
@@ -184,6 +185,7 @@ export default function Dashboard() {
 
                 {user && !hasChampionPick && (
                     <motion.div
+                        key="champ-pick"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
@@ -195,6 +197,7 @@ export default function Dashboard() {
 
                 {user && !hasFinalsMVPPick && (
                     <motion.div
+                        key="mvp-pick"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}

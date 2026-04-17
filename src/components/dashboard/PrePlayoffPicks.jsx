@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trophy, Star, AlertTriangle, Clock } from "lucide-react";
-import { Prediction, User, Settings } from "@/entities/all";
+import { Prediction, User, Settings } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";

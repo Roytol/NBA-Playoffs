@@ -1,5 +1,5 @@
 import React from "react";
-import { User, Leaderboard } from "@/entities/all";
+import { User, Leaderboard } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
