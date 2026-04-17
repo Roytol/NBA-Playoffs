@@ -326,9 +326,8 @@ export function FinalsMVPPick({ onSave }) {
 
     // Don't show if:
     // 1. User is not logged in
-    // 2. MVP predictions are closed
-    // 3. User already has a pick (unless deadline has passed)
-    if (!user || mvpStatus === "closed" || (existingPick && !isDeadlinePassed)) return null;
+    // 2. User already has a pick (unless deadline has passed to view it)
+    if (!user || (existingPick && !isDeadlinePassed)) return null;
 
     return (
         <Card className="border-blue-200 bg-blue-50 mb-6">

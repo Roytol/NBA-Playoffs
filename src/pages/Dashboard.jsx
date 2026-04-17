@@ -27,10 +27,10 @@ export default function Dashboard() {
         setSeries(prev => prev.map(s => s.id === updatedSeries.id ? updatedSeries : s));
     }, []));
 
-    // Reload series data after sync completes
+    // Reload series data silently after background sync completes
     React.useEffect(() => {
         if (lastSynced) {
-            loadData();
+            loadData(true);
         }
     }, [lastSynced]);
 
@@ -38,13 +38,13 @@ export default function Dashboard() {
         loadData();
     }, [loadRetries]);
 
-    const loadData = async () => {
-        setLoading(true);
+    const loadData = async (isBackground = false) => {
+        if (!isBackground) setLoading(true);
         setError(null);
 
         try {
             // Load series first
-            setLoadingMessage("Loading playoff series...");
+            if (!isBackground) setLoadingMessage("Loading playoff series...");
             const seriesData = await Series.list()
                 .catch(e => {
                     console.error("Failed to load series:", e);
@@ -56,7 +56,7 @@ export default function Dashboard() {
 
             // Then try to load user
             try {
-                setLoadingMessage("Loading user data...");
+                if (!isBackground) setLoadingMessage("Loading user data...");
                 const userData = await User.me();
                 setUser(userData);
 

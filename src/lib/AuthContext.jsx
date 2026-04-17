@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
     const checkUserAuth = async () => {
         try {
-            setIsLoadingAuth(true);
+            if (!authChecked) setIsLoadingAuth(true);
             const currentUser = await User.me();
             setUser(currentUser);
             setIsAuthenticated(true);
