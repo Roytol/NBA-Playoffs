@@ -217,7 +217,7 @@ export default function Dashboard() {
             </motion.div>
 
             <AnimatePresence>
-                {!user && (
+                {!loading && !user && (
                     <motion.div
                         key="login-prompt"
                         initial={{ opacity: 0, y: 20 }}
