@@ -88,8 +88,10 @@ async function getFromCacheOrFetch(cacheKey, ttlMs, fetchFn) {
 
         if (cached) {
             const age = Date.now() - new Date(cached.last_synced_at).getTime();
-            if (age < ttlMs) {
-                // Cache is fresh
+            // Treat empty arrays as cache misses — forces re-fetch (e.g. stale [] from old endpoint)
+            const hasData = !Array.isArray(cached.data) || cached.data.length > 0;
+            if (age < ttlMs && hasData) {
+                // Cache is fresh and non-empty
                 return cached.data;
             }
         }
