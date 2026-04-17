@@ -1,0 +1,89 @@
+{
+    "name": "Series",
+    "type": "object",
+    "properties": {
+        "series_id": {
+            "type": "string",
+            "description": "Unique identifier for the series (e.g., 'WC1_2024' for West Conference Round 1)"
+        },
+        "round": {
+            "type": "string",
+            "enum": [
+                "play_in",
+                "first_round",
+                "second_round",
+                "conference_finals",
+                "finals"
+            ],
+            "description": "Playoff round"
+        },
+        "conference": {
+            "type": "string",
+            "enum": [
+                "East",
+                "West"
+            ],
+            "description": "Conference of the series"
+        },
+        "team1": {
+            "type": "string",
+            "description": "First team in the series"
+        },
+        "team2": {
+            "type": "string",
+            "description": "Second team in the series"
+        },
+        "team1_seed": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8,
+            "description": "Seed of team 1"
+        },
+        "team2_seed": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8,
+            "description": "Seed of team 2"
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "upcoming",
+                "active",
+                "completed"
+            ],
+            "default": "upcoming",
+            "description": "Status of the series"
+        },
+        "winner": {
+            "type": "string",
+            "description": "Winner of the series (populated when completed)"
+        },
+        "games": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 7,
+            "description": "Number of games the series went"
+        },
+        "start_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Start date of the series"
+        },
+        "prediction_deadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Deadline for submitting predictions"
+        }
+    },
+    "required": [
+        "series_id",
+        "round",
+        "conference",
+        "team1",
+        "team2",
+        "team1_seed",
+        "team2_seed",
+        "prediction_deadline"
+    ]
+}

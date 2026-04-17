@@ -1,0 +1,52 @@
+{
+    "name": "Prediction",
+    "type": "object",
+    "properties": {
+        "series_id": {
+            "type": "string",
+            "description": "Unique identifier for the playoff series (e.g., 'WC1_2024' for West Conference Round 1)"
+        },
+        "winner": {
+            "type": "string",
+            "description": "Predicted winning team"
+        },
+        "games": {
+            "type": "number",
+            "minimum": 4,
+            "maximum": 7,
+            "description": "Number of games the series will last"
+        },
+        "points_earned": {
+            "type": "number",
+            "default": 0,
+            "description": "Points earned for this prediction"
+        },
+        "is_correct": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the prediction was correct"
+        },
+        "prediction_type": {
+            "type": "string",
+            "enum": [
+                "play_in",
+                "first_round",
+                "second_round",
+                "conference_finals",
+                "finals",
+                "champion",
+                "finals_mvp"
+            ],
+            "description": "Type of prediction"
+        },
+        "user_email": {
+            "type": "string",
+            "description": "Email of the user who made the prediction"
+        }
+    },
+    "required": [
+        "prediction_type",
+        "winner",
+        "user_email"
+    ]
+}
