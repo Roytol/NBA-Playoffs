@@ -1,93 +1,98 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+/**
+ * AuthContext — Supabase best-practice auth implementation.
+ *
+ * Auth state is driven entirely by supabase.auth.onAuthStateChange().
+ * The INITIAL_SESSION event fires on mount directly from the localStorage
+ * token cache — no network call, no spinner for already-logged-in users.
+ *
+ * Separation of concerns:
+ *   - Supabase session  → who the user IS (handled by onAuthStateChange)
+ *   - App user record   → app-level data (is_admin, points) fetched ONCE after session confirmed
+ */
+
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { User, supabase } from '@/lib/db';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    // isLoadingAuth starts true and becomes false after INITIAL_SESSION fires.
+    // For logged-in users this happens almost instantly (localStorage read).
     const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-    const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
-    const [authError, setAuthError] = useState(null);
-    const [authChecked, setAuthChecked] = useState(false);
-    const authCheckedRef = React.useRef(false);
-    const [appPublicSettings, setAppPublicSettings] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState(null);
+
+    // Fetch the app-level User record (is_admin, total_points, etc.)
+    // Called only when we have a confirmed Supabase session.
+    const loadAppUser = useCallback(async () => {
+        try {
+            const appUser = await User.me();
+            setUser(appUser);
+            setIsAuthenticated(true);
+        } catch (err) {
+            console.error('[Auth] Failed to load app user:', err);
+            // Session exists but no app record — treat as unauthenticated
+            setUser(null);
+            setIsAuthenticated(false);
+        } finally {
+            setIsLoadingAuth(false);
+        }
+    }, []);
 
     useEffect(() => {
-        checkUserAuth();
-        
-        // Listen to auth changes
-        const { data: authListener } = supabase.auth.onAuthStateChange(
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                if (event === 'SIGNED_IN') {
-                    await checkUserAuth();
-                } else if (event === 'SIGNED_OUT') {
-                    setUser(null);
-                    setIsAuthenticated(false);
+                switch (event) {
+                    case 'INITIAL_SESSION':
+                        // Fires on mount from localStorage — almost instant.
+                        if (session) {
+                            await loadAppUser();
+                        } else {
+                            // No session → user is not logged in, stop loading.
+                            setIsLoadingAuth(false);
+                        }
+                        break;
+
+                    case 'SIGNED_IN':
+                        // Fires after a successful login.
+                        await loadAppUser();
+                        break;
+
+                    case 'SIGNED_OUT':
+                        setUser(null);
+                        setIsAuthenticated(false);
+                        setIsLoadingAuth(false);
+                        break;
+
+                    // TOKEN_REFRESHED, USER_UPDATED, PASSWORD_RECOVERY:
+                    // Supabase handles these silently. No UI change needed.
+                    default:
+                        break;
                 }
             }
         );
 
-        return () => {
-            authListener.subscription.unsubscribe();
-        };
+        return () => subscription.unsubscribe();
+    }, [loadAppUser]);
+
+    const logout = useCallback(async () => {
+        await User.logout();
+        // SIGNED_OUT event above handles state cleanup.
     }, []);
 
-    const checkAppState = async () => {
-        // Mocked app state since base44 is gone
-        setIsLoadingPublicSettings(false);
-    }
-
-    const checkUserAuth = async () => {
-        try {
-            if (!authCheckedRef.current) {
-                setIsLoadingAuth(true);
-            }
-            const currentUser = await User.me();
-            setUser(currentUser);
-            setIsAuthenticated(true);
-            setIsLoadingAuth(false);
-            setAuthChecked(true);
-            authCheckedRef.current = true;
-        } catch (error) {
-            console.error('User auth check failed:', error);
-            setIsLoadingAuth(false);
-            setIsAuthenticated(false);
-            setAuthChecked(true);
-            authCheckedRef.current = true;
-            if (error.status === 401 || error.status === 403 || error.message.includes("Not logged in")) {
-                setAuthError({
-                    type: 'auth_required',
-                    message: 'Authentication required'
-                });
-            }
-        }
-    };
-
-    const logout = (shouldRedirect = true) => {
-        setUser(null);
-        setIsAuthenticated(false);
-        User.logout();
-    };
-
-    const navigateToLogin = () => {
-        User.login();
+    const value = {
+        user,
+        isAuthenticated,
+        isLoadingAuth,
+        // Keep authChecked as an alias so existing consumers don't break.
+        authChecked: !isLoadingAuth,
+        logout,
+        // Expose refresh for cases where app user data needs manual reload.
+        refreshUser: loadAppUser,
     };
 
     return (
-        <AuthContext.Provider value={{
-            user,
-            isAuthenticated,
-            isLoadingAuth,
-            isLoadingPublicSettings,
-            authError,
-            appPublicSettings,
-            authChecked,
-            logout,
-            navigateToLogin,
-            checkUserAuth,
-            checkAppState
-        }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
