@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
     const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
     const [authError, setAuthError] = useState(null);
     const [authChecked, setAuthChecked] = useState(false);
+    const authCheckedRef = React.useRef(false);
     const [appPublicSettings, setAppPublicSettings] = useState(null);
 
     useEffect(() => {
@@ -39,17 +40,21 @@ export const AuthProvider = ({ children }) => {
 
     const checkUserAuth = async () => {
         try {
-            if (!authChecked) setIsLoadingAuth(true);
+            if (!authCheckedRef.current) {
+                setIsLoadingAuth(true);
+            }
             const currentUser = await User.me();
             setUser(currentUser);
             setIsAuthenticated(true);
             setIsLoadingAuth(false);
             setAuthChecked(true);
+            authCheckedRef.current = true;
         } catch (error) {
             console.error('User auth check failed:', error);
             setIsLoadingAuth(false);
             setIsAuthenticated(false);
             setAuthChecked(true);
+            authCheckedRef.current = true;
             if (error.status === 401 || error.status === 403 || error.message.includes("Not logged in")) {
                 setAuthError({
                     type: 'auth_required',
