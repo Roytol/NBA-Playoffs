@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import SeriesCard from "../components/dashboard/SeriesCard";
 import { ChampionPick, FinalsMVPPick } from "../components/dashboard/PrePlayoffPicks";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Trophy, RefreshCw } from "lucide-react";
+import { AlertTriangle, Trophy, RefreshCw, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNbaSync } from "@/hooks/useNbaSync";
 import { useLiveScores } from "@/hooks/useLiveScores";
@@ -18,6 +18,7 @@ export default function Dashboard() {
     const [user, setUser] = React.useState(null);
     const [loadRetries, setLoadRetries] = React.useState(0);
     const [loadingMessage, setLoadingMessage] = React.useState("Loading playoff data...");
+    const [completedExpanded, setCompletedExpanded] = React.useState(false);
 
     // NBA API sync
     const { syncing, lastSynced, error: syncError, triggerSync } = useNbaSync();
@@ -117,9 +118,16 @@ export default function Dashboard() {
             return acc;
         }, { active: [], closed: [], completed: [] });
 
+        const ROUND_ORDER = { play_in: 0, first_round: 1, second_round: 2, conference_finals: 3, finals: 4 };
+
         // Sort active series by deadline (earliest first)
         categorized.active.sort((a, b) =>
             new Date(a.prediction_deadline) - new Date(b.prediction_deadline)
+        );
+
+        // Sort closed series by round order (play-in → finals)
+        categorized.closed.sort((a, b) =>
+            (ROUND_ORDER[a.round] ?? 99) - (ROUND_ORDER[b.round] ?? 99)
         );
 
         // Sort completed series by date (latest first)
@@ -336,34 +344,60 @@ export default function Dashboard() {
                             </motion.div>
                         )}
 
-                        {/* Completed Series */}
+                        {/* Completed Series — collapsed by default */}
                         {categorizedSeries.completed.length > 0 && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                             >
-                                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-                                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                                    Completed Series
-                                </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
-                                    {categorizedSeries.completed.map((seriesItem) => (
+                                <button
+                                    onClick={() => setCompletedExpanded(prev => !prev)}
+                                    className="w-full flex items-center justify-between mb-3 sm:mb-4 group"
+                                >
+                                    <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                                        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                                        Completed Series
+                                        <span className="text-sm font-normal text-gray-400 ml-1">
+                                            ({categorizedSeries.completed.length})
+                                        </span>
+                                    </h2>
+                                    <ChevronDown
+                                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                                            completedExpanded ? 'rotate-180' : ''
+                                        }`}
+                                    />
+                                </button>
+
+                                <AnimatePresence>
+                                    {completedExpanded && (
                                         <motion.div
-                                            key={seriesItem.id || seriesItem.series_id}
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{ duration: 0.2 }}
+                                            key="completed-grid"
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.25 }}
+                                            style={{ overflow: 'hidden' }}
                                         >
-                                            <SeriesCard
-                                                series={seriesItem}
-                                                predictions={predictions}
-                                                onPredictionMade={loadData}
-                                            />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
+                                                {categorizedSeries.completed.map((seriesItem) => (
+                                                    <motion.div
+                                                        key={seriesItem.id || seriesItem.series_id}
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        transition={{ duration: 0.2 }}
+                                                    >
+                                                        <SeriesCard
+                                                            series={seriesItem}
+                                                            predictions={predictions}
+                                                            onPredictionMade={loadData}
+                                                        />
+                                                    </motion.div>
+                                                ))}
+                                            </div>
                                         </motion.div>
-                                    ))}
-                                </div>
+                                    )}
+                                </AnimatePresence>
                             </motion.div>
                         )}
 
