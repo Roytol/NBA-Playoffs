@@ -88,7 +88,7 @@ export default function Layout() {
                                     </div>
                                     <div className="text-sm text-gray-500 flex items-center gap-1">
                                         <Trophy className="w-4 h-4 text-yellow-500" />
-                                        {userScore} points
+                                {user?.total_points ?? 0} points
                                     </div>
                                 </div>
                             </div>
@@ -218,7 +218,7 @@ export default function Layout() {
                         <div className="flex items-center gap-3">
                             <div className="text-sm text-gray-500 flex items-center gap-1">
                                 <Trophy className="w-4 h-4 text-yellow-500" />
-                                {userScore} points
+                                {user?.total_points ?? 0} points
                             </div>
                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
                                 <span className="text-indigo-700 font-medium text-sm">
