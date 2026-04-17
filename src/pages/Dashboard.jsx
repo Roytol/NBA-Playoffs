@@ -305,6 +305,7 @@ export default function Dashboard() {
                                             <SeriesCard
                                                 series={seriesItem}
                                                 predictions={predictions}
+                                                user={user}
                                                 onPredictionMade={loadData}
                                             />
                                         </motion.div>
@@ -336,6 +337,7 @@ export default function Dashboard() {
                                             <SeriesCard
                                                 series={seriesItem}
                                                 predictions={predictions}
+                                                user={user}
                                                 onPredictionMade={loadData}
                                             />
                                         </motion.div>
@@ -390,6 +392,7 @@ export default function Dashboard() {
                                                         <SeriesCard
                                                             series={seriesItem}
                                                             predictions={predictions}
+                                                            user={user}
                                                             onPredictionMade={loadData}
                                                         />
                                                     </motion.div>

@@ -22,6 +22,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { getTeamNames } from "@/api/nbaApi";
+import { useToast } from "@/components/ui/use-toast";
 
 // Fallback teams if API is unavailable
 const FALLBACK_TEAMS = [
@@ -54,8 +55,8 @@ export default function PredictionsPage() {
     const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [mvpStatus, setMvpStatus] = React.useState("closed");
-    const [submissionMessage, setSubmissionMessage] = useState("");
     const [nbaTeams, setNbaTeams] = useState(FALLBACK_TEAMS);
+    const { toast } = useToast();
 
     useEffect(() => {
         loadData();
@@ -152,17 +153,11 @@ export default function PredictionsPage() {
 
     const handleUpdateChampion = async () => {
         if (!user) return;
-
         setIsSubmitting(true);
-        setSubmissionMessage("Saving Champion Prediction...");
-
         try {
             const championPred = predictions.find(p => p.prediction_type === "champion");
-
             if (championPred) {
-                await Prediction.update(championPred.id, {
-                    winner: championForm.champion
-                });
+                await Prediction.update(championPred.id, { winner: championForm.champion });
             } else {
                 await Prediction.create({
                     prediction_type: "champion",
@@ -172,31 +167,24 @@ export default function PredictionsPage() {
                     user_email: user.email
                 });
             }
-
             await loadData();
             setEditingChampion(false);
+            toast({ title: "Champion pick saved! 🏆", description: championForm.champion });
         } catch (err) {
             console.error("Error updating champion:", err);
-            setError("Failed to update prediction. Please try again.");
+            toast({ title: "Failed to save champion pick", description: "Please try again.", variant: "destructive" });
         } finally {
             setIsSubmitting(false);
-            setSubmissionMessage("");
         }
     };
 
     const handleUpdateMVP = async () => {
         if (!user) return;
-
         setIsSubmitting(true);
-        setSubmissionMessage("Saving MVP Prediction...");
-
         try {
             const mvpPred = predictions.find(p => p.prediction_type === "finals_mvp");
-
             if (mvpPred) {
-                await Prediction.update(mvpPred.id, {
-                    winner: mvpForm.mvp
-                });
+                await Prediction.update(mvpPred.id, { winner: mvpForm.mvp });
             } else {
                 await Prediction.create({
                     prediction_type: "finals_mvp",
@@ -206,15 +194,14 @@ export default function PredictionsPage() {
                     user_email: user.email
                 });
             }
-
             await loadData();
             setEditingMVP(false);
+            toast({ title: "MVP pick saved! ⭐", description: mvpForm.mvp });
         } catch (err) {
             console.error("Error updating MVP:", err);
-            setError("Failed to update prediction. Please try again.");
+            toast({ title: "Failed to save MVP pick", description: "Please try again.", variant: "destructive" });
         } finally {
             setIsSubmitting(false);
-            setSubmissionMessage("");
         }
     };
 

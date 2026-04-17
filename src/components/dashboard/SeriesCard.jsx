@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { Prediction, User } from "@/lib/db";
 import TeamLogo from "../common/TeamLogo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/components/ui/use-toast";
 
 const roundPoints = {
     play_in: [1, 1],
@@ -17,30 +18,13 @@ const roundPoints = {
     finals: [4, 8]
 };
 
-export default function SeriesCard({ series, predictions, onPredictionMade }) {
+export default function SeriesCard({ series, predictions, user, onPredictionMade }) {
+    const { toast } = useToast();
     const [predictionData, setPredictionData] = React.useState({
         winner: "",
         games: ""
     });
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [submissionMessage, setSubmissionMessage] = React.useState("");
-    const [user, setUser] = React.useState(null);
-    const [error, setError] = React.useState(null);
-    const [retryCount, setRetryCount] = React.useState(0);
-
-    React.useEffect(() => {
-        loadUser();
-    }, [retryCount]);
-
-    const loadUser = async () => {
-        try {
-            const userData = await User.me();
-            setUser(userData);
-        } catch (error) {
-            console.error("Error loading user:", error);
-            setUser(null);
-        }
-    };
 
     const existingPrediction = React.useMemo(() => {
         if (!user || !predictions) return null;
@@ -80,29 +64,20 @@ export default function SeriesCard({ series, predictions, onPredictionMade }) {
         if (!predictionData.winner || (!predictionData.games && !isPlayIn) || !user) return;
 
         setIsSubmitting(true);
-        setError(null);
-        setSubmissionMessage("Saving prediction...");
 
         try {
-            // For Play-In games, always set games to 1
             const gamesValue = isPlayIn ? 1 : parseInt(predictionData.games);
+            const isUpdate = !!existingPrediction;
 
-            if (existingPrediction) {
-                setSubmissionMessage("Updating existing prediction...");
+            if (isUpdate) {
                 await Prediction.update(existingPrediction.id, {
                     winner: predictionData.winner,
                     games: gamesValue,
                 });
             } else {
-                setSubmissionMessage("Creating new prediction...");
-                const seriesId = series.series_id;
-
-                if (!seriesId) {
-                    throw new Error("Invalid series ID");
-                }
-
+                if (!series.series_id) throw new Error("Invalid series ID");
                 await Prediction.create({
-                    series_id: seriesId,
+                    series_id: series.series_id,
                     winner: predictionData.winner,
                     games: gamesValue,
                     prediction_type: series.round,
@@ -112,29 +87,24 @@ export default function SeriesCard({ series, predictions, onPredictionMade }) {
                 });
             }
 
-            setSubmissionMessage("Refreshing predictions...");
-            if (onPredictionMade) {
-                await onPredictionMade();
-            }
+            if (onPredictionMade) await onPredictionMade();
 
-            // Show success message briefly
-            setSubmissionMessage("Prediction saved successfully!");
-            setTimeout(() => {
-                setSubmissionMessage("");
-                setIsSubmitting(false);
-            }, 1500);
-
+            toast({
+                title: isUpdate ? "Prediction updated! ✏️" : "Prediction locked in! 🏀",
+                description: `${predictionData.winner}${
+                    !isPlayIn ? ` in ${predictionData.games}` : ''
+                }`,
+            });
         } catch (error) {
             console.error("Error making prediction:", error);
-            setError("Failed to save prediction. Please try again.");
-            setSubmissionMessage("");
+            toast({
+                title: "Failed to save prediction",
+                description: "Please try again.",
+                variant: "destructive",
+            });
+        } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const handleRetry = () => {
-        setRetryCount(prev => prev + 1);
-        setError(null);
     };
 
     if (!series) {
@@ -355,25 +325,6 @@ export default function SeriesCard({ series, predictions, onPredictionMade }) {
                         </div>
                     )}
 
-                    {error && (
-                        <Alert variant="destructive">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertDescription className="flex justify-between items-center">
-                                <span>{error}</span>
-                                <Button size="sm" variant="outline" onClick={handleRetry}>Retry</Button>
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
-                    {/* Add loading overlay for the entire card when submitting */}
-                    {isSubmitting && (
-                        <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] rounded-lg flex items-center justify-center">
-                            <div className="bg-white p-4 rounded-lg shadow-lg">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                                <p className="text-sm text-gray-600">{submissionMessage}</p>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </CardContent>
         </Card>

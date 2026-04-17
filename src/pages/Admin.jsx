@@ -17,6 +17,7 @@ import {
 import { forceRefreshAll, getTeamNames } from "@/api/nbaApi";
 import { syncPlayoffSeries } from "@/api/nbaSync";
 import { supabase } from "@/lib/db";
+import { useToast } from "@/components/ui/use-toast";
 
 // Default scoring rules (fallback if none in DB yet)
 const DEFAULT_SCORING_RULES = {
@@ -41,6 +42,7 @@ const ROUND_LABELS = {
 
 
 export default function AdminPage() {
+    const { toast } = useToast();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
@@ -140,15 +142,16 @@ export default function AdminPage() {
     // ---- Handlers ----
     const handleApiSync = async () => {
         setApiSyncing(true);
-        setApiSyncMessage("Refreshing API cache...");
+        setApiSyncMessage("Syncing playoff brackets and live scores...");
         try {
             await forceRefreshAll();
-            setApiSyncMessage("Syncing playoff brackets and live scores...");
             await syncPlayoffSeries();
             setApiSyncMessage("Sync complete!");
-            setTimeout(() => { setApiSyncMessage(""); setApiSyncing(false); }, 3000);
+            toast({ title: "Sync complete ✅", description: "Playoff data is up to date." });
+            setTimeout(() => { setApiSyncMessage(""); setApiSyncing(false); }, 2000);
         } catch (err) {
             setApiSyncMessage(`Sync failed: ${err.message}`);
+            toast({ title: "Sync failed", description: err.message, variant: "destructive" });
             setTimeout(() => { setApiSyncMessage(""); setApiSyncing(false); }, 3000);
         }
     };
@@ -169,10 +172,11 @@ export default function AdminPage() {
             await upsertSetting(name, newValue);
             if (type === "champion") setChampionDeadline(newValue);
             else setMvpDeadline(newValue);
-            endProcessing(`${type === "champion" ? "Champion" : "MVP"} deadline updated.`);
+            endProcessing();
+            toast({ title: `${type === "champion" ? "Champion" : "MVP"} deadline saved ✅` });
         } catch (err) {
-            setProcessingState(prev => ({ ...prev, message: `Failed: ${err.message}` }));
-            setTimeout(() => endProcessing(), 2000);
+            endProcessing();
+            toast({ title: "Failed to save deadline", description: err.message, variant: "destructive" });
         }
     };
 
@@ -180,22 +184,23 @@ export default function AdminPage() {
         try {
             startProcessing("winners", "Saving champion and MVP...");
             await upsertSetting("champion_mvp_winners", JSON.stringify(championSettings));
-            endProcessing("Champion and MVP winners saved — trigger will auto-score!");
+            endProcessing();
+            toast({ title: "Champion & MVP winners saved 🏆", description: "Scoring trigger will auto-score predictions." });
         } catch (err) {
-            setProcessingState(prev => ({ ...prev, message: `Failed: ${err.message}` }));
-            setTimeout(() => endProcessing(), 2000);
+            endProcessing();
+            toast({ title: "Failed to save", description: err.message, variant: "destructive" });
         }
     };
 
     const saveScoringRules = async () => {
         setSavingRules(true);
-        setRulesSaved(false);
         try {
             await upsertSetting("scoring_rules", JSON.stringify(scoringRules));
+            toast({ title: "Scoring rules saved ✅" });
             setRulesSaved(true);
             setTimeout(() => setRulesSaved(false), 3000);
         } catch (err) {
-            console.error("Failed to save scoring rules:", err);
+            toast({ title: "Failed to save rules", description: err.message, variant: "destructive" });
         } finally {
             setSavingRules(false);
         }
@@ -214,25 +219,26 @@ export default function AdminPage() {
             startProcessing("delete-user", `Deleting ${email}...`);
             await User.delete(email);
             setAllUsers(allUsers.filter(u => u.email !== email));
-            endProcessing(`Deleted ${email}.`);
+            endProcessing();
+            toast({ title: `User deleted`, description: email });
         } catch (err) {
-            setProcessingState(prev => ({ ...prev, message: `Failed: ${err.message}` }));
-            setTimeout(() => endProcessing(), 2000);
+            endProcessing();
+            toast({ title: "Failed to delete user", description: err.message, variant: "destructive" });
         }
     };
 
     const handleToggleAdmin = async (targetUser) => {
         const newIsAdmin = !targetUser.is_admin;
-        const action = newIsAdmin ? "promote to Admin" : "demote to Player";
-        if (!confirm(`${action} ${targetUser.full_name || targetUser.email}?`)) return;
+        const action = newIsAdmin ? "promoted to Admin" : "demoted to Player";
+        if (!confirm(`${newIsAdmin ? 'Promote' : 'Demote'} ${targetUser.full_name || targetUser.email}?`)) return;
         try {
             await User.update(targetUser.email, { is_admin: newIsAdmin });
-            // Optimistic UI update
             setAllUsers(prev => prev.map(u =>
                 u.email === targetUser.email ? { ...u, is_admin: newIsAdmin } : u
             ));
+            toast({ title: `${targetUser.full_name || targetUser.email} ${action} ✅` });
         } catch (err) {
-            console.error("Failed to toggle admin:", err);
+            toast({ title: "Failed to update role", description: err.message, variant: "destructive" });
         }
     };
 
@@ -296,7 +302,12 @@ export default function AdminPage() {
         }
     };
 
-    if (loading) return <div className="flex h-[50vh] items-center justify-center p-8">Loading admin dashboard...</div>;
+    if (loading) return (
+        <div className="flex h-[50vh] items-center justify-center p-8 gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <span className="text-muted-foreground">Loading admin dashboard...</span>
+        </div>
+    );
 
     if (error) {
         return (
