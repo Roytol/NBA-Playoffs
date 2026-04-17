@@ -5,6 +5,7 @@ import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, U
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { User, Prediction, Settings } from "@/lib/db";
+import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
@@ -75,6 +76,9 @@ export default function Layout() {
 
     return (
         <div className="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden">
+            {/* iOS Add to Home Screen nudge */}
+            <AddToHomeScreenBanner />
+
             {/* Mobile sidebar backdrop */}
             {sidebarOpen && (
                 <div
