@@ -40,6 +40,11 @@ export default function Login() {
 
         if (error) {
             setError(error.message);
+            toast({
+                title: "Sign In Failed",
+                description: error.message,
+                variant: "destructive",
+            });
             setIsLoading(false);
         } else {
             navigate('/');
@@ -48,13 +53,25 @@ export default function Login() {
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        setError(null);
+
         if (!registerName || !registerEmail || !registerPassword || !registerConfirmPassword) {
             setError("Please fill in all fields.");
+            toast({
+                title: "Missing Fields",
+                description: "Please fill in all the required fields.",
+                variant: "destructive",
+            });
             return;
         }
 
         if (registerPassword !== registerConfirmPassword) {
             setError("Passwords do not match.");
+            toast({
+                title: "Validation Error",
+                description: "Your passwords do not match. Please try again.",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -74,6 +91,11 @@ export default function Login() {
 
         if (signUpError) {
             setError(signUpError.message);
+            toast({
+                title: "Registration Failed",
+                description: signUpError.message,
+                variant: "destructive",
+            });
             setIsLoading(false);
         } else {
             // Automatically log them in by redirecting to home where AuthContext picks up the session
