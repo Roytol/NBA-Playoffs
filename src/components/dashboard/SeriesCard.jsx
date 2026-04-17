@@ -141,8 +141,12 @@ export default function SeriesCard({ series, predictions, onPredictionMade }) {
         return <div>Series data is missing</div>;
     }
 
+    // Determine if there's a live game in this series
+    const currentGame = series.current_game;
+    const isLive = currentGame?.is_live;
+
     return (
-        <Card className={`${series.status === 'completed' ? 'bg-gray-50' : ''}`}>
+        <Card className={`${series.status === 'completed' ? 'bg-gray-50' : ''} ${isLive ? 'ring-2 ring-red-200' : ''}`}>
             <CardHeader className="pb-2 py-3 px-3 sm:py-4 sm:px-6">
                 <CardTitle className="text-base sm:text-lg flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -150,9 +154,21 @@ export default function SeriesCard({ series, predictions, onPredictionMade }) {
                                 ? 'text-green-500'
                                 : 'text-yellow-500'
                             }`} />
-                        {series.round.split("_").map(word =>
-                            word.charAt(0).toUpperCase() + word.slice(1)
-                        ).join(" ")}
+                        <span>
+                            {series.conference && series.conference !== 'Finals' ? `${series.conference} · ` : ''}
+                            {series.round.split("_").map(word =>
+                                word.charAt(0).toUpperCase() + word.slice(1)
+                            ).join(" ")}
+                        </span>
+                        {isLive && (
+                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">
+                                <span className="relative flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                                </span>
+                                LIVE
+                            </span>
+                        )}
                     </div>
                     <div className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
                         <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -162,29 +178,85 @@ export default function SeriesCard({ series, predictions, onPredictionMade }) {
             </CardHeader>
             <CardContent className="py-3 px-3 sm:py-4 sm:px-6">
                 <div className="space-y-3 sm:space-y-4">
-                    {/* Teams */}
+                    {/* Teams with Series Score */}
                     <div className="space-y-2 sm:space-y-3">
                         <div className="flex items-center gap-2 sm:gap-3">
                             {series.team1 && <TeamLogo team={series.team1} className="w-8 h-8 sm:w-10 sm:h-10" />}
-                            <span className={`text-sm sm:text-base font-medium ${series.winner === series.team1 ? 'text-green-600' : ''}`}>
+                            <span className={`text-sm sm:text-base font-medium flex-1 ${series.winner === series.team1 ? 'text-green-600' : ''}`}>
                                 {series.team1}
                             </span>
                             <span className="text-xs sm:text-sm text-gray-500">({series.team1_seed})</span>
+                            {/* Series win count */}
+                            {!isPlayIn && (series.team1_wins > 0 || series.team2_wins > 0) && (
+                                <span className={`text-lg sm:text-xl font-bold min-w-[24px] text-center ${
+                                    series.winner === series.team1 ? 'text-green-600' : 'text-gray-700'
+                                }`}>
+                                    {series.team1_wins}
+                                </span>
+                            )}
                             {series.winner === series.team1 && (
-                                <span className="text-xs sm:text-sm text-green-600">Winner</span>
+                                <span className="text-xs sm:text-sm text-green-600 font-medium">✓</span>
                             )}
                         </div>
                         <div className="flex items-center gap-2 sm:gap-3">
                             {series.team2 && <TeamLogo team={series.team2} className="w-8 h-8 sm:w-10 sm:h-10" />}
-                            <span className={`text-sm sm:text-base font-medium ${series.winner === series.team2 ? 'text-green-600' : ''}`}>
+                            <span className={`text-sm sm:text-base font-medium flex-1 ${series.winner === series.team2 ? 'text-green-600' : ''}`}>
                                 {series.team2}
                             </span>
                             <span className="text-xs sm:text-sm text-gray-500">({series.team2_seed})</span>
+                            {/* Series win count */}
+                            {!isPlayIn && (series.team1_wins > 0 || series.team2_wins > 0) && (
+                                <span className={`text-lg sm:text-xl font-bold min-w-[24px] text-center ${
+                                    series.winner === series.team2 ? 'text-green-600' : 'text-gray-700'
+                                }`}>
+                                    {series.team2_wins}
+                                </span>
+                            )}
                             {series.winner === series.team2 && (
-                                <span className="text-xs sm:text-sm text-green-600">Winner</span>
+                                <span className="text-xs sm:text-sm text-green-600 font-medium">✓</span>
                             )}
                         </div>
                     </div>
+
+                    {/* Live Game Score */}
+                    {isLive && currentGame && (
+                        <div className="bg-red-50 border border-red-200 p-2.5 sm:p-3 rounded-lg">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-red-700">
+                                    Game {currentGame.game_number} · {currentGame.status}
+                                    {currentGame.time && currentGame.time !== 'Final' ? ` · ${currentGame.time}` : ''}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-center gap-4 mt-1.5">
+                                <div className="text-center">
+                                    <div className="text-xs text-gray-500">{currentGame.home_team?.split(' ').pop()}</div>
+                                    <div className="text-xl font-bold">{currentGame.home_team_score || 0}</div>
+                                </div>
+                                <div className="text-gray-400 text-sm">—</div>
+                                <div className="text-center">
+                                    <div className="text-xs text-gray-500">{currentGame.visitor_team?.split(' ').pop()}</div>
+                                    <div className="text-xl font-bold">{currentGame.visitor_team_score || 0}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Next Game Info (not live, but scheduled) */}
+                    {!isLive && currentGame && currentGame.status !== 'Final' && series.status !== 'completed' && (
+                        <div className="bg-blue-50 border border-blue-100 p-2 sm:p-2.5 rounded-lg">
+                            <div className="text-xs text-blue-700">
+                                {currentGame.game_number ? `Game ${currentGame.game_number} · ` : ''}
+                                {(() => {
+                                    const timeStr = currentGame.datetime || currentGame.status;
+                                    if (!timeStr) return '';
+                                    if (timeStr.includes('T') || timeStr.includes('Z')) {
+                                        return format(new Date(timeStr), "MMM d 'at' h:mm a");
+                                    }
+                                    return timeStr;
+                                })()}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Points Info */}
                     <div className="text-xs sm:text-sm text-gray-500">

@@ -7,8 +7,10 @@ import { Prediction, User, Settings } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
+import { getTeamNames } from "@/api/nbaApi";
 
-const NBA_TEAMS = [
+// Fallback teams if API is unavailable
+const FALLBACK_TEAMS = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets",
     "Chicago Bulls", "Cleveland Cavaliers", "Dallas Mavericks", "Denver Nuggets",
     "Detroit Pistons", "Golden State Warriors", "Houston Rockets", "Indiana Pacers",
@@ -28,11 +30,13 @@ export function ChampionPick({ onSave }) {
     const [deadline, setDeadline] = React.useState(null);
     const [isDeadlinePassed, setIsDeadlinePassed] = React.useState(false);
     const [loading, setLoading] = React.useState(true);
+    const [nbaTeams, setNbaTeams] = React.useState(FALLBACK_TEAMS);
 
     React.useEffect(() => {
         loadUser();
         loadDeadline();
         loadExistingPick();
+        getTeamNames().then(t => t?.length > 0 && setNbaTeams(t)).catch(() => {});
     }, []);
 
     const loadUser = async () => {
@@ -180,7 +184,7 @@ export function ChampionPick({ onSave }) {
                                     <SelectValue placeholder="Select NBA Champion" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {NBA_TEAMS.map(team => (
+                                    {nbaTeams.map(team => (
                                         <SelectItem key={team} value={team}>{team}</SelectItem>
                                     ))}
                                 </SelectContent>
