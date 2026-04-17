@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Series, Prediction, User } from "@/lib/db";
+import { Series, Prediction } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import SeriesCard from "../components/dashboard/SeriesCard";
 import { ChampionPick, FinalsMVPPick } from "../components/dashboard/PrePlayoffPicks";
@@ -9,13 +9,14 @@ import { AlertTriangle, Trophy, RefreshCw, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNbaSync } from "@/hooks/useNbaSync";
 import { useLiveScores } from "@/hooks/useLiveScores";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Dashboard() {
+    const { user } = useAuth();
     const [series, setSeries] = React.useState([]);
     const [predictions, setPredictions] = React.useState([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState(null);
-    const [user, setUser] = React.useState(null);
     const [loadRetries, setLoadRetries] = React.useState(0);
     const [loadingMessage, setLoadingMessage] = React.useState("Loading playoff data...");
     const [completedExpanded, setCompletedExpanded] = React.useState(false);
@@ -44,41 +45,25 @@ export default function Dashboard() {
         setError(null);
 
         try {
-            // Load series first
             if (!isBackground) setLoadingMessage("Loading playoff series...");
-            const seriesData = await Series.list()
-                .catch(e => {
+
+            // Series and user predictions are independent — fetch in parallel
+            const [seriesData, predictionsData] = await Promise.all([
+                Series.list().catch(e => {
                     console.error("Failed to load series:", e);
                     setError("Failed to load playoff data. Please try refreshing the page.");
                     return [];
-                });
+                }),
+                user
+                    ? Prediction.filter({ user_email: user.email }).catch(e => {
+                        console.error("Failed to load predictions:", e);
+                        return [];
+                    })
+                    : Promise.resolve([]),
+            ]);
 
             setSeries(seriesData);
-
-            // Then try to load user
-            try {
-                if (!isBackground) setLoadingMessage("Loading user data...");
-                const userData = await User.me();
-                setUser(userData);
-
-                // If user exists, check if they're in the leaderboard and add if not
-                if (userData) {
-                    setLoadingMessage("Loading your predictions...");
-                    // First, load their predictions
-                    const predictionsData = await Prediction.filter({ user_email: userData.email })
-                        .catch(e => {
-                            console.error("Failed to load predictions:", e);
-                            return [];
-                        });
-
-                    setPredictions(predictionsData);
-
-
-                }
-            } catch (userError) {
-                console.log("User not logged in:", userError);
-                setUser(null);
-            }
+            setPredictions(predictionsData);
         } catch (err) {
             console.error("Error loading dashboard data:", err);
             setError("Failed to load playoff data. Please try refreshing the page.");
@@ -247,7 +232,7 @@ export default function Dashboard() {
                         exit={{ opacity: 0, y: -20 }}
                         className="mb-4"
                     >
-                        <ChampionPick onSave={loadData} />
+                        <ChampionPick onSave={loadData} user={user} />
                     </motion.div>
                 )}
 
@@ -259,7 +244,7 @@ export default function Dashboard() {
                         exit={{ opacity: 0, y: -20 }}
                         className="mb-4"
                     >
-                        <FinalsMVPPick onSave={loadData} />
+                        <FinalsMVPPick onSave={loadData} user={user} />
                     </motion.div>
                 )}
             </AnimatePresence>

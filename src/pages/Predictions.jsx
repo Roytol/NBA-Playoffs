@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
-import { Prediction, Series, User, Settings } from "@/lib/db";
+import { Prediction, Series, Settings } from "@/lib/db";
+import { useAuth } from "@/lib/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -42,7 +43,6 @@ export default function PredictionsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState("all");
-    const [user, setUser] = useState(null);
     const [editingChampion, setEditingChampion] = useState(false);
     const [editingMVP, setEditingMVP] = useState(false);
     const [championForm, setChampionForm] = useState({
@@ -57,6 +57,7 @@ export default function PredictionsPage() {
     const [mvpStatus, setMvpStatus] = React.useState("closed");
     const [nbaTeams, setNbaTeams] = useState(FALLBACK_TEAMS);
     const { toast } = useToast();
+    const { user } = useAuth();
 
     useEffect(() => {
         loadData();
@@ -81,24 +82,14 @@ export default function PredictionsPage() {
         setLoading(true);
         setError(null);
 
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            // Try to load user first
-            let userData = null;
-            try {
-                userData = await User.me();
-                setUser(userData);
-
-                // Leaderboard is a Postgres View linked to the User table, so no manual insertion needed!
-            } catch (userError) {
-                console.log("User not logged in:", userError);
-                setUser(null);
-                setLoading(false);
-                return; // Don't try to load predictions if there's no user
-            }
-
-            // If we have a user, load predictions and series
             const [predictionsData, seriesData] = await Promise.all([
-                Prediction.filter({ user_email: userData.email }),
+                Prediction.filter({ user_email: user.email }),
                 Series.list()
             ]);
             setPredictions(predictionsData);

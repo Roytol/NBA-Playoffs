@@ -21,11 +21,10 @@ const FALLBACK_TEAMS = [
     "Utah Jazz", "Washington Wizards"
 ];
 
-export function ChampionPick({ onSave }) {
+export function ChampionPick({ onSave, user }) {
     const [pick, setPick] = React.useState("");
     const [existingPick, setExistingPick] = React.useState(null);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [user, setUser] = React.useState(null);
     const [error, setError] = React.useState(null);
     const [deadline, setDeadline] = React.useState(null);
     const [isDeadlinePassed, setIsDeadlinePassed] = React.useState(false);
@@ -33,21 +32,10 @@ export function ChampionPick({ onSave }) {
     const [nbaTeams, setNbaTeams] = React.useState(FALLBACK_TEAMS);
 
     React.useEffect(() => {
-        loadUser();
         loadDeadline();
         loadExistingPick();
         getTeamNames().then(t => t?.length > 0 && setNbaTeams(t)).catch(() => {});
-    }, []);
-
-    const loadUser = async () => {
-        try {
-            const userData = await User.me();
-            setUser(userData);
-        } catch (error) {
-            console.error("Error loading user:", error);
-            setUser(null);
-        }
-    };
+    }, [user]);
 
     const loadDeadline = async () => {
         try {
@@ -208,11 +196,10 @@ export function ChampionPick({ onSave }) {
     );
 }
 
-export function FinalsMVPPick({ onSave }) {
+export function FinalsMVPPick({ onSave, user }) {
     const [pick, setPick] = React.useState("");
     const [existingPick, setExistingPick] = React.useState(null);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [user, setUser] = React.useState(null);
     const [error, setError] = React.useState(null);
     const [deadline, setDeadline] = React.useState(null);
     const [isDeadlinePassed, setIsDeadlinePassed] = React.useState(false);
@@ -220,21 +207,10 @@ export function FinalsMVPPick({ onSave }) {
     const [mvpStatus, setMvpStatus] = React.useState("closed");
 
     React.useEffect(() => {
-        loadUser();
         loadDeadline();
         loadExistingPick();
         loadMVPStatus();
-    }, []);
-
-    const loadUser = async () => {
-        try {
-            const userData = await User.me();
-            setUser(userData);
-        } catch (error) {
-            console.error("Error loading user:", error);
-            setUser(null);
-        }
-    };
+    }, [user]);
 
     const loadDeadline = async () => {
         try {

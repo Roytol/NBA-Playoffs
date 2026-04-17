@@ -306,15 +306,9 @@ export async function forceRefreshAll() {
         return data.data || [];
     });
 
-    await forceRefreshCache(`standings_${season}`, async () => {
-        try {
-            const data = await apiFetch('/standings', { season });
-            return data.data || [];
-        } catch (error) {
-            console.warn('Could not fetch standings for refresh (requires paid tier).');
-            return [];
-        }
-    });
+    // Note: standings are NOT force-refreshed here.
+    // They come from ESPN (free, no auth) via getStandings() with a 30-day TTL.
+    // Playoff seeds are frozen for the season — no need to ever clear them.
 
     await forceRefreshCache(`games_postseason_${season}`, async () => {
         return apiFetchAll('/games', {

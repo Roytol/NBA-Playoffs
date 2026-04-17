@@ -4,74 +4,35 @@ import { createPageUrl } from "@/utils";
 import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { User, Prediction, Settings } from "@/lib/db";
+import { User, Settings } from "@/lib/db";
 import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
+import { useAuth } from "@/lib/AuthContext";
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
 export default function Layout() {
     const location = useLocation();
     const currentPageName = location.pathname.substring(1) || "Dashboard";
+    const { user, logout } = useAuth();
 
     const [sidebarOpen, setSidebarOpen] = React.useState(false);
-    const [user, setUser] = React.useState(null);
-    const [userScore, setUserScore] = React.useState(0);
     const [activeSeason, setActiveSeason] = React.useState("");
 
+    // Load active season label once (lightweight, Settings table)
     React.useEffect(() => {
-        checkUser();
+        Settings.filter({ setting_name: "active_season" })
+            .then(s => { if (s.length > 0) setActiveSeason(s[0].setting_value); })
+            .catch(() => {});
+    }, []);
 
-        // Prevent body scrolling when sidebar is open on mobile
-        if (sidebarOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-
-        return () => {
-            document.body.style.overflow = '';
-        };
+    // Prevent body scroll when sidebar is open on mobile
+    React.useEffect(() => {
+        document.body.style.overflow = sidebarOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
     }, [sidebarOpen]);
 
-    const checkUser = async () => {
-        try {
-            const userData = await User.me();
-            setUser(userData);
-            if (userData) {
-                const predictions = await Prediction.filter({ user_email: userData.email });
-                const totalPoints = predictions.reduce((sum, p) => sum + (p.points_earned || 0), 0);
-                setUserScore(totalPoints);
-            }
-            // Load active season for sidebar subtitle
-            const seasonSetting = await Settings.filter({ setting_name: "active_season" });
-            if (seasonSetting.length > 0) setActiveSeason(seasonSetting[0].setting_value);
-        } catch (error) {
-            console.error("Auth error:", error);
-            setUser(null);
-            setUserScore(0);
-        }
-    };
-
-    const handleLogin = async () => {
-        try {
-            await User.login();
-            const userData = await User.me();
-            setUser(userData);
-
-            // No manual Leaderboard insertion required anymore! The SQL View handles it dynamically based on the User table.
-        } catch (error) {
-            console.error("Login error:", error);
-        }
-    };
-
     const handleLogout = async () => {
-        try {
-            await User.logout();
-            setUser(null);
-            setUserScore(0);
-        } catch (error) {
-            console.error("Logout error:", error);
-        }
+        try { await logout(); } catch (e) { console.error(e); }
     };
 
     return (
