@@ -58,8 +58,11 @@ export const Leaderboard = new BaseEntity('Leaderboard');
 export const Settings = new BaseEntity('Settings');
 export const ApiCache = new BaseEntity('api_cache');
 
-export const User = {
-    ...new BaseEntity('User'),
+class UserEntity extends BaseEntity {
+    constructor() {
+        super('User');
+    }
+
     async me() {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error || !session) throw new Error("Not logged in");
@@ -83,14 +86,18 @@ export const User = {
         }
 
         return userData;
-    },
+    }
+
     async login() {
         window.location.href = '/login';
-    },
+    }
+
     async logout() {
         await supabase.auth.signOut();
         window.location.reload();
     }
 }
+
+export const User = new UserEntity();
 
 export { supabase };
