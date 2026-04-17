@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import SeriesCard from "../components/dashboard/SeriesCard";
 import { ChampionPick, FinalsMVPPick } from "../components/dashboard/PrePlayoffPicks";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Trophy } from "lucide-react";
+import { AlertTriangle, Trophy, RefreshCw, Radio } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useNbaSync } from "@/hooks/useNbaSync";
+import { useLiveScores } from "@/hooks/useLiveScores";
 
 export default function Dashboard() {
     const [series, setSeries] = React.useState([]);
@@ -16,6 +18,19 @@ export default function Dashboard() {
     const [user, setUser] = React.useState(null);
     const [loadRetries, setLoadRetries] = React.useState(0);
     const [loadingMessage, setLoadingMessage] = React.useState("Loading playoff data...");
+
+    // NBA API sync
+    const { syncing, lastSynced, error: syncError, triggerSync } = useNbaSync();
+
+    // Live scores polling
+    const { isPolling, liveGames } = useLiveScores(series);
+
+    // Reload series data after sync completes
+    React.useEffect(() => {
+        if (lastSynced) {
+            loadData();
+        }
+    }, [lastSynced]);
 
     React.useEffect(() => {
         loadData();
@@ -127,12 +142,16 @@ export default function Dashboard() {
         );
 
         // Sort completed series by date (latest first)
-        // Using prediction_deadline as a proxy for completion date
         categorized.completed.sort((a, b) =>
             new Date(b.prediction_deadline) - new Date(a.prediction_deadline)
         );
 
         return categorized;
+    }, [series]);
+
+    // Check if any series has a live game
+    const hasLiveGame = React.useMemo(() => {
+        return series.some(s => s.current_game?.is_live);
     }, [series]);
 
     if (error) {
@@ -164,8 +183,56 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-4 sm:mb-6"
             >
-                <h1 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2">NBA Playoffs 2025</h1>
-                <p className="text-sm text-gray-500">Make your predictions and compete with others</p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2">NBA Playoffs 2026</h1>
+                        <p className="text-sm text-gray-500">Make your predictions and compete with others</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {/* Live indicator */}
+                        {hasLiveGame && (
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                                <span className="text-xs font-medium text-red-700">LIVE</span>
+                            </div>
+                        )}
+
+                        {/* Sync button */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={triggerSync}
+                            disabled={syncing}
+                            className="text-gray-500"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Sync status bar */}
+                {(syncing || syncError) && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="mt-2"
+                    >
+                        {syncing && (
+                            <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-1.5">
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                Syncing playoff data...
+                            </div>
+                        )}
+                        {syncError && (
+                            <div className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-1.5">
+                                Sync issue: {syncError} — showing cached data
+                            </div>
+                        )}
+                    </motion.div>
+                )}
             </motion.div>
 
             <AnimatePresence>
@@ -328,7 +395,7 @@ export default function Dashboard() {
                                     animate={{ opacity: 1 }}
                                     className="text-center py-8 sm:py-12 text-gray-500 text-sm"
                                 >
-                                    No series available at the moment
+                                    {syncing ? 'Syncing playoff data from NBA API...' : 'No series available at the moment. Playoff data will appear once the season starts.'}
                                 </motion.div>
                             )}
                     </AnimatePresence>

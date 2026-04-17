@@ -21,8 +21,10 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
+import { getTeamNames } from "@/api/nbaApi";
 
-const NBA_TEAMS = [
+// Fallback teams if API is unavailable
+const FALLBACK_TEAMS = [
     "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets",
     "Chicago Bulls", "Cleveland Cavaliers", "Dallas Mavericks", "Denver Nuggets",
     "Detroit Pistons", "Golden State Warriors", "Houston Rockets", "Indiana Pacers",
@@ -53,9 +55,11 @@ export default function PredictionsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [mvpStatus, setMvpStatus] = React.useState("closed");
     const [submissionMessage, setSubmissionMessage] = useState("");
+    const [nbaTeams, setNbaTeams] = useState(FALLBACK_TEAMS);
 
     useEffect(() => {
         loadData();
+        getTeamNames().then(t => t?.length > 0 && setNbaTeams(t)).catch(() => {});
         loadDeadlines();
         loadMVPStatus();
     }, []);
@@ -654,7 +658,7 @@ export default function PredictionsPage() {
                                     <SelectValue placeholder="Select NBA Champion" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {NBA_TEAMS.map(team => (
+                                    {nbaTeams.map(team => (
                                         <SelectItem key={team} value={team}>{team}</SelectItem>
                                     ))}
                                 </SelectContent>

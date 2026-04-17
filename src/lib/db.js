@@ -56,6 +56,7 @@ export const Series = new BaseEntity('Series');
 export const Prediction = new BaseEntity('Prediction');
 export const Leaderboard = new BaseEntity('Leaderboard');
 export const Settings = new BaseEntity('Settings');
+export const ApiCache = new BaseEntity('api_cache');
 
 export const User = {
     ...new BaseEntity('User'),
