@@ -117,7 +117,7 @@ export default function Login() {
                     alt="NBA Playoffs Logo"
                     className="h-24 mb-4 drop-shadow-md"
                 />
-                <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">NBA Playoffs Challenge</h1>
+                <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">NBA Playoffs</h1>
                 <p className="text-gray-500 mt-2">Sign in to make your predictions and view the leaderboard.</p>
             </div>
 
