@@ -145,11 +145,27 @@ async function processMatchup(matchupKey, games, seedMap, existingByKey, allExis
     const team1Name = firstGame.home_team.full_name;
     const team2Name = firstGame.visitor_team.full_name;
 
-    // Get seed info
-    const team1Seed = seedMap.get(team1Name)?.seed || 0;
-    const team2Seed = seedMap.get(team2Name)?.seed || 0;
+    // Get seed info from standings map (requires paid API tier)
+    let team1Seed = seedMap.get(team1Name)?.seed || 0;
+    let team2Seed = seedMap.get(team2Name)?.seed || 0;
     const team1Conf = seedMap.get(team1Name)?.conference || firstGame.home_team.conference || '';
     const team2Conf = seedMap.get(team2Name)?.conference || firstGame.visitor_team.conference || '';
+
+    // Fallback: derive relative seed order from home court advantage.
+    // In the NBA playoffs the home team in Game 1 is always the higher seed.
+    // We count total home games — the team with more home games = higher seed.
+    // We use 1/2 as relative seeds (not the true bracket seed) when standings are unavailable.
+    if (team1Seed === 0 && team2Seed === 0 && games.length > 0) {
+        const team1HomeGames = games.filter(g => g.home_team.full_name === team1Name).length;
+        const team2HomeGames = games.filter(g => g.home_team.full_name === team2Name).length;
+        if (team1HomeGames >= team2HomeGames) {
+            team1Seed = 1;
+            team2Seed = 2;
+        } else {
+            team1Seed = 2;
+            team2Seed = 1;
+        }
+    }
 
     // Determine conference
     let conference;
@@ -190,29 +206,16 @@ async function processMatchup(matchupKey, games, seedMap, existingByKey, allExis
     // Find current/next game for live data
     const currentGame = findCurrentGame(games);
 
-    // Order teams by seed (lower seed = team1 = higher seeded)
+    // Order teams: lower seed number = team1 (higher seeded / home court)
     let orderedTeam1, orderedTeam2, orderedSeed1, orderedSeed2, orderedWins1, orderedWins2;
-    if (team1Seed > 0 && team2Seed > 0 && team1Seed <= team2Seed) {
-        orderedTeam1 = team1Name;
-        orderedTeam2 = team2Name;
-        orderedSeed1 = team1Seed;
-        orderedSeed2 = team2Seed;
-        orderedWins1 = team1Wins;
-        orderedWins2 = team2Wins;
-    } else if (team1Seed > 0 && team2Seed > 0) {
-        orderedTeam1 = team2Name;
-        orderedTeam2 = team1Name;
-        orderedSeed1 = team2Seed;
-        orderedSeed2 = team1Seed;
-        orderedWins1 = team2Wins;
-        orderedWins2 = team1Wins;
+    if (team1Seed <= team2Seed) {
+        orderedTeam1 = team1Name; orderedTeam2 = team2Name;
+        orderedSeed1 = team1Seed; orderedSeed2 = team2Seed;
+        orderedWins1 = team1Wins; orderedWins2 = team2Wins;
     } else {
-        orderedTeam1 = team1Name;
-        orderedTeam2 = team2Name;
-        orderedSeed1 = team1Seed;
-        orderedSeed2 = team2Seed;
-        orderedWins1 = team1Wins;
-        orderedWins2 = team2Wins;
+        orderedTeam1 = team2Name; orderedTeam2 = team1Name;
+        orderedSeed1 = team2Seed; orderedSeed2 = team1Seed;
+        orderedWins1 = team2Wins; orderedWins2 = team1Wins;
     }
 
     // Build the Series data object

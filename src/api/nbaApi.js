@@ -14,10 +14,10 @@ const API_KEY = import.meta.env.VITE_BALLDONTLIE_API_KEY;
 
 // Cache TTLs in milliseconds
 export const CACHE_TTL = {
-    TEAMS: 24 * 60 * 60 * 1000,        // 24 hours
-    STANDINGS: 60 * 60 * 1000,          // 1 hour
-    PLAYOFF_GAMES: 5 * 60 * 1000,       // 5 minutes
-    LIVE_GAMES: 60 * 1000,              // 60 seconds
+    TEAMS: 24 * 60 * 60 * 1000,            // 24 hours
+    STANDINGS: 30 * 24 * 60 * 60 * 1000,   // 30 days — playoff seeds never change mid-season
+    PLAYOFF_GAMES: 5 * 60 * 1000,           // 5 minutes
+    LIVE_GAMES: 60 * 1000,                  // 60 seconds
 };
 
 // Current NBA season (2025-26 season = season param 2025)
@@ -202,16 +202,41 @@ export async function getTeams() {
 }
 
 /**
- * Get team standings for a season
- * Returns: [{ team, conference, division, wins, losses, ... }, ...]
+ * Get team standings with conference seeds.
+ * Uses ESPN's public (unofficial) standings API — free, no auth required.
+ * Returns: [{ team: { full_name }, seed, conference, wins, losses }, ...]
  */
 export async function getStandings(season = CURRENT_SEASON) {
+    // ESPN uses the season END year (e.g. 2025-26 season → espnSeason=2026)
+    const espnSeason = season + 1;
+
     return getFromCacheOrFetch(`standings_${season}`, CACHE_TTL.STANDINGS, async () => {
         try {
-            const data = await apiFetch('/standings', { season });
-            return data.data || [];
+            const res = await fetch(
+                `https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=${espnSeason}`
+            );
+            if (!res.ok) throw new Error(`ESPN standings HTTP ${res.status}`);
+            const data = await res.json();
+
+            const results = [];
+            for (const conf of data.children || []) {
+                const conference = conf.name?.includes('Eastern') ? 'East' : 'West';
+                for (const entry of conf.standings?.entries || []) {
+                    const fullName = entry.team?.displayName;
+                    if (!fullName) continue;
+                    let seed = 0, wins = 0, losses = 0;
+                    for (const stat of entry.stats || []) {
+                        if (stat.name === 'playoffSeed') seed = Math.round(stat.value);
+                        if (stat.name === 'wins')   wins   = Math.round(stat.value);
+                        if (stat.name === 'losses') losses = Math.round(stat.value);
+                    }
+                    results.push({ team: { full_name: fullName }, seed, conference, wins, losses });
+                }
+            }
+            console.log(`[nbaApi] ESPN standings loaded: ${results.length} teams`);
+            return results;
         } catch (error) {
-            console.warn('Could not fetch standings (requires paid tier), defaulting to empty.', error);
+            console.warn('[nbaApi] ESPN standings fetch failed:', error.message);
             return [];
         }
     });
