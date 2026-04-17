@@ -21,10 +21,9 @@ export async function syncPlayoffSeries(season = CURRENT_SEASON) {
     console.log(`[nbaSync] Starting playoff sync for season ${season}...`);
 
     // 1. Fetch all data we need
-    const [playoffGames, standings, teams] = await Promise.all([
+    const [playoffGames, standings] = await Promise.all([
         getPlayoffGames(season),
         getStandings(season),
-        getTeams(),
     ]);
 
     if (!playoffGames || playoffGames.length === 0) {
@@ -35,7 +34,6 @@ export async function syncPlayoffSeries(season = CURRENT_SEASON) {
     console.log(`[nbaSync] Found ${playoffGames.length} playoff games`);
 
     // 2. Build lookup maps
-    const teamMap = buildTeamMap(teams);
     const seedMap = buildSeedMap(standings);
 
     // 3. Group games by matchup
@@ -62,7 +60,6 @@ export async function syncPlayoffSeries(season = CURRENT_SEASON) {
         const result = await processMatchup(
             matchupKey,
             games,
-            teamMap,
             seedMap,
             existingByKey,
             existingSeries || []
@@ -142,7 +139,7 @@ function groupGamesByMatchup(games) {
 /**
  * Process a single matchup — create or update the corresponding Series record
  */
-async function processMatchup(matchupKey, games, teamMap, seedMap, existingByKey, allExistingSeries) {
+async function processMatchup(matchupKey, games, seedMap, existingByKey, allExistingSeries) {
     // Determine the two teams (use first game)
     const firstGame = games[0];
     const team1Name = firstGame.home_team.full_name;
@@ -487,10 +484,13 @@ export async function updateLiveScores(liveGames) {
                 is_live: isLive,
             };
 
-            await supabase
-                .from('Series')
-                .update({ current_game: currentGameData })
-                .eq('id', series.id);
+            // Only update DB if the data actually changed
+            if (JSON.stringify(series.current_game) !== JSON.stringify(currentGameData)) {
+                await supabase
+                    .from('Series')
+                    .update({ current_game: currentGameData })
+                    .eq('id', series.id);
+            }
         }
     }
 }

@@ -22,8 +22,10 @@ export default function Dashboard() {
     // NBA API sync
     const { syncing, lastSynced, error: syncError, triggerSync } = useNbaSync();
 
-    // Live scores polling
-    const { isPolling, liveGames } = useLiveScores(series);
+    // Live scores polling via Realtime
+    const { isPolling, liveGames } = useLiveScores(series, React.useCallback((updatedSeries) => {
+        setSeries(prev => prev.map(s => s.id === updatedSeries.id ? updatedSeries : s));
+    }, []));
 
     // Reload series data after sync completes
     React.useEffect(() => {
@@ -70,28 +72,7 @@ export default function Dashboard() {
 
                     setPredictions(predictionsData);
 
-                    // Check if user is in leaderboard
-                    const leaderboardEntries = await Leaderboard.filter({ player_id: userData.email });
 
-                    // If not in leaderboard, add them
-                    if (leaderboardEntries.length === 0) {
-                        try {
-                            setLoadingMessage("Setting up your profile...");
-                            // Calculate total points
-                            const totalPoints = predictionsData.reduce((sum, p) =>
-                                sum + (p.points_earned || 0), 0);
-
-                            // Add to leaderboard
-                            await Leaderboard.create({
-                                player_id: userData.email,
-                                player_name: userData.full_name || "Anonymous Player",
-                                total_points: totalPoints,
-                                last_updated: new Date().toISOString()
-                            });
-                        } catch (error) {
-                            console.error("Failed to add user to leaderboard:", error);
-                        }
-                    }
                 }
             } catch (userError) {
                 console.log("User not logged in:", userError);

@@ -87,20 +87,7 @@ export default function PredictionsPage() {
                 userData = await User.me();
                 setUser(userData);
 
-                // Check if user is in leaderboard
-                if (userData) {
-                    const leaderboardEntries = await Leaderboard.filter({ player_id: userData.email });
-
-                    // If not in leaderboard, add them
-                    if (leaderboardEntries.length === 0) {
-                        await Leaderboard.create({
-                            player_id: userData.email,
-                            player_name: userData.full_name || "Anonymous Player",
-                            total_points: 0,
-                            last_updated: new Date().toISOString()
-                        });
-                    }
-                }
+                // Leaderboard is a Postgres View linked to the User table, so no manual insertion needed!
             } catch (userError) {
                 console.log("User not logged in:", userError);
                 setUser(null);

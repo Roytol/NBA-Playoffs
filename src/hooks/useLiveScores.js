@@ -6,14 +6,31 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getLiveGames } from '@/api/nbaApi';
 import { updateLiveScores } from '@/api/nbaSync';
+import { supabase } from '@/lib/supabaseClient';
 
 const POLL_INTERVAL = 60 * 1000; // 60 seconds
 
-export function useLiveScores(activeSeries = []) {
+export function useLiveScores(activeSeries = [], onRealtimeUpdate = null) {
     const [liveGames, setLiveGames] = useState([]);
     const [isPolling, setIsPolling] = useState(false);
     const [lastPolled, setLastPolled] = useState(null);
     const intervalRef = useRef(null);
+
+    // Setup Supabase Realtime Subscription
+    useEffect(() => {
+        if (!onRealtimeUpdate) return;
+
+        const channel = supabase.channel('series-updates')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'Series' }, (payload) => {
+                console.log('[LiveScores] Realtime DB Update Received!', payload.new);
+                onRealtimeUpdate(payload.new);
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [onRealtimeUpdate]);
 
     // Check if any game might be live right now
     const shouldPoll = useCallback(() => {

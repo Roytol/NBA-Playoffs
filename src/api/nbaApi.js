@@ -94,10 +94,38 @@ async function getFromCacheOrFetch(cacheKey, ttlMs, fetchFn) {
             }
         }
 
-        // 2. Cache is stale or missing — fetch fresh data
+        // 2. Cache is stale or missing — attempt to acquire distributed lock
+        const lockKey = `${cacheKey}_lock`;
+        const { data: lockRecord } = await supabase
+            .from('api_cache')
+            .select('last_synced_at')
+            .eq('cache_key', lockKey)
+            .maybeSingle();
+
+        if (lockRecord) {
+            const lockAge = Date.now() - new Date(lockRecord.last_synced_at).getTime();
+            if (lockAge < 10000) {
+                // Lock is less than 10s old — another client is currently fetching!
+                console.log(`[API Cache] Lock active for ${cacheKey}. Serving stale/waiting...`);
+                if (cached) return cached.data; 
+                
+                // If completely missing, wait 2.5s and retry cache read
+                await new Promise(resolve => setTimeout(resolve, 2500));
+                return getFromCacheOrFetch(cacheKey, ttlMs, fetchFn);
+            }
+        }
+
+        // Acquire lock
+        await supabase.from('api_cache').upsert({
+            cache_key: lockKey,
+            data: { status: 'syncing' },
+            last_synced_at: new Date().toISOString()
+        }, { onConflict: 'cache_key' });
+
+        // 3. Fetch fresh data
         const freshData = await fetchFn();
 
-        // 3. Upsert into cache
+        // 4. Upsert into cache
         const { error: upsertError } = await supabase
             .from('api_cache')
             .upsert(
@@ -108,6 +136,9 @@ async function getFromCacheOrFetch(cacheKey, ttlMs, fetchFn) {
                 },
                 { onConflict: 'cache_key' }
             );
+
+        // Free the lock
+        await supabase.from('api_cache').delete().eq('cache_key', lockKey);
 
         if (upsertError) {
             console.warn(`Failed to update cache for ${cacheKey}:`, upsertError);

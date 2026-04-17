@@ -52,9 +52,27 @@ class BaseEntity {
     }
 }
 
+class ReadOnlyLeaderboardEntity extends BaseEntity {
+    constructor() {
+        super('Leaderboard');
+    }
+    async create(data) {
+        console.warn('Leaderboard is now a Read-Only SQL View. Insertions ignored.');
+        return [data];
+    }
+    async update(id, updates) {
+        console.warn('Leaderboard is now a Read-Only SQL View. Updates ignored.');
+        return [updates];
+    }
+    async delete(id) {
+        console.warn('Leaderboard is now a Read-Only SQL View. Deletions ignored.');
+        return [];
+    }
+}
+
 export const Series = new BaseEntity('Series');
 export const Prediction = new BaseEntity('Prediction');
-export const Leaderboard = new BaseEntity('Leaderboard');
+export const Leaderboard = new ReadOnlyLeaderboardEntity();
 export const Settings = new BaseEntity('Settings');
 export const ApiCache = new BaseEntity('api_cache');
 

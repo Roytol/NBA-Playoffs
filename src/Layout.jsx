@@ -50,27 +50,7 @@ export default function Layout({ children, currentPageName }) {
             const userData = await User.me();
             setUser(userData);
 
-            // Check if user is in leaderboard
-            if (userData) {
-                try {
-                    const leaderboardEntries = await Leaderboard.filter({ player_id: userData.email });
-
-                    // If not in leaderboard, add them with 0 points
-                    if (leaderboardEntries.length === 0) {
-                        await Leaderboard.create({
-                            player_id: userData.email,
-                            player_name: userData.full_name || "Anonymous Player",
-                            total_points: 0,
-                            last_updated: new Date().toISOString()
-                        });
-
-                        console.log("Added new user to leaderboard from layout");
-                    }
-                } catch (error) {
-                    console.error("Failed to add user to leaderboard:", error);
-                    // Don't fail login if this fails
-                }
-            }
+            // No manual Leaderboard insertion required anymore! The SQL View handles it dynamically based on the User table.
         } catch (error) {
             console.error("Login error:", error);
         }
