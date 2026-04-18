@@ -10,6 +10,7 @@ import TeamLogo from "../common/TeamLogo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 import { getHeadToHeadMatchups } from "@/api/nbaApi";
+import { formatCurrentGameStatus } from "@/utils";
 
 const roundPoints = {
     play_in: [1, 1],
@@ -214,8 +215,7 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
                         <div className="bg-red-50 border border-red-200 p-2.5 sm:p-3 rounded-lg">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-medium text-red-700">
-                                    Game {currentGame.game_number} · {currentGame.status}
-                                    {currentGame.time && currentGame.time !== 'Final' ? ` · ${currentGame.time}` : ''}
+                                    {formatCurrentGameStatus(currentGame)}
                                 </span>
                             </div>
                             <div className="flex items-center justify-center gap-4 mt-1.5">

@@ -11,6 +11,7 @@ import { useNbaSync } from "@/hooks/useNbaSync";
 import { useLiveScores } from "@/hooks/useLiveScores";
 import { useAuth } from "@/lib/AuthContext";
 import TeamLogo from "@/components/common/TeamLogo";
+import { formatLiveGameDetail } from "@/utils";
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -440,10 +441,10 @@ export default function Dashboard() {
                                     {activeLiveGames.map((game, idx) => (
                                         <div key={game.id || idx} className="space-y-1">
                                             <div className="flex items-center justify-between text-xs font-medium text-gray-400 px-1">
-                                                <span>{game.status}</span>
+                                                <span>{game.period ? "LIVE" : game.status}</span>
                                                 {game.period && (
                                                     <span className="text-red-500 font-bold uppercase tracking-tighter">
-                                                        {game.period}{game.period <= 4 ? 'Q' : 'OT'} · {game.time || 'LIVE'}
+                                                        {formatLiveGameDetail(game)}
                                                     </span>
                                                 )}
                                             </div>
