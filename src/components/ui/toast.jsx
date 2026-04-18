@@ -41,6 +41,7 @@ const Toast = React.forwardRef(({ className, variant, onOpenChange, open, ...pro
         <div
             ref={ref}
             className={cn(toastVariants({ variant }), className)}
+            data-state={open ? "open" : "closed"}
             {...props}
         />
     );
