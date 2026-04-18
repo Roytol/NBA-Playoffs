@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  */
 
 const DISMISS_KEY = 'hs_banner_dismissed';
-const DISMISS_DAYS = 14;
+const DISMISS_DAYS = 1;
 
 function isIosSafari() {
     const ua = window.navigator.userAgent;
