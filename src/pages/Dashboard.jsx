@@ -232,7 +232,7 @@ export default function Dashboard() {
                         exit={{ opacity: 0, y: -20 }}
                         className="mb-4"
                     >
-                        <ChampionPick onSave={loadData} user={user} />
+                        <ChampionPick onSave={() => loadData(true)} user={user} />
                     </motion.div>
                 )}
 
@@ -244,7 +244,7 @@ export default function Dashboard() {
                         exit={{ opacity: 0, y: -20 }}
                         className="mb-4"
                     >
-                        <FinalsMVPPick onSave={loadData} user={user} />
+                        <FinalsMVPPick onSave={() => loadData(true)} user={user} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -291,7 +291,7 @@ export default function Dashboard() {
                                                 series={seriesItem}
                                                 predictions={predictions}
                                                 user={user}
-                                                onPredictionMade={loadData}
+                                                onPredictionMade={() => loadData(true)}
                                             />
                                         </motion.div>
                                     ))}
@@ -323,7 +323,7 @@ export default function Dashboard() {
                                                 series={seriesItem}
                                                 predictions={predictions}
                                                 user={user}
-                                                onPredictionMade={loadData}
+                                                onPredictionMade={() => loadData(true)}
                                             />
                                         </motion.div>
                                     ))}
@@ -378,7 +378,7 @@ export default function Dashboard() {
                                                             series={seriesItem}
                                                             predictions={predictions}
                                                             user={user}
-                                                            onPredictionMade={loadData}
+                                                            onPredictionMade={() => loadData(true)}
                                                         />
                                                     </motion.div>
                                                 ))}
