@@ -202,7 +202,9 @@ export function FinalsMVPPick({ onSave, user }) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [error, setError] = React.useState(null);
     const [deadline, setDeadline] = React.useState(null);
+    const [startDate, setStartDate] = React.useState(null);
     const [isDeadlinePassed, setIsDeadlinePassed] = React.useState(false);
+    const [isBeforeStart, setIsBeforeStart] = React.useState(false);
     const [loading, setLoading] = React.useState(true);
     const [mvpStatus, setMvpStatus] = React.useState("closed");
 
@@ -216,8 +218,15 @@ export function FinalsMVPPick({ onSave, user }) {
         try {
             const settings = await Settings.list();
             const mvpDeadline = settings.find(s => s.setting_name === "mvp_prediction_deadline");
+            const mvpStart = settings.find(s => s.setting_name === "mvp_prediction_start");
 
             const now = new Date();
+
+            if (mvpStart) {
+                const sDate = new Date(mvpStart.setting_value);
+                setStartDate(sDate);
+                setIsBeforeStart(sDate > now);
+            }
 
             if (mvpDeadline) {
                 const deadlineDate = new Date(mvpDeadline.setting_value);
@@ -303,7 +312,8 @@ export function FinalsMVPPick({ onSave, user }) {
     // Don't show if:
     // 1. User is not logged in
     // 2. User already has a pick (unless deadline has passed to view it)
-    if (!user || (existingPick && !isDeadlinePassed)) return null;
+    // 3. The prediction window hasn't started yet
+    if (!user || (existingPick && !isDeadlinePassed) || isBeforeStart) return null;
 
     return (
         <Card className="border-blue-200 bg-blue-50 mb-6">

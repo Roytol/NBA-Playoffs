@@ -58,6 +58,7 @@ export default function AdminPage() {
 
     // Settings
     const [championDeadline, setChampionDeadline] = useState("");
+    const [mvpStart, setMvpStart] = useState("");
     const [mvpDeadline, setMvpDeadline] = useState("");
     const [championSettings, setChampionSettings] = useState({ champion: "", mvp: "" });
     const [processingState, setProcessingState] = useState({ isProcessing: false, operation: "", message: "" });
@@ -111,6 +112,7 @@ export default function AdminPage() {
             // Parse settings
             for (const s of (settingsData || [])) {
                 if (s.setting_name === "champion_prediction_deadline") setChampionDeadline(s.setting_value);
+                if (s.setting_name === "mvp_prediction_start") setMvpStart(s.setting_value);
                 if (s.setting_name === "mvp_prediction_deadline") setMvpDeadline(s.setting_value);
                 if (s.setting_name === "champion_mvp_winners") {
                     try { setChampionSettings(JSON.parse(s.setting_value)); } catch(e) {}
@@ -167,16 +169,23 @@ export default function AdminPage() {
 
     const updateDeadline = async (type, newValue) => {
         try {
-            startProcessing(`deadline-${type}`, `Updating ${type} deadline...`);
-            const name = type === "champion" ? "champion_prediction_deadline" : "mvp_prediction_deadline";
+            startProcessing(`deadline-${type}`, `Updating ${type} time...`);
+            let name = "";
+            if (type === "champion") name = "champion_prediction_deadline";
+            else if (type === "mvp") name = "mvp_prediction_deadline";
+            else if (type === "mvp_start") name = "mvp_prediction_start";
+            
             await upsertSetting(name, newValue);
+            
             if (type === "champion") setChampionDeadline(newValue);
-            else setMvpDeadline(newValue);
+            else if (type === "mvp") setMvpDeadline(newValue);
+            else if (type === "mvp_start") setMvpStart(newValue);
+            
             endProcessing();
-            toast({ title: `${type === "champion" ? "Champion" : "MVP"} deadline saved ✅` });
+            toast({ title: `Time saved ✅` });
         } catch (err) {
             endProcessing();
-            toast({ title: "Failed to save deadline", description: err.message, variant: "destructive" });
+            toast({ title: "Failed to save time", description: err.message, variant: "destructive" });
         }
     };
 
@@ -388,8 +397,18 @@ export default function AdminPage() {
                                     <Button size="sm" onClick={() => updateDeadline("champion", championDeadline)}>Save</Button>
                                 </div>
                             </div>
+                            <div className="space-y-2 pt-2 border-t text-amber-700">
+                                <span className="text-xs font-semibold uppercase tracking-wider block">Finals MVP Window</span>
+                            </div>
+                            <div className="space-y-2 mt-2">
+                                <label className="text-sm font-medium">MVP Pick Starts On</label>
+                                <div className="flex gap-2">
+                                    <Input type="datetime-local" value={mvpStart} onChange={(e) => setMvpStart(e.target.value)} className="text-sm" />
+                                    <Button size="sm" onClick={() => updateDeadline("mvp_start", mvpStart)}>Save</Button>
+                                </div>
+                            </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Finals MVP Pick Deadline</label>
+                                <label className="text-sm font-medium">MVP Pick Closes On (Deadline)</label>
                                 <div className="flex gap-2">
                                     <Input type="datetime-local" value={mvpDeadline} onChange={(e) => setMvpDeadline(e.target.value)} className="text-sm" />
                                     <Button size="sm" onClick={() => updateDeadline("mvp", mvpDeadline)}>Save</Button>
