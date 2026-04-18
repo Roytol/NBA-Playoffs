@@ -3,23 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trophy, Star, AlertTriangle, Clock } from "lucide-react";
-import { Prediction, User, Settings } from "@/lib/db";
+import { Prediction, Settings } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format } from "date-fns";
 import { getTeamNames } from "@/api/nbaApi";
-
-// Fallback teams if API is unavailable
-const FALLBACK_TEAMS = [
-    "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets",
-    "Chicago Bulls", "Cleveland Cavaliers", "Dallas Mavericks", "Denver Nuggets",
-    "Detroit Pistons", "Golden State Warriors", "Houston Rockets", "Indiana Pacers",
-    "LA Clippers", "Los Angeles Lakers", "Memphis Grizzlies", "Miami Heat",
-    "Milwaukee Bucks", "Minnesota Timberwolves", "New Orleans Pelicans", "New York Knicks",
-    "Oklahoma City Thunder", "Orlando Magic", "Philadelphia 76ers", "Phoenix Suns",
-    "Portland Trail Blazers", "Sacramento Kings", "San Antonio Spurs", "Toronto Raptors",
-    "Utah Jazz", "Washington Wizards"
-];
+import { SETTINGS_KEYS } from "@/constants/app";
+import { NBA_TEAM_NAMES } from "@/constants/nba";
 
 export function ChampionPick({ onSave, user }) {
     const [pick, setPick] = React.useState("");
@@ -29,7 +19,7 @@ export function ChampionPick({ onSave, user }) {
     const [deadline, setDeadline] = React.useState(null);
     const [isDeadlinePassed, setIsDeadlinePassed] = React.useState(false);
     const [loading, setLoading] = React.useState(true);
-    const [nbaTeams, setNbaTeams] = React.useState(FALLBACK_TEAMS);
+    const [nbaTeams, setNbaTeams] = React.useState(NBA_TEAM_NAMES);
 
     React.useEffect(() => {
         loadDeadline();
@@ -40,7 +30,7 @@ export function ChampionPick({ onSave, user }) {
     const loadDeadline = async () => {
         try {
             const settings = await Settings.list();
-            const championDeadline = settings.find(s => s.setting_name === "champion_prediction_deadline");
+            const championDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.CHAMPION_PREDICTION_DEADLINE);
 
             const now = new Date();
 
@@ -217,8 +207,8 @@ export function FinalsMVPPick({ onSave, user }) {
     const loadDeadline = async () => {
         try {
             const settings = await Settings.list();
-            const mvpDeadline = settings.find(s => s.setting_name === "mvp_prediction_deadline");
-            const mvpStart = settings.find(s => s.setting_name === "mvp_prediction_start");
+            const mvpDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE);
+            const mvpStart = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_START);
 
             const now = new Date();
 
@@ -241,7 +231,7 @@ export function FinalsMVPPick({ onSave, user }) {
     const loadMVPStatus = async () => {
         try {
             const settings = await Settings.list();
-            const mvpStatusSetting = settings.find(s => s.setting_name === "mvp_prediction_status");
+            const mvpStatusSetting = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_STATUS);
             if (mvpStatusSetting) {
                 setMvpStatus(mvpStatusSetting.setting_value);
             }
@@ -316,10 +306,10 @@ export function FinalsMVPPick({ onSave, user }) {
     if (!user || (existingPick && !isDeadlinePassed) || isBeforeStart) return null;
 
     return (
-        <Card className="border-blue-200 bg-blue-50 mb-6">
+        <Card className="surface-status-info mb-6 border">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-blue-800">
-                    <Star className="w-6 h-6 text-blue-600" />
+                    <Star className="text-status-info w-6 h-6" />
                     Finals MVP Prediction
                     {deadline && (
                         <div className="text-sm font-normal text-gray-600 ml-auto flex items-center">

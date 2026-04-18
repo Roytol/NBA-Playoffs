@@ -24,18 +24,8 @@ import {
 } from "@/components/ui/dialog";
 import { getTeamNames } from "@/api/nbaApi";
 import { useToast } from "@/components/ui/use-toast";
-
-// Fallback teams if API is unavailable
-const FALLBACK_TEAMS = [
-    "Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets",
-    "Chicago Bulls", "Cleveland Cavaliers", "Dallas Mavericks", "Denver Nuggets",
-    "Detroit Pistons", "Golden State Warriors", "Houston Rockets", "Indiana Pacers",
-    "LA Clippers", "Los Angeles Lakers", "Memphis Grizzlies", "Miami Heat",
-    "Milwaukee Bucks", "Minnesota Timberwolves", "New Orleans Pelicans", "New York Knicks",
-    "Oklahoma City Thunder", "Orlando Magic", "Philadelphia 76ers", "Phoenix Suns",
-    "Portland Trail Blazers", "Sacramento Kings", "San Antonio Spurs", "Toronto Raptors",
-    "Utah Jazz", "Washington Wizards"
-];
+import { PREDICTION_TABS, ROUND_POINTS_DISPLAY, SETTINGS_KEYS } from "@/constants/app";
+import { NBA_TEAM_NAMES } from "@/constants/nba";
 
 export default function PredictionsPage() {
     const [predictions, setPredictions] = useState([]);
@@ -55,7 +45,7 @@ export default function PredictionsPage() {
     const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [mvpStatus, setMvpStatus] = React.useState("closed");
-    const [nbaTeams, setNbaTeams] = useState(FALLBACK_TEAMS);
+    const [nbaTeams, setNbaTeams] = useState(NBA_TEAM_NAMES);
     const { toast } = useToast();
     const { user } = useAuth();
 
@@ -69,7 +59,7 @@ export default function PredictionsPage() {
     const loadMVPStatus = async () => {
         try {
             const settings = await Settings.list();
-            const mvpStatusSetting = settings.find(s => s.setting_name === "mvp_prediction_status");
+            const mvpStatusSetting = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_STATUS);
             if (mvpStatusSetting) {
                 setMvpStatus(mvpStatusSetting.setting_value);
             }
@@ -117,8 +107,8 @@ export default function PredictionsPage() {
         try {
             // Load both deadlines
             const settings = await Settings.list();
-            const championDeadline = settings.find(s => s.setting_name === "champion_prediction_deadline");
-            const mvpDeadline = settings.find(s => s.setting_name === "mvp_prediction_deadline");
+            const championDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.CHAMPION_PREDICTION_DEADLINE);
+            const mvpDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE);
 
             // Use the later of the two deadlines (if both exist)
             let finalDeadline = null;
@@ -216,7 +206,7 @@ export default function PredictionsPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6 mb-8 text-center"
+                    className="surface-status-info rounded-lg border p-4 sm:p-6 mb-8 text-center"
                 >
                     <h2 className="text-lg font-semibold mb-2">Sign in to view predictions</h2>
                     <p className="text-gray-600 mb-4 text-sm">You need to be logged in to view your predictions</p>
@@ -268,20 +258,12 @@ export default function PredictionsPage() {
     }
 
     const getPointsInfo = (prediction) => {
-        const pointsMap = {
-            play_in: [1, 1],
-            first_round: [1, 3],
-            second_round: [2, 4],
-            conference_finals: [3, 6],
-            finals: [4, 8],
-            champion: [5, 5],
-            finals_mvp: [3, 3]
-        };
+        const pointInfo = ROUND_POINTS_DISPLAY[prediction.prediction_type];
 
         if (prediction.prediction_type === "champion" || prediction.prediction_type === "finals_mvp") {
-            return pointsMap[prediction.prediction_type][0];
+            return pointInfo?.winner ?? "-";
         } else {
-            return `${pointsMap[prediction.prediction_type][0]} / ${pointsMap[prediction.prediction_type][1]}`;
+            return pointInfo ? `${pointInfo.winner} / ${pointInfo.max}` : "-";
         }
     };
 
@@ -298,7 +280,7 @@ export default function PredictionsPage() {
         const relatedSeries = prediction.series_id ? getSeriesById(prediction.series_id) : null;
         if (!relatedSeries || relatedSeries.status === "active") {
             return (
-                <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                <Badge className="badge-status-info">
                     Pending
                 </Badge>
             );
@@ -306,7 +288,7 @@ export default function PredictionsPage() {
 
         if (relatedSeries.status === "completed") {
             return (
-                <Badge className="bg-red-100 text-red-800 border-red-200">
+                <Badge className="badge-status-danger">
                     <X className="w-3 h-3 mr-1" />
                     Incorrect
                 </Badge>
@@ -355,7 +337,7 @@ export default function PredictionsPage() {
                                 <CardHeader className="bg-yellow-50">
                                     <CardTitle className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <Trophy className="w-5 h-5 text-yellow-500" />
+                                            <Trophy className="text-brand-gold w-5 h-5" />
                                             Champion Prediction
                                         </div>
                                     </CardTitle>
@@ -411,7 +393,7 @@ export default function PredictionsPage() {
                                 <CardHeader className="bg-yellow-50">
                                     <CardTitle className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <Star className="w-5 h-5 text-yellow-500" />
+                                            <Star className="text-brand-gold w-5 h-5" />
                                             Finals MVP Prediction
                                         </div>
                                     </CardTitle>
@@ -468,23 +450,20 @@ export default function PredictionsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-6"
                 >
-                    <Tabs defaultValue="all" onValueChange={setActiveTab}>
-                        <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap">
-                            <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
-                            <TabsTrigger value="play_in" className="text-xs sm:text-sm">Play-In</TabsTrigger>
-                            <TabsTrigger value="first_round" className="text-xs sm:text-sm">First</TabsTrigger>
-                            <TabsTrigger value="second_round" className="text-xs sm:text-sm">Second</TabsTrigger>
-                            <TabsTrigger value="conference_finals" className="text-xs sm:text-sm">Conf</TabsTrigger>
-                            <TabsTrigger value="finals" className="text-xs sm:text-sm">Finals</TabsTrigger>
-                            <TabsTrigger value="champion" className="text-xs sm:text-sm">Champ</TabsTrigger>
-                            <TabsTrigger value="finals_mvp" className="text-xs sm:text-sm">MVP</TabsTrigger>
-                        </TabsList>
+                        <Tabs defaultValue="all" onValueChange={setActiveTab}>
+                            <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap">
+                                {PREDICTION_TABS.map((tab) => (
+                                    <TabsTrigger key={tab.value} value={tab.value} className="text-xs sm:text-sm">
+                                        {tab.label}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
 
                         <TabsContent value={activeTab}>
                             <Card>
                                 <CardHeader className="border-b">
                                     <CardTitle className="flex items-center gap-2">
-                                        <Trophy className="w-5 h-5 text-yellow-500" />
+                                        <Trophy className="text-brand-gold w-5 h-5" />
                                         {activeTab === "all" ? "All Predictions" :
                                             activeTab.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") + " Predictions"}
                                     </CardTitle>
@@ -522,12 +501,12 @@ export default function PredictionsPage() {
                                                             <TableCell>
                                                                 {prediction.prediction_type === "champion" ? (
                                                                     <div className="flex items-center gap-2">
-                                                                        <Trophy className="w-5 h-5 text-yellow-500" />
+                                                                        <Trophy className="text-brand-gold w-5 h-5" />
                                                                         <span>NBA Champion</span>
                                                                     </div>
                                                                 ) : prediction.prediction_type === "finals_mvp" ? (
                                                                     <div className="flex items-center gap-2">
-                                                                        <Star className="w-5 h-5 text-yellow-500" />
+                                                                        <Star className="text-brand-gold w-5 h-5" />
                                                                         <span>Finals MVP</span>
                                                                     </div>
                                                                 ) : seriesInfo ? (
@@ -612,7 +591,7 @@ export default function PredictionsPage() {
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <label className="font-medium flex items-center gap-2">
-                                <Trophy className="w-4 h-4 text-yellow-500" />
+                                <Trophy className="text-brand-gold w-4 h-4" />
                                 NBA Champion (5 points)
                             </label>
                             <Select
@@ -664,7 +643,7 @@ export default function PredictionsPage() {
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <label className="font-medium flex items-center gap-2">
-                                <Star className="w-4 h-4 text-yellow-500" />
+                                <Star className="text-brand-gold w-4 h-4" />
                                 Finals MVP (3 points)
                             </label>
                             <Input

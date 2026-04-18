@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle } from 'lucide-react';
+import { AUTH_TAB_TRIGGER_CLASSES } from '@/constants/theme';
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
@@ -124,8 +125,8 @@ export default function Login() {
             <Card className="w-full max-w-md shadow-xl border-t-4 border-t-red-500">
                 <Tabs defaultValue="signin" className="w-full">
                     <TabsList className="grid w-full grid-cols-2 rounded-t-lg rounded-b-none p-0 h-auto">
-                        <TabsTrigger value="signin" className="py-3 font-semibold data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none">Sign In</TabsTrigger>
-                        <TabsTrigger value="register" className="py-3 font-semibold data-[state=active]:text-red-500 data-[state=active]:border-b-2 data-[state=active]:border-red-500 rounded-none">Register</TabsTrigger>
+                        <TabsTrigger value="signin" className={AUTH_TAB_TRIGGER_CLASSES.signIn}>Sign In</TabsTrigger>
+                        <TabsTrigger value="register" className={AUTH_TAB_TRIGGER_CLASSES.register}>Register</TabsTrigger>
                     </TabsList>
                     
                     <CardHeader className="pt-6 pb-2">
@@ -166,7 +167,7 @@ export default function Login() {
                                         className="h-11"
                                     />
                                 </div>
-                                <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-700 mt-6" disabled={isLoading}>
+                                <Button type="submit" className="bg-status-info-strong hover:opacity-90 w-full h-11 mt-6" disabled={isLoading}>
                                     {isLoading ? "Signing in..." : "Sign In"}
                                 </Button>
                             </form>
@@ -184,7 +185,7 @@ export default function Login() {
                                         value={registerName}
                                         onChange={(e) => setRegisterName(e.target.value)}
                                         required 
-                                        className="h-11 border-red-200 focus-visible:ring-red-500"
+                                        className="border-status-danger h-11 focus-visible:ring-status-danger"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -196,7 +197,7 @@ export default function Login() {
                                         value={registerEmail}
                                         onChange={(e) => setRegisterEmail(e.target.value)}
                                         required 
-                                        className="h-11 border-red-200 focus-visible:ring-red-500"
+                                        className="border-status-danger h-11 focus-visible:ring-status-danger"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -208,7 +209,7 @@ export default function Login() {
                                         onChange={(e) => setRegisterPassword(e.target.value)}
                                         required 
                                         minLength={6}
-                                        className="h-11 border-red-200 focus-visible:ring-red-500"
+                                        className="border-status-danger h-11 focus-visible:ring-status-danger"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -220,10 +221,10 @@ export default function Login() {
                                         onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                                         required 
                                         minLength={6}
-                                        className="h-11 border-red-200 focus-visible:ring-red-500"
+                                        className="border-status-danger h-11 focus-visible:ring-status-danger"
                                     />
                                 </div>
-                                <Button type="submit" className="w-full h-11 bg-red-500 hover:bg-red-600 mt-6" disabled={isLoading}>
+                                <Button type="submit" className="bg-status-danger-strong hover:opacity-90 w-full h-11 mt-6" disabled={isLoading}>
                                     {isLoading ? "Creating account..." : "Create Account"}
                                 </Button>
                             </form>

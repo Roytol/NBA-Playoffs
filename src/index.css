@@ -28,6 +28,17 @@
         --chart-3: 197 37% 24%;
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
+        --brand-gold: 45 93% 47%;
+        --status-info-bg: 214 100% 97%;
+        --status-info-bg-strong: 221 91% 60%;
+        --status-info-border: 214 95% 93%;
+        --status-info-fg: 221 83% 53%;
+        --status-info-fg-strong: 224 76% 48%;
+        --status-danger-bg: 0 86% 97%;
+        --status-danger-bg-strong: 0 84.2% 60.2%;
+        --status-danger-border: 0 93% 94%;
+        --status-danger-fg: 0 74% 42%;
+        --status-danger-fg-strong: 0 70% 35%;
         --radius: 0.5rem;
         --sidebar-background: 0 0% 98%;
         --sidebar-foreground: 240 5.3% 26.1%;
@@ -64,6 +75,17 @@
         --chart-3: 30 80% 55%;
         --chart-4: 280 65% 60%;
         --chart-5: 340 75% 55%;
+        --brand-gold: 45 93% 47%;
+        --status-info-bg: 214 100% 97%;
+        --status-info-bg-strong: 221 91% 60%;
+        --status-info-border: 214 95% 93%;
+        --status-info-fg: 221 83% 53%;
+        --status-info-fg-strong: 224 76% 48%;
+        --status-danger-bg: 0 86% 97%;
+        --status-danger-bg-strong: 0 84.2% 60.2%;
+        --status-danger-border: 0 93% 94%;
+        --status-danger-fg: 0 74% 42%;
+        --status-danger-fg-strong: 0 70% 35%;
         --sidebar-background: 240 5.9% 10%;
         --sidebar-foreground: 240 4.8% 95.9%;
         --sidebar-primary: 224.3 76.3% 48%;
@@ -84,5 +106,69 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    .text-brand-gold {
+        color: hsl(var(--brand-gold));
+    }
+
+    .text-status-info {
+        color: hsl(var(--status-info-fg));
+    }
+
+    .text-status-info-strong {
+        color: hsl(var(--status-info-fg-strong));
+    }
+
+    .text-status-danger {
+        color: hsl(var(--status-danger-fg));
+    }
+
+    .text-status-danger-strong {
+        color: hsl(var(--status-danger-fg-strong));
+    }
+
+    .bg-status-info-strong {
+        background-color: hsl(var(--status-info-bg-strong));
+    }
+
+    .bg-status-danger-strong {
+        background-color: hsl(var(--status-danger-bg-strong));
+    }
+
+    .border-status-info {
+        border-color: hsl(var(--status-info-border));
+    }
+
+    .border-status-danger {
+        border-color: hsl(var(--status-danger-border));
+    }
+
+    .ring-status-danger {
+        --tw-ring-color: hsl(var(--status-danger-bg-strong));
+    }
+
+    .surface-status-info {
+        background-color: hsl(var(--status-info-bg));
+        border-color: hsl(var(--status-info-border));
+    }
+
+    .surface-status-danger {
+        background-color: hsl(var(--status-danger-bg));
+        border-color: hsl(var(--status-danger-border));
+    }
+
+    .badge-status-info {
+        background-color: hsl(var(--status-info-border));
+        border-color: hsl(var(--status-info-border));
+        color: hsl(var(--status-info-fg-strong));
+    }
+
+    .badge-status-danger {
+        background-color: hsl(var(--status-danger-border));
+        border-color: hsl(var(--status-danger-border));
+        color: hsl(var(--status-danger-fg-strong));
     }
 }

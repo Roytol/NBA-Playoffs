@@ -12,6 +12,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getRoundDisplayLabel, PREDICTION_TABS, SETTINGS_KEYS } from "@/constants/app";
 
 export default function UserPredictionsPage() {
     const [searchParams] = useSearchParams();
@@ -67,13 +68,12 @@ export default function UserPredictionsPage() {
                 Prediction.filter({ user_email: userId }),
                 Series.list(),
                 Settings.list(),
-                Settings.list(),
                 Leaderboard.filter({ player_id: userId })
             ]);
 
             // Get deadlines from settings
-            const championDeadline = settings.find(s => s.setting_name === "champion_prediction_deadline")?.setting_value;
-            const mvpDeadline = settings.find(s => s.setting_name === "mvp_prediction_deadline")?.setting_value;
+            const championDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.CHAMPION_PREDICTION_DEADLINE)?.setting_value;
+            const mvpDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE)?.setting_value;
 
             // Filter predictions based on deadlines
             const validPredictions = predictionsData.filter(p => {
@@ -190,7 +190,7 @@ export default function UserPredictionsPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 ml-7">
                         <div className="text-base sm:text-lg font-semibold">{userData.name}</div>
                         <div className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
-                            <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
+                            <Trophy className="text-brand-gold w-3 h-3 sm:w-4 sm:h-4" />
                             Total points: {userData.points}
                         </div>
                     </div>
@@ -224,23 +224,19 @@ export default function UserPredictionsPage() {
 
             <Tabs defaultValue="all" onValueChange={setActiveTab}>
                 <TabsList className="mb-3 sm:mb-4 w-full overflow-x-auto flex-nowrap">
-                    <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-                    <TabsTrigger value="play_in" className="text-xs">Play-In</TabsTrigger>
-                    <TabsTrigger value="first_round" className="text-xs">First</TabsTrigger>
-                    <TabsTrigger value="second_round" className="text-xs">Second</TabsTrigger>
-                    <TabsTrigger value="conference_finals" className="text-xs">Conf</TabsTrigger>
-                    <TabsTrigger value="finals" className="text-xs">Finals</TabsTrigger>
-                    <TabsTrigger value="champion" className="text-xs">Champ</TabsTrigger>
-                    <TabsTrigger value="finals_mvp" className="text-xs">MVP</TabsTrigger>
+                    {PREDICTION_TABS.map((tab) => (
+                        <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
+                            {tab.label}
+                        </TabsTrigger>
+                    ))}
                 </TabsList>
 
                 <TabsContent value={activeTab}>
                     <Card>
                         <CardHeader className="py-2 px-3 sm:py-4 sm:px-6">
                             <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
-                                {activeTab === "all" ? "All Predictions" :
-                                    activeTab.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") + " Predictions"}
+                                <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
+                                {activeTab === "all" ? "All Predictions" : `${getRoundDisplayLabel(activeTab)} Predictions`}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
@@ -270,12 +266,12 @@ export default function UserPredictionsPage() {
                                                     <TableCell className="py-2 px-2 sm:px-4">
                                                         {prediction.prediction_type === "champion" ? (
                                                             <div className="flex items-center gap-1 text-xs sm:text-sm">
-                                                                <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
+                                                                <Trophy className="text-brand-gold w-3 h-3 sm:w-4 sm:h-4" />
                                                                 <span>Champion</span>
                                                             </div>
                                                         ) : prediction.prediction_type === "finals_mvp" ? (
                                                             <div className="flex items-center gap-1 text-xs sm:text-sm">
-                                                                <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
+                                                                <Star className="text-brand-gold w-3 h-3 sm:w-4 sm:h-4" />
                                                                 <span>Finals MVP</span>
                                                             </div>
                                                         ) : seriesInfo ? (

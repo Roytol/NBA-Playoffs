@@ -12,6 +12,7 @@ import { useLiveScores } from "@/hooks/useLiveScores";
 import { useAuth } from "@/lib/AuthContext";
 import TeamLogo from "@/components/common/TeamLogo";
 import { formatLiveGameDetail } from "@/utils";
+import { ROUND_SORT_ORDER } from "@/constants/app";
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -105,8 +106,6 @@ export default function Dashboard() {
             return acc;
         }, { active: [], closed: [], completed: [] });
 
-        const ROUND_ORDER = { play_in: 0, first_round: 1, second_round: 2, conference_finals: 3, finals: 4 };
-
         // Sort active series by deadline (earliest first)
         categorized.active.sort((a, b) =>
             new Date(a.prediction_deadline) - new Date(b.prediction_deadline)
@@ -114,7 +113,7 @@ export default function Dashboard() {
 
         // Sort closed series by round order (play-in → finals)
         categorized.closed.sort((a, b) =>
-            (ROUND_ORDER[a.round] ?? 99) - (ROUND_ORDER[b.round] ?? 99)
+            (ROUND_SORT_ORDER[a.round] ?? 99) - (ROUND_SORT_ORDER[b.round] ?? 99)
         );
 
         // Sort completed series by date (latest first)
@@ -167,12 +166,12 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2">
                         {/* Live indicator */}
                         {hasLiveGame && (
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200">
+                            <div className="surface-status-danger flex items-center gap-1.5 px-2.5 py-1 rounded-full border">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                    <span className="bg-status-danger-strong relative inline-flex rounded-full h-2 w-2"></span>
                                 </span>
-                                <span className="text-xs font-medium text-red-700">LIVE</span>
+                                <span className="text-status-danger text-xs font-medium">LIVE</span>
                             </div>
                         )}
 
@@ -197,7 +196,7 @@ export default function Dashboard() {
                         className="mt-2"
                     >
                         {syncing && (
-                            <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-1.5">
+                            <div className="surface-status-info text-status-info flex items-center gap-2 text-xs rounded-lg border px-3 py-1.5">
                                 <RefreshCw className="h-3 w-3 animate-spin" />
                                 Syncing playoff data...
                             </div>
@@ -218,7 +217,7 @@ export default function Dashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-8 text-center"
+                        className="surface-status-info rounded-lg border p-4 sm:p-6 mb-4 sm:mb-8 text-center"
                     >
                         <h2 className="text-base sm:text-lg font-semibold mb-2">Sign in to make predictions</h2>
                         <p className="text-sm text-gray-600 mb-4">Join the competition and track your predictions</p>
@@ -258,7 +257,7 @@ export default function Dashboard() {
                     className="text-center py-8 sm:py-12"
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white shadow-md">
-                        <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-blue-600"></div>
+                        <div className="text-status-info animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-current"></div>
                         <span className="text-sm text-gray-600">{loadingMessage}</span>
                     </div>
                 </motion.div>
@@ -277,7 +276,7 @@ export default function Dashboard() {
                                 exit={{ opacity: 0, y: -20 }}
                             >
                                 <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-                                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+                                    <Trophy className="text-status-info w-4 h-4 sm:w-5 sm:h-5" />
                                     Open for Predictions
                                 </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
@@ -427,7 +426,7 @@ export default function Dashboard() {
                             className="fixed bottom-4 right-4 z-50 w-64 sm:w-72"
                         >
                             <div className="bg-white/90 backdrop-blur-md border border-red-100 shadow-2xl rounded-2xl overflow-hidden">
-                                <div className="bg-red-500 px-4 py-2 flex items-center justify-between">
+                                <div className="bg-status-danger-strong px-4 py-2 flex items-center justify-between text-white">
                                     <div className="flex items-center gap-2">
                                         <span className="relative flex h-2 w-2">
                                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -443,7 +442,7 @@ export default function Dashboard() {
                                             <div className="flex items-center justify-between text-xs font-medium text-gray-400 px-1">
                                                 <span>{game.period ? "LIVE" : game.status}</span>
                                                 {game.period && (
-                                                    <span className="text-red-500 font-bold uppercase tracking-tighter">
+                                                    <span className="text-status-danger font-bold uppercase tracking-tighter">
                                                         {formatLiveGameDetail(game)}
                                                     </span>
                                                 )}

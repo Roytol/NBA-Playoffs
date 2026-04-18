@@ -18,27 +18,14 @@ import { forceRefreshAll, getTeamNames } from "@/api/nbaApi";
 import { syncPlayoffSeries } from "@/api/nbaSync";
 import { supabase } from "@/lib/db";
 import { useToast } from "@/components/ui/use-toast";
-
-// Default scoring rules (fallback if none in DB yet)
-const DEFAULT_SCORING_RULES = {
-    play_in:           { winner: 1, games: 0 },
-    first_round:       { winner: 1, games: 2 },
-    second_round:      { winner: 2, games: 2 },
-    conference_finals: { winner: 3, games: 3 },
-    finals:            { winner: 4, games: 4 },
-    champion:          { winner: 5, games: null },
-    finals_mvp:        { winner: 3, games: null },
-};
-
-const ROUND_LABELS = {
-    play_in:           "Play-In Games",
-    first_round:       "First Round",
-    second_round:      "Conference Semifinals",
-    conference_finals: "Conference Finals",
-    finals:            "NBA Finals",
-    champion:          "Champion Pick (Pre-playoffs)",
-    finals_mvp:        "Finals MVP Pick (Pre-finals)",
-};
+import {
+    APP_DELAYS,
+    CURRENT_SEASON,
+    DEFAULT_SCORING_RULES,
+    ROUND_LABELS,
+    SETTINGS_KEYS,
+} from "@/constants/app";
+import { ADMIN_SUMMARY_COLOR_CLASSES, DANGER_GHOST_BUTTON_CLASS } from "@/constants/theme";
 
 
 export default function AdminPage() {
@@ -49,7 +36,7 @@ export default function AdminPage() {
     const [allUsers, setAllUsers] = useState([]);
     const [allSeries, setAllSeries] = useState([]);
     const [allPredictions, setAllPredictions] = useState([]);
-    const [activeSeason, setActiveSeason] = useState("2025");
+    const [activeSeason, setActiveSeason] = useState(String(CURRENT_SEASON));
 
     // API Sync
     const [apiSyncing, setApiSyncing] = useState(false);
@@ -111,16 +98,16 @@ export default function AdminPage() {
 
             // Parse settings
             for (const s of (settingsData || [])) {
-                if (s.setting_name === "champion_prediction_deadline") setChampionDeadline(s.setting_value);
-                if (s.setting_name === "mvp_prediction_start") setMvpStart(s.setting_value);
-                if (s.setting_name === "mvp_prediction_deadline") setMvpDeadline(s.setting_value);
-                if (s.setting_name === "champion_mvp_winners") {
+                if (s.setting_name === SETTINGS_KEYS.CHAMPION_PREDICTION_DEADLINE) setChampionDeadline(s.setting_value);
+                if (s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_START) setMvpStart(s.setting_value);
+                if (s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE) setMvpDeadline(s.setting_value);
+                if (s.setting_name === SETTINGS_KEYS.CHAMPION_MVP_WINNERS) {
                     try { setChampionSettings(JSON.parse(s.setting_value)); } catch(e) {}
                 }
-                if (s.setting_name === "scoring_rules") {
+                if (s.setting_name === SETTINGS_KEYS.SCORING_RULES) {
                     try { setScoringRules(JSON.parse(s.setting_value)); } catch(e) {}
                 }
-                if (s.setting_name === "active_season") setActiveSeason(s.setting_value);
+                if (s.setting_name === SETTINGS_KEYS.ACTIVE_SEASON) setActiveSeason(s.setting_value);
             }
         } catch (err) {
             console.error("Failed to load admin data:", err);
@@ -135,7 +122,7 @@ export default function AdminPage() {
     const endProcessing = (successMessage = null) => {
         if (successMessage) {
             setProcessingState(prev => ({ ...prev, message: successMessage }));
-            setTimeout(() => setProcessingState({ isProcessing: false, operation: "", message: "" }), 2000);
+            setTimeout(() => setProcessingState({ isProcessing: false, operation: "", message: "" }), APP_DELAYS.PROCESSING_COMPLETE);
         } else {
             setProcessingState({ isProcessing: false, operation: "", message: "" });
         }
@@ -154,7 +141,7 @@ export default function AdminPage() {
         } catch (err) {
             setApiSyncMessage(`Sync failed: ${err.message}`);
             toast({ title: "Sync failed", description: err.message, variant: "destructive" });
-            setTimeout(() => { setApiSyncMessage(""); setApiSyncing(false); }, 3000);
+            setTimeout(() => { setApiSyncMessage(""); setApiSyncing(false); }, APP_DELAYS.TRANSIENT_MESSAGE);
         }
     };
 
@@ -171,9 +158,9 @@ export default function AdminPage() {
         try {
             startProcessing(`deadline-${type}`, `Updating ${type} time...`);
             let name = "";
-            if (type === "champion") name = "champion_prediction_deadline";
-            else if (type === "mvp") name = "mvp_prediction_deadline";
-            else if (type === "mvp_start") name = "mvp_prediction_start";
+            if (type === "champion") name = SETTINGS_KEYS.CHAMPION_PREDICTION_DEADLINE;
+            else if (type === "mvp") name = SETTINGS_KEYS.MVP_PREDICTION_DEADLINE;
+            else if (type === "mvp_start") name = SETTINGS_KEYS.MVP_PREDICTION_START;
             
             await upsertSetting(name, newValue);
             
@@ -192,7 +179,7 @@ export default function AdminPage() {
     const saveChampionMVPSettings = async () => {
         try {
             startProcessing("winners", "Saving champion and MVP...");
-            await upsertSetting("champion_mvp_winners", JSON.stringify(championSettings));
+            await upsertSetting(SETTINGS_KEYS.CHAMPION_MVP_WINNERS, JSON.stringify(championSettings));
             endProcessing();
             toast({ title: "Champion & MVP winners saved 🏆", description: "Scoring trigger will auto-score predictions." });
         } catch (err) {
@@ -204,10 +191,10 @@ export default function AdminPage() {
     const saveScoringRules = async () => {
         setSavingRules(true);
         try {
-            await upsertSetting("scoring_rules", JSON.stringify(scoringRules));
+            await upsertSetting(SETTINGS_KEYS.SCORING_RULES, JSON.stringify(scoringRules));
             toast({ title: "Scoring rules saved ✅" });
             setRulesSaved(true);
-            setTimeout(() => setRulesSaved(false), 3000);
+            setTimeout(() => setRulesSaved(false), APP_DELAYS.TRANSIENT_MESSAGE);
         } catch (err) {
             toast({ title: "Failed to save rules", description: err.message, variant: "destructive" });
         } finally {
@@ -298,7 +285,7 @@ export default function AdminPage() {
 
             // Step 5: Update active season
             log(`🗓️ Setting active season to ${newSeasonYear}...`);
-            await upsertSetting("active_season", newSeasonYear);
+            await upsertSetting(SETTINGS_KEYS.ACTIVE_SEASON, newSeasonYear);
             setActiveSeason(newSeasonYear);
             log(`✅ Active season is now ${newSeasonYear}!`);
 
@@ -313,7 +300,7 @@ export default function AdminPage() {
 
     if (loading) return (
         <div className="flex h-[50vh] items-center justify-center p-8 gap-3">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <Loader2 className="text-status-info h-6 w-6 animate-spin" />
             <span className="text-muted-foreground">Loading admin dashboard...</span>
         </div>
     );
@@ -321,9 +308,9 @@ export default function AdminPage() {
     if (error) {
         return (
             <div className="flex flex-col h-[50vh] items-center justify-center p-8 gap-4">
-                <ShieldAlert className="h-16 w-16 text-red-500" />
+                <ShieldAlert className="text-status-danger h-16 w-16" />
                 <h1 className="text-2xl font-bold">Admin Area</h1>
-                <p className="text-red-600">{error}</p>
+                <p className="text-status-danger">{error}</p>
                 <Button onClick={() => window.location.href = '/'}>Return Home</Button>
             </div>
         );
@@ -362,18 +349,18 @@ export default function AdminPage() {
                     <Card>
                         <CardHeader className="bg-slate-50 border-b pb-4">
                             <CardTitle className="text-lg flex items-center gap-2">
-                                <RefreshCw className="h-5 w-5 text-blue-600" />
+                                <RefreshCw className="text-status-info h-5 w-5" />
                                 API Sync
                             </CardTitle>
                             <CardDescription>Force-refresh all datasets from BallDontLie without waiting for cache expiry.</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-4 space-y-3">
                             {apiSyncMessage && (
-                                <Alert className="bg-blue-50 border-blue-200">
-                                    <AlertDescription className="text-blue-800 text-sm">{apiSyncMessage}</AlertDescription>
+                                <Alert className="surface-status-info border">
+                                    <AlertDescription className="text-status-info-strong text-sm">{apiSyncMessage}</AlertDescription>
                                 </Alert>
                             )}
-                            <Button onClick={handleApiSync} disabled={apiSyncing} className="w-full bg-blue-600 hover:bg-blue-700">
+                            <Button onClick={handleApiSync} disabled={apiSyncing} className="bg-status-info-strong w-full hover:opacity-90">
                                 <RefreshCw className={`mr-2 h-4 w-4 ${apiSyncing ? "animate-spin" : ""}`} />
                                 {apiSyncing ? "Syncing..." : "Force API Sync"}
                             </Button>
@@ -466,7 +453,7 @@ export default function AdminPage() {
                                                 </Button>
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 h-8 w-8 p-0"
+                                                <Button variant="ghost" size="sm" className={`${DANGER_GHOST_BUTTON_CLASS} h-8 w-8 p-0`}
                                                     onClick={() => handleDeleteUser(u.email)} disabled={u.email === user?.email}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -570,7 +557,7 @@ export default function AdminPage() {
                                                         <span className="text-gray-400 text-xs">N/A</span>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-center font-semibold text-blue-600">
+                                                <TableCell className="text-status-info text-center font-semibold">
                                                     {(rules.winner ?? 0) + (rules.games ?? 0)}
                                                 </TableCell>
                                             </TableRow>
@@ -589,8 +576,8 @@ export default function AdminPage() {
                                     </span>
                                 )}
                             </div>
-                            <Alert className="mt-4 bg-blue-50 border-blue-200">
-                                <AlertTriangle className="h-4 w-4 text-blue-600" />
+                            <Alert className="surface-status-info mt-4 border">
+                                <AlertTriangle className="text-status-info h-4 w-4" />
                                 <AlertDescription className="text-blue-800 text-xs">
                                     Saving updates the database immediately. The Postgres trigger reads these values on the next series completion — no SQL re-run needed.
                                 </AlertDescription>
@@ -617,7 +604,7 @@ export default function AdminPage() {
                             {/* Current season summary */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {[
-                                    { label: "Active Season", value: activeSeason, color: "bg-blue-50 text-blue-800" },
+                                    { label: "Active Season", value: activeSeason, color: ADMIN_SUMMARY_COLOR_CLASSES.activeSeason },
                                     { label: "Total Players", value: allUsers.length, color: "bg-emerald-50 text-emerald-800" },
                                     { label: "Series Played", value: allSeries.filter(s => s.status === "completed").length, color: "bg-purple-50 text-purple-800" },
                                     { label: "Predictions Made", value: allPredictions.length, color: "bg-amber-50 text-amber-800" },
@@ -671,7 +658,7 @@ export default function AdminPage() {
             {processingState.isProcessing && (
                 <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 text-center">
-                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-blue-600" />
+                        <Loader2 className="text-status-info h-8 w-8 animate-spin mx-auto mb-3" />
                         <p className="text-sm text-gray-700">{processingState.message || "Processing..."}</p>
                     </div>
                 </div>

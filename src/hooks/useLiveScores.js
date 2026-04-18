@@ -7,8 +7,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getLiveGames } from '@/api/nbaApi';
 import { updateLiveScores } from '@/api/nbaSync';
 import { supabase } from '@/lib/supabaseClient';
+import { APP_DELAYS } from '@/constants/app';
 
-const POLL_INTERVAL = 60 * 1000; // 60 seconds
+const POLL_INTERVAL = APP_DELAYS.LIVE_POLL;
 
 export function useLiveScores(activeSeries = [], onRealtimeUpdate = null) {
     const [liveGames, setLiveGames] = useState([]);

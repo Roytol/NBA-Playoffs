@@ -1,10 +1,9 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import TeamLogo from "../common/TeamLogo";
+import { BRACKET_ROUND_KEYS, ROUND_LABELS } from "@/constants/app";
 
 export default function PlayoffBracket({ series, predictions }) {
-    const rounds = ["first_round", "second_round", "conference_finals", "finals"];
-
     const getSeriesByRound = (round, conference = null) => {
         return series.filter(s =>
             s.round === round &&
@@ -29,7 +28,7 @@ export default function PlayoffBracket({ series, predictions }) {
             <Card className={`p-3 ${seriesData.status === "completed"
                     ? "bg-gray-50"
                     : seriesData.status === "active"
-                        ? "bg-blue-50"
+                        ? "surface-status-info border"
                         : ""
                 }`}>
                 <div className="flex justify-between items-center gap-2">
@@ -69,14 +68,14 @@ export default function PlayoffBracket({ series, predictions }) {
                 <div className="grid grid-cols-4 gap-8">
                     {/* First Round */}
                     <div className="space-y-4">
-                        <h3 className="text-center font-semibold mb-6">First Round</h3>
+                        <h3 className="text-center font-semibold mb-6">{ROUND_LABELS[BRACKET_ROUND_KEYS[0]]}</h3>
                         <div className="space-y-4">
-                            {getSeriesByRound("first_round", "East").map(s => (
+                            {getSeriesByRound(BRACKET_ROUND_KEYS[0], "East").map(s => (
                                 <div key={s.series_id}>{renderSeries(s)}</div>
                             ))}
                         </div>
                         <div className="space-y-4 mt-8">
-                            {getSeriesByRound("first_round", "West").map(s => (
+                            {getSeriesByRound(BRACKET_ROUND_KEYS[0], "West").map(s => (
                                 <div key={s.series_id}>{renderSeries(s)}</div>
                             ))}
                         </div>
@@ -84,14 +83,14 @@ export default function PlayoffBracket({ series, predictions }) {
 
                     {/* Second Round */}
                     <div className="space-y-4 pt-12">
-                        <h3 className="text-center font-semibold mb-6">Conference Semifinals</h3>
+                        <h3 className="text-center font-semibold mb-6">{ROUND_LABELS[BRACKET_ROUND_KEYS[1]]}</h3>
                         <div className="space-y-16">
-                            {getSeriesByRound("second_round", "East").map(s => (
+                            {getSeriesByRound(BRACKET_ROUND_KEYS[1], "East").map(s => (
                                 <div key={s.series_id}>{renderSeries(s)}</div>
                             ))}
                         </div>
                         <div className="space-y-16 mt-8">
-                            {getSeriesByRound("second_round", "West").map(s => (
+                            {getSeriesByRound(BRACKET_ROUND_KEYS[1], "West").map(s => (
                                 <div key={s.series_id}>{renderSeries(s)}</div>
                             ))}
                         </div>
@@ -99,14 +98,14 @@ export default function PlayoffBracket({ series, predictions }) {
 
                     {/* Conference Finals */}
                     <div className="space-y-4 pt-24">
-                        <h3 className="text-center font-semibold mb-6">Conference Finals</h3>
+                        <h3 className="text-center font-semibold mb-6">{ROUND_LABELS[BRACKET_ROUND_KEYS[2]]}</h3>
                         <div className="space-y-32">
-                            {getSeriesByRound("conference_finals", "East").map(s => (
+                            {getSeriesByRound(BRACKET_ROUND_KEYS[2], "East").map(s => (
                                 <div key={s.series_id}>{renderSeries(s)}</div>
                             ))}
                         </div>
                         <div className="space-y-32 mt-8">
-                            {getSeriesByRound("conference_finals", "West").map(s => (
+                            {getSeriesByRound(BRACKET_ROUND_KEYS[2], "West").map(s => (
                                 <div key={s.series_id}>{renderSeries(s)}</div>
                             ))}
                         </div>
@@ -114,9 +113,9 @@ export default function PlayoffBracket({ series, predictions }) {
 
                     {/* Finals */}
                     <div className="space-y-4 pt-48">
-                        <h3 className="text-center font-semibold mb-6">NBA Finals</h3>
+                        <h3 className="text-center font-semibold mb-6">{ROUND_LABELS[BRACKET_ROUND_KEYS[3]]}</h3>
                         <div className="space-y-4">
-                            {getSeriesByRound("finals").map(s => (
+                            {getSeriesByRound(BRACKET_ROUND_KEYS[3]).map(s => (
                                 <div key={s.series_id}>{renderSeries(s)}</div>
                             ))}
                         </div>

@@ -3,26 +3,7 @@ import { Settings } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Trophy, AlertCircle, Clock } from "lucide-react";
-
-const DEFAULT_SCORING_DETAILS = {
-    play_in:           { winner: 1, games: 0,    description: "Play-In Games" },
-    first_round:       { winner: 1, games: 2,    description: "First Round" },
-    second_round:      { winner: 2, games: 2,    description: "Conference Semifinals" },
-    conference_finals: { winner: 3, games: 3,    description: "Conference Finals" },
-    finals:            { winner: 4, games: 4,    description: "NBA Finals" },
-    champion:          { winner: 5, games: null, description: "Champion Pick (Pre-playoffs)" },
-    finals_mvp:        { winner: 3, games: null, description: "Finals MVP Pick (Pre-finals)" },
-};
-
-const ROUND_DESCRIPTIONS = {
-    play_in:           "Play-In Games",
-    first_round:       "First Round",
-    second_round:      "Conference Semifinals",
-    conference_finals: "Conference Finals",
-    finals:            "NBA Finals",
-    champion:          "Champion Pick (Pre-playoffs)",
-    finals_mvp:        "Finals MVP Pick (Pre-finals)",
-};
+import { buildScoringDetails, DEFAULT_SCORING_RULES, SETTINGS_KEYS } from "@/constants/app";
 
 export default function RulesPage() {
     const [scoringDetails, setScoringDetails] = React.useState(null);
@@ -34,31 +15,22 @@ export default function RulesPage() {
 
     const loadRules = async () => {
         try {
-            const settings = await Settings.filter({ setting_name: "scoring_rules" });
+            const settings = await Settings.filter({ setting_name: SETTINGS_KEYS.SCORING_RULES });
             if (settings.length > 0 && settings[0].setting_value) {
                 const parsed = JSON.parse(settings[0].setting_value);
-                // Merge with descriptions since DB only stores point values
-                const merged = {};
-                for (const [key, defaults] of Object.entries(DEFAULT_SCORING_DETAILS)) {
-                    merged[key] = {
-                        ...defaults,
-                        ...(parsed[key] || {}),
-                        description: ROUND_DESCRIPTIONS[key],
-                    };
-                }
-                setScoringDetails(merged);
+                setScoringDetails(buildScoringDetails(parsed));
             } else {
-                setScoringDetails(DEFAULT_SCORING_DETAILS);
+                setScoringDetails(buildScoringDetails(DEFAULT_SCORING_RULES));
             }
         } catch (err) {
             console.error("Failed to load scoring rules:", err);
-            setScoringDetails(DEFAULT_SCORING_DETAILS);
+            setScoringDetails(buildScoringDetails(DEFAULT_SCORING_RULES));
         } finally {
             setLoading(false);
         }
     };
 
-    const details = scoringDetails || DEFAULT_SCORING_DETAILS;
+    const details = scoringDetails || buildScoringDetails(DEFAULT_SCORING_RULES);
 
     return (
         <div className="max-w-4xl mx-auto p-4 sm:p-6">
@@ -69,7 +41,7 @@ export default function RulesPage() {
             <Card className="mb-4 sm:mb-8">
                 <CardHeader className="py-3 px-4 sm:py-4 sm:px-6">
                     <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                        <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
                         Scoring System
                         {loading && <span className="text-xs text-gray-400 font-normal ml-1">(loading...)</span>}
                     </CardTitle>
@@ -86,7 +58,7 @@ export default function RulesPage() {
                                         <>
                                             {rule.winner} pt{rule.winner !== 1 ? "s" : ""} for winner
                                             {rule.games > 0 && (
-                                                <span className="ml-2 text-blue-600">
+                                                <span className="text-status-info ml-2">
                                                     +{rule.games} for exact games
                                                     {" "}
                                                     <span className="text-gray-400">({rule.winner + rule.games} max)</span>

@@ -12,6 +12,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { getRoundGroupLabel, PREDICTION_TABS, SETTINGS_KEYS } from "@/constants/app";
+import { INTERACTIVE_INFO_LINK_CLASS } from "@/constants/theme";
 
 export default function AllPredictionsPage() {
     const [series, setSeries] = React.useState([]);
@@ -41,9 +43,9 @@ export default function AllPredictionsPage() {
             const now = new Date();
 
             // Get deadlines from settings
-            const championDeadline = settings.find(s => s.setting_name === "champion_prediction_deadline")?.setting_value;
-            const mvpDeadline = settings.find(s => s.setting_name === "mvp_prediction_deadline")?.setting_value;
-            const mvpStatus = settings.find(s => s.setting_name === "mvp_prediction_status")?.setting_value;
+            const championDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.CHAMPION_PREDICTION_DEADLINE)?.setting_value;
+            const mvpDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE)?.setting_value;
+            const mvpStatus = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_STATUS)?.setting_value;
 
             // Only keep series where prediction deadline has passed
             const closedSeries = seriesData.filter(s =>
@@ -214,14 +216,11 @@ export default function AllPredictionsPage() {
                 >
                     <Tabs defaultValue="all" onValueChange={setActiveRound}>
                         <TabsList className="mb-4 w-full overflow-x-auto flex-nowrap">
-                            <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
-                            <TabsTrigger value="play_in" className="text-xs sm:text-sm">Play-In</TabsTrigger>
-                            <TabsTrigger value="first_round" className="text-xs sm:text-sm">First</TabsTrigger>
-                            <TabsTrigger value="second_round" className="text-xs sm:text-sm">Second</TabsTrigger>
-                            <TabsTrigger value="conference_finals" className="text-xs sm:text-sm">Conf</TabsTrigger>
-                            <TabsTrigger value="finals" className="text-xs sm:text-sm">Finals</TabsTrigger>
-                            <TabsTrigger value="champion" className="text-xs sm:text-sm">Champ</TabsTrigger>
-                            <TabsTrigger value="finals_mvp" className="text-xs sm:text-sm">MVP</TabsTrigger>
+                            {PREDICTION_TABS.map((tab) => (
+                                <TabsTrigger key={tab.value} value={tab.value} className="text-xs sm:text-sm">
+                                    {tab.label}
+                                </TabsTrigger>
+                            ))}
                         </TabsList>
 
                         <TabsContent value={activeRound}>
@@ -246,16 +245,13 @@ export default function AllPredictionsPage() {
                                                 >
                                                     <CardTitle className="flex items-center justify-between text-base sm:text-lg">
                                                         <div className="flex items-center gap-1 sm:gap-2">
-                                                            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                                                            <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
                                                             {group.seriesInfo ? (
                                                                 <div className="flex items-center gap-1 sm:gap-2 flex-wrap text-sm sm:text-base">
                                                                     <span className="hidden sm:inline">{group.seriesInfo.conference}</span>
                                                                     <span className="sm:hidden">{group.seriesInfo.conference === "East" ? "E" : "W"}</span>
                                                                     {" "}
-                                                                    {group.type === "first_round" ? "1st" :
-                                                                        group.type === "second_round" ? "2nd" :
-                                                                            group.type === "conference_finals" ? "Conf" :
-                                                                                group.type === "play_in" ? "Play-In" : "Finals"}
+                                                                    {getRoundGroupLabel(group.type)}
                                                                     {group.seriesInfo.status === "completed" && (
                                                                         <Badge className="bg-green-100 text-green-800 text-xs p-1 h-auto">
                                                                             {group.seriesInfo.winner} in {group.seriesInfo.games}
@@ -263,7 +259,7 @@ export default function AllPredictionsPage() {
                                                                     )}
                                                                 </div>
                                                             ) : (
-                                                                group.type === "champion" ? "Champion" : "Finals MVP"
+                                                                getRoundGroupLabel(group.type)
                                                             )}
                                                         </div>
                                                         <Badge variant="outline" className="ml-1 text-xs h-5">
@@ -306,7 +302,7 @@ export default function AllPredictionsPage() {
                                                                             <TableCell className="py-2 px-3">
                                                                                 <Link
                                                                                     to={createPageUrl("UserPredictions") + "?id=" + prediction.user_email}
-                                                                                    className="hover:text-blue-600 transition-colors font-medium"
+                                                                                    className={`${INTERACTIVE_INFO_LINK_CLASS} font-medium`}
                                                                                 >
                                                                                     {prediction.user_name}
                                                                                 </Link>

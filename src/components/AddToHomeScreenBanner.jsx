@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Share } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+    APP_DELAYS,
+    HOME_SCREEN_BANNER_DISMISS_DAYS,
+    STORAGE_KEYS,
+    TIME_MS,
+} from '@/constants/app';
 
 /**
  * iOS-only "Add to Home Screen" nudge banner.
@@ -8,13 +14,10 @@ import { motion, AnimatePresence } from 'framer-motion';
  * Shows a bottom sheet on iOS Safari when:
  *  1. User agent is iOS (iPhone/iPad/iPod)
  *  2. App is NOT already running in standalone (home screen) mode
- *  3. User hasn't dismissed it in the last 14 days
+ *  3. User hasn't dismissed it in the configured cooldown window
  *
  * Android/Chrome gets the native install prompt instead — no banner needed.
  */
-
-const DISMISS_KEY = 'hs_banner_dismissed';
-const DISMISS_DAYS = 1;
 
 function isIosSafari() {
     const ua = window.navigator.userAgent;
@@ -29,10 +32,10 @@ function isStandalone() {
 }
 
 function wasDismissedRecently() {
-    const ts = localStorage.getItem(DISMISS_KEY);
+    const ts = localStorage.getItem(STORAGE_KEYS.HOME_SCREEN_BANNER_DISMISSED);
     if (!ts) return false;
     const age = Date.now() - Number(ts);
-    return age < DISMISS_DAYS * 24 * 60 * 60 * 1000;
+    return age < HOME_SCREEN_BANNER_DISMISS_DAYS * TIME_MS.DAY;
 }
 
 export default function AddToHomeScreenBanner() {
@@ -44,12 +47,12 @@ export default function AddToHomeScreenBanner() {
             if (isIosSafari() && !isStandalone() && !wasDismissedRecently()) {
                 setVisible(true);
             }
-        }, 3000);
+        }, APP_DELAYS.HOME_SCREEN_BANNER_SHOW);
         return () => clearTimeout(timer);
     }, []);
 
     const dismiss = () => {
-        localStorage.setItem(DISMISS_KEY, String(Date.now()));
+        localStorage.setItem(STORAGE_KEYS.HOME_SCREEN_BANNER_DISMISSED, String(Date.now()));
         setVisible(false);
     };
 
@@ -79,7 +82,7 @@ export default function AddToHomeScreenBanner() {
                             </p>
                             <p className="text-xs text-gray-500 mt-1 leading-snug">
                                 Tap{' '}
-                                <span className="inline-flex items-center gap-0.5 font-medium text-blue-600">
+                                <span className="text-status-info inline-flex items-center gap-0.5 font-medium">
                                     <Share className="w-3 h-3" />
                                     {' '}Share
                                 </span>

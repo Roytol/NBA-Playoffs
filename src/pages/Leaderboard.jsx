@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/db";
+import { SETTINGS_KEYS } from "@/constants/app";
+import { INTERACTIVE_INFO_LINK_CLASS } from "@/constants/theme";
 
 export default function LeaderboardPage() {
     const [leaderboard, setLeaderboard] = React.useState([]);
@@ -39,7 +41,7 @@ export default function LeaderboardPage() {
     const loadSeasonMeta = async () => {
         try {
             const settings = await Settings.list();
-            const seasonSetting = settings.find(s => s.setting_name === "active_season");
+            const seasonSetting = settings.find(s => s.setting_name === SETTINGS_KEYS.ACTIVE_SEASON);
             if (seasonSetting) setActiveSeason(seasonSetting.setting_value);
 
             // Find distinct past seasons from archived predictions/series
@@ -161,7 +163,7 @@ export default function LeaderboardPage() {
     };
 
     const RankIcon = ({ index }) => {
-        if (index === 0) return <Trophy className="w-5 h-5 text-yellow-500" />;
+        if (index === 0) return <Trophy className="text-brand-gold w-5 h-5" />;
         if (index === 1) return <Medal className="w-5 h-5 text-gray-400" />;
         if (index === 2) return <Medal className="w-5 h-5 text-amber-600" />;
         return <span className="text-sm text-gray-500">{index + 1}</span>;
@@ -217,7 +219,7 @@ export default function LeaderboardPage() {
                     <Card>
                         <CardHeader className="py-3 px-4 sm:py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
                             <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                                <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                                <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
                                 Current Standings
                             </CardTitle>
                             {lastUpdated && (
@@ -246,14 +248,14 @@ export default function LeaderboardPage() {
                                             </TableRow>
                                         ) : leaderboard.map((entry, index) => (
                                             <TableRow key={entry.player_id}
-                                                className={entry.player_id === currentUser?.email ? "bg-blue-50" : ""}>
+                                                className={entry.player_id === currentUser?.email ? "surface-status-info" : ""}>
                                                 <TableCell className="py-2 px-3 sm:px-4 text-xs sm:text-sm">
                                                     <RankIcon index={index} />
                                                 </TableCell>
                                                 <TableCell className="py-2 px-3 sm:px-4 text-xs sm:text-sm">
                                                     <div className="font-medium truncate max-w-[120px] sm:max-w-none flex items-center gap-1.5">
                                                         <Link to={createPageUrl("UserPredictions") + "?id=" + entry.player_id}
-                                                            className={`transition-colors ${entry.hotStreak >= 3 ? 'text-orange-600 hover:text-orange-700 font-bold drop-shadow-sm' : 'hover:text-blue-600'}`}>
+                                                            className={`${entry.hotStreak >= 3 ? 'text-orange-600 hover:text-orange-700 font-bold drop-shadow-sm' : INTERACTIVE_INFO_LINK_CLASS}`}>
                                                             {entry.player_name}
                                                         </Link>
                                                         {entry.hotStreak >= 3 && (
@@ -284,7 +286,7 @@ export default function LeaderboardPage() {
                         <Card>
                             <CardHeader className="py-3 px-4 sm:py-4 sm:px-6">
                                 <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                                    <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
                                     {season} Final Standings
                                 </CardTitle>
                             </CardHeader>

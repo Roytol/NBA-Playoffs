@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { User, Settings } from "@/lib/db";
 import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
 import { useAuth } from "@/lib/AuthContext";
+import { SETTINGS_KEYS } from "@/constants/app";
+import { DANGER_GHOST_BUTTON_CLASS } from "@/constants/theme";
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
@@ -20,7 +22,7 @@ export default function Layout() {
 
     // Load active season label once (lightweight, Settings table)
     React.useEffect(() => {
-        Settings.filter({ setting_name: "active_season" })
+        Settings.filter({ setting_name: SETTINGS_KEYS.ACTIVE_SEASON })
             .then(s => { if (s.length > 0) setActiveSeason(s[0].setting_value); })
             .catch(() => {});
     }, []);
@@ -87,7 +89,7 @@ export default function Layout() {
                                         {user.full_name}
                                     </div>
                                     <div className="text-sm text-gray-500 flex items-center gap-1">
-                                        <Trophy className="w-4 h-4 text-yellow-500" />
+                                        <Trophy className="text-brand-gold w-4 h-4" />
                                 {user?.total_points ?? 0} points
                                     </div>
                                 </div>
@@ -109,7 +111,7 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("Dashboard")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Dashboard"
-                                ? "bg-blue-50 text-blue-700"
+                                ? "surface-status-info text-status-info border"
                                 : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
@@ -120,7 +122,7 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("Predictions")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Predictions"
-                                ? "bg-blue-50 text-blue-700"
+                                ? "surface-status-info text-status-info border"
                                 : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
@@ -131,7 +133,7 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("AllPredictions")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "AllPredictions"
-                                ? "bg-blue-50 text-blue-700"
+                                ? "surface-status-info text-status-info border"
                                 : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
@@ -142,7 +144,7 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("Leaderboard")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Leaderboard"
-                                ? "bg-blue-50 text-blue-700"
+                                ? "surface-status-info text-status-info border"
                                 : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
@@ -153,7 +155,7 @@ export default function Layout() {
                         <Link
                             to={createPageUrl("Rules")}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Rules"
-                                ? "bg-blue-50 text-blue-700"
+                                ? "surface-status-info text-status-info border"
                                 : "text-gray-700 hover:bg-gray-100"
                                 }`}
                             onClick={() => setSidebarOpen(false)}
@@ -165,7 +167,7 @@ export default function Layout() {
                             <Link
                                 to={createPageUrl("Admin")}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Admin"
-                                    ? "bg-blue-50 text-blue-700"
+                                    ? "surface-status-info text-status-info border"
                                     : "text-gray-700 hover:bg-gray-100"
                                     }`}
                                 onClick={() => setSidebarOpen(false)}
@@ -180,7 +182,7 @@ export default function Layout() {
                         <div className="mt-auto p-4 border-t">
                             <Button
                                 variant="ghost"
-                                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className={`w-full justify-start ${DANGER_GHOST_BUTTON_CLASS}`}
                                 onClick={handleLogout}
                             >
                                 <LogOut className="w-5 h-5 mr-2" />
@@ -217,7 +219,7 @@ export default function Layout() {
                     {user && (
                         <div className="flex items-center gap-3">
                             <div className="text-sm text-gray-500 flex items-center gap-1">
-                                <Trophy className="w-4 h-4 text-yellow-500" />
+                                <Trophy className="text-brand-gold w-4 h-4" />
                                 {user?.total_points ?? 0} points
                             </div>
                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">

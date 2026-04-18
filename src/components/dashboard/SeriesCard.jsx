@@ -3,22 +3,14 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Clock, AlertTriangle, History, ChevronDown } from "lucide-react";
+import { Trophy, Clock, History, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
-import { Prediction, User } from "@/lib/db";
+import { Prediction } from "@/lib/db";
 import TeamLogo from "../common/TeamLogo";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 import { getHeadToHeadMatchups } from "@/api/nbaApi";
 import { formatCurrentGameStatus } from "@/utils";
-
-const roundPoints = {
-    play_in: [1, 1],
-    first_round: [1, 3],
-    second_round: [2, 4],
-    conference_finals: [3, 6],
-    finals: [4, 8]
-};
+import { ROUND_POINTS_DISPLAY } from "@/constants/app";
 
 export default function SeriesCard({ series, predictions, user, onPredictionMade }) {
     const { toast } = useToast();
@@ -144,7 +136,7 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
                     <div className="flex items-center gap-2">
                         <Trophy className={`w-4 h-4 sm:w-5 sm:h-5 ${series.status === 'completed'
                                 ? 'text-green-500'
-                                : 'text-yellow-500'
+                                : 'text-brand-gold'
                             }`} />
                         <span>
                             {series.conference && series.conference !== 'Finals' ? `${series.conference} · ` : ''}
@@ -153,10 +145,10 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
                             ).join(" ")}
                         </span>
                         {isLive && (
-                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">
+                            <span className="badge-status-danger flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-xs font-medium">
                                 <span className="relative flex h-1.5 w-1.5">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                                    <span className="bg-status-danger-strong relative inline-flex rounded-full h-1.5 w-1.5"></span>
                                 </span>
                                 LIVE
                             </span>
@@ -212,9 +204,9 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
 
                     {/* Live Game Score */}
                     {isLive && currentGame && (
-                        <div className="bg-red-50 border border-red-200 p-2.5 sm:p-3 rounded-lg">
+                        <div className="surface-status-danger p-2.5 sm:p-3 rounded-lg border">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-medium text-red-700">
+                                <span className="text-status-danger text-xs font-medium">
                                     {formatCurrentGameStatus(currentGame)}
                                 </span>
                             </div>
@@ -234,8 +226,8 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
 
                     {/* Next Game Info (not live, but scheduled) */}
                     {!isLive && currentGame && currentGame.status !== 'Final' && series.status !== 'completed' && (
-                        <div className="bg-blue-50 border border-blue-100 p-2 sm:p-2.5 rounded-lg">
-                            <div className="text-xs text-blue-700">
+                        <div className="surface-status-info p-2 sm:p-2.5 rounded-lg border">
+                            <div className="text-status-info text-xs">
                                 {currentGame.game_number ? `Game ${currentGame.game_number} · ` : ''}
                                 {(() => {
                                     const timeStr = currentGame.datetime || currentGame.status;
@@ -268,15 +260,15 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
                                         <div className="flex justify-center p-2"><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div></div>
                                     ) : h2hData ? (
                                         <div className="space-y-3">
-                                            <div className="flex justify-between items-center px-4 py-2 bg-blue-50 rounded-lg">
+                                            <div className="surface-status-info flex justify-between items-center px-4 py-2 rounded-lg border">
                                                 <div className="text-center">
-                                                    <div className="font-bold text-lg text-blue-900">{h2hData.team1Wins}</div>
-                                                    <div className="text-[10px] uppercase tracking-wider text-blue-600 font-semibold">{series.team1.split(' ').pop()}</div>
+                                                    <div className="text-status-info-strong font-bold text-lg">{h2hData.team1Wins}</div>
+                                                    <div className="text-status-info text-[10px] uppercase tracking-wider font-semibold">{series.team1.split(' ').pop()}</div>
                                                 </div>
                                                 <div className="text-gray-400 text-[10px] uppercase tracking-widest font-bold">VS</div>
                                                 <div className="text-center">
-                                                    <div className="font-bold text-lg text-blue-900">{h2hData.team2Wins}</div>
-                                                    <div className="text-[10px] uppercase tracking-wider text-blue-600 font-semibold">{series.team2.split(' ').pop()}</div>
+                                                    <div className="text-status-info-strong font-bold text-lg">{h2hData.team2Wins}</div>
+                                                    <div className="text-status-info text-[10px] uppercase tracking-wider font-semibold">{series.team2.split(' ').pop()}</div>
                                                 </div>
                                             </div>
                                             {h2hData.games?.length > 0 && (
@@ -306,10 +298,10 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
                     {/* Points Info */}
                     <div className="text-xs sm:text-sm text-gray-500">
                         {isPlayIn ? (
-                            "Points: 1 for correct winner"
+                            `Points: ${ROUND_POINTS_DISPLAY.play_in.winner} for correct winner`
                         ) : (
-                            `Points: ${roundPoints[series.round] ?
-                                `${roundPoints[series.round][0]} for winner, ${roundPoints[series.round][1]} with correct games` :
+                            `Points: ${ROUND_POINTS_DISPLAY[series.round] ?
+                                `${ROUND_POINTS_DISPLAY[series.round].winner} for winner, ${ROUND_POINTS_DISPLAY[series.round].max} total with correct games` :
                                 "TBD"}`
                         )}
                     </div>

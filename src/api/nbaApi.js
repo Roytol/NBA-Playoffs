@@ -8,20 +8,19 @@
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { APP_DELAYS, CURRENT_SEASON, TIME_MS } from '@/constants/app';
 
 const API_BASE = 'https://api.balldontlie.io/v1';
 const API_KEY = import.meta.env.VITE_BALLDONTLIE_API_KEY;
+export { CURRENT_SEASON };
 
 // Cache TTLs in milliseconds
 export const CACHE_TTL = {
-    TEAMS: 24 * 60 * 60 * 1000,            // 24 hours
-    STANDINGS: 30 * 24 * 60 * 60 * 1000,   // 30 days — playoff seeds never change mid-season
-    PLAYOFF_GAMES: 5 * 60 * 1000,           // 5 minutes
-    LIVE_GAMES: 60 * 1000,                  // 60 seconds
+    TEAMS: TIME_MS.DAY,                     // 24 hours
+    STANDINGS: 30 * TIME_MS.DAY,            // 30 days — playoff seeds never change mid-season
+    PLAYOFF_GAMES: 5 * TIME_MS.MINUTE,      // 5 minutes
+    LIVE_GAMES: TIME_MS.MINUTE,             // 60 seconds
 };
-
-// Current NBA season (2025-26 season = season param 2025)
-export const CURRENT_SEASON = 2025;
 
 /**
  * Generic fetch wrapper for BallDontLie API
@@ -106,13 +105,13 @@ async function getFromCacheOrFetch(cacheKey, ttlMs, fetchFn) {
 
         if (lockRecord) {
             const lockAge = Date.now() - new Date(lockRecord.last_synced_at).getTime();
-            if (lockAge < 10000) {
+            if (lockAge < APP_DELAYS.CACHE_LOCK_MAX_AGE) {
                 // Lock is less than 10s old — another client is currently fetching!
                 console.log(`[API Cache] Lock active for ${cacheKey}. Serving stale/waiting...`);
                 if (cached) return cached.data; 
                 
                 // If completely missing, wait 2.5s and retry cache read
-                await new Promise(resolve => setTimeout(resolve, 2500));
+                await new Promise(resolve => setTimeout(resolve, APP_DELAYS.CACHE_LOCK_RETRY));
                 return getFromCacheOrFetch(cacheKey, ttlMs, fetchFn);
             }
         }
@@ -283,7 +282,7 @@ export async function getHeadToHeadMatchups(team1Name, team2Name, season = CURRE
     const sortedNames = [team1Name, team2Name].sort();
     const cacheKey = `h2h_${season}_${sortedNames[0]}_${sortedNames[1]}`.replace(/\s+/g, '');
     
-    const H2H_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days caching since reg-season is over
+    const H2H_TTL = 30 * TIME_MS.DAY; // 30 days caching since reg-season is over
 
     return getFromCacheOrFetch(cacheKey, H2H_TTL, async () => {
         try {
