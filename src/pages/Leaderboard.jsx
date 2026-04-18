@@ -101,10 +101,50 @@ export default function LeaderboardPage() {
                 setCurrentUser(userData);
             } catch (err) { /* not logged in */ }
 
-            const leaderboardData = await Leaderboard.list();
+            const [leaderboardData, allPredictions, allSeries] = await Promise.all([
+                Leaderboard.list(),
+                Prediction.list(),
+                Series.list()
+            ]);
+
             if (!leaderboardData) throw new Error("Failed to load leaderboard data");
 
-            const sorted = [...leaderboardData].sort((a, b) => b.total_points - a.total_points);
+            // Evaluate hot streaks
+            const completedSeriesIds = new Set((allSeries || []).filter(s => s.status === 'completed').map(s => s.series_id || s.id));
+            const userStreaks = {};
+
+            const settledPredictions = (allPredictions || []).filter(p => {
+                if (p.prediction_type === 'champion' || p.prediction_type === 'finals_mvp') {
+                    return p.points_earned > 0; 
+                }
+                return completedSeriesIds.has(p.series_id);
+            });
+
+            const groupedByEmail = {};
+            for (let p of settledPredictions) {
+                if (!groupedByEmail[p.user_email]) groupedByEmail[p.user_email] = [];
+                groupedByEmail[p.user_email].push(p);
+            }
+
+            for (let [email, preds] of Object.entries(groupedByEmail)) {
+                // sort by updated_at descending (most recently resolved first)
+                preds.sort((a,b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+                
+                let streak = 0;
+                for (let p of preds) {
+                    if (p.points_earned > 0) streak++;
+                    else break; // A loss snaps the streak
+                }
+                if (streak >= 3) {
+                    userStreaks[email] = streak;
+                }
+            }
+
+            const sorted = [...leaderboardData].map(entry => ({
+                ...entry,
+                hotStreak: userStreaks[entry.player_id] || 0
+            })).sort((a, b) => b.total_points - a.total_points);
+
             const latest = sorted.reduce((latest, e) => {
                 if (e.last_updated && (!latest || new Date(e.last_updated) > new Date(latest))) return e.last_updated;
                 return latest;
@@ -211,13 +251,18 @@ export default function LeaderboardPage() {
                                                     <RankIcon index={index} />
                                                 </TableCell>
                                                 <TableCell className="py-2 px-3 sm:px-4 text-xs sm:text-sm">
-                                                    <div className="font-medium truncate max-w-[120px] sm:max-w-none">
+                                                    <div className="font-medium truncate max-w-[120px] sm:max-w-none flex items-center gap-1.5">
                                                         <Link to={createPageUrl("UserPredictions") + "?id=" + entry.player_id}
-                                                            className="hover:text-blue-600 transition-colors">
+                                                            className={`transition-colors ${entry.hotStreak >= 3 ? 'text-orange-600 hover:text-orange-700 font-bold drop-shadow-sm' : 'hover:text-blue-600'}`}>
                                                             {entry.player_name}
                                                         </Link>
+                                                        {entry.hotStreak >= 3 && (
+                                                            <span title={`${entry.hotStreak} Playoff Prediction Validations in a row!`} className="cursor-help animate-bounce drop-shadow-md pb-1 text-sm">
+                                                                🔥
+                                                            </span>
+                                                        )}
                                                         {entry.player_id === currentUser?.email && (
-                                                            <Badge className="ml-2 bg-blue-100 text-blue-800 text-xs p-1 h-5">You</Badge>
+                                                            <Badge className="ml-1 bg-blue-100 text-blue-800 text-[10px] uppercase font-bold p-1 h-4 flex items-center">You</Badge>
                                                         )}
                                                     </div>
                                                 </TableCell>

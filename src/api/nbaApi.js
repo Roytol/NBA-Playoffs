@@ -274,6 +274,73 @@ export async function getLiveGames() {
 }
 
 /**
+ * Fetch Head-to-Head regular season matchups between two given teams
+ */
+export async function getHeadToHeadMatchups(team1Name, team2Name, season = CURRENT_SEASON) {
+    if (!team1Name || !team2Name) return null;
+
+    // Stable cache key regardless of arg order
+    const sortedNames = [team1Name, team2Name].sort();
+    const cacheKey = `h2h_${season}_${sortedNames[0]}_${sortedNames[1]}`.replace(/\s+/g, '');
+    
+    const H2H_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days caching since reg-season is over
+
+    return getFromCacheOrFetch(cacheKey, H2H_TTL, async () => {
+        try {
+            const teams = await getTeams();
+            const t1 = teams.find(t => t.full_name === team1Name || t.name === team1Name);
+            const t2 = teams.find(t => t.full_name === team2Name || t.name === team2Name);
+
+            if (!t1 || !t2) return null;
+
+            const matches = await apiFetchAll('/games', {
+                seasons: [season],
+                "team_ids[]": [t1.id, t2.id],
+                postseason: false
+            });
+
+            // Filter exactly games where THESE two played each other
+            const h2hGames = matches.filter(g => 
+                (g.home_team.id === t1.id && g.visitor_team.id === t2.id) ||
+                (g.home_team.id === t2.id && g.visitor_team.id === t1.id)
+            ).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            let team1Wins = 0;
+            let team2Wins = 0;
+
+            const games = h2hGames.map(game => {
+                const isT1Home = game.home_team.id === t1.id;
+                const t1Score = isT1Home ? game.home_team_score : game.visitor_team_score;
+                const t2Score = isT1Home ? game.visitor_team_score : game.home_team_score;
+                
+                if (t1Score > t2Score) team1Wins++;
+                else if (t2Score > t1Score) team2Wins++;
+
+                return {
+                    date: game.date,
+                    team1Score: t1Score,
+                    team2Score: t2Score,
+                    isTeam1Home: isT1Home,
+                    status: game.status
+                };
+            });
+
+            return {
+                team1: team1Name,
+                team2: team2Name,
+                team1Wins,
+                team2Wins,
+                games,
+                totalGames: games.length
+            };
+        } catch (error) {
+            console.error("Failed to fetch head-to-head:", error);
+            return null;
+        }
+    });
+}
+
+/**
  * Get team name list for dropdowns (from cache, with hardcoded fallback)
  */
 export async function getTeamNames() {

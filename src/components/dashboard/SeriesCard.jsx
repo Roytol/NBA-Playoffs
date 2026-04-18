@@ -3,12 +3,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Clock, AlertTriangle } from "lucide-react";
+import { Trophy, Clock, AlertTriangle, History, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { Prediction, User } from "@/lib/db";
 import TeamLogo from "../common/TeamLogo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
+import { getHeadToHeadMatchups } from "@/api/nbaApi";
 
 const roundPoints = {
     play_in: [1, 1],
@@ -25,6 +26,11 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
         games: ""
     });
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    // H2H State
+    const [h2hExpanded, setH2hExpanded] = React.useState(false);
+    const [h2hData, setH2hData] = React.useState(null);
+    const [h2hLoading, setH2hLoading] = React.useState(false);
 
     const existingPrediction = React.useMemo(() => {
         if (!user || !predictions) return null;
@@ -57,6 +63,21 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
         } catch (error) {
             console.error("Error formatting date:", error);
             return "Invalid date";
+        }
+    };
+
+    const toggleH2H = async () => {
+        setH2hExpanded(prev => !prev);
+        if (!h2hData && !h2hLoading && series.team1 && series.team2) {
+            setH2hLoading(true);
+            try {
+                const data = await getHeadToHeadMatchups(series.team1, series.team2);
+                setH2hData(data);
+            } catch (err) {
+                console.error("Failed to load H2H:", err);
+            } finally {
+                setH2hLoading(false);
+            }
         }
     };
 
@@ -225,6 +246,60 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
                                     return timeStr;
                                 })()}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Head to Head Accordion */}
+                    {!isPlayIn && series.team1 && series.team2 && (
+                        <div className="bg-gray-50 border border-gray-100 rounded-lg overflow-hidden">
+                            <button
+                                onClick={toggleH2H}
+                                className="w-full flex items-center justify-between p-3 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <History className="w-4 h-4 text-blue-500" />
+                                    Regular Season Head-to-Head
+                                </span>
+                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${h2hExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                            {h2hExpanded && (
+                                <div className="p-3 border-t border-gray-100 bg-white">
+                                    {h2hLoading ? (
+                                        <div className="flex justify-center p-2"><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div></div>
+                                    ) : h2hData ? (
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center px-4 py-2 bg-blue-50 rounded-lg">
+                                                <div className="text-center">
+                                                    <div className="font-bold text-lg text-blue-900">{h2hData.team1Wins}</div>
+                                                    <div className="text-[10px] uppercase tracking-wider text-blue-600 font-semibold">{series.team1.split(' ').pop()}</div>
+                                                </div>
+                                                <div className="text-gray-400 text-[10px] uppercase tracking-widest font-bold">VS</div>
+                                                <div className="text-center">
+                                                    <div className="font-bold text-lg text-blue-900">{h2hData.team2Wins}</div>
+                                                    <div className="text-[10px] uppercase tracking-wider text-blue-600 font-semibold">{series.team2.split(' ').pop()}</div>
+                                                </div>
+                                            </div>
+                                            {h2hData.games?.length > 0 && (
+                                                <div className="space-y-1.5">
+                                                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Game Results</div>
+                                                    {h2hData.games.map((g, i) => (
+                                                        <div key={i} className="flex justify-between items-center text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-100">
+                                                            <span className="font-medium text-gray-500">{format(new Date(g.date), "MMM d")}</span>
+                                                            <div className="font-mono tracking-tighter text-sm flex gap-2">
+                                                                <span className={g.team1Score > g.team2Score ? "font-bold text-gray-900" : "text-gray-400"}>{g.team1Score}</span>
+                                                                <span className="text-gray-300">-</span>
+                                                                <span className={g.team2Score > g.team1Score ? "font-bold text-gray-900" : "text-gray-400"}>{g.team2Score}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center text-xs text-gray-500 py-2">No matchup data found</div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
