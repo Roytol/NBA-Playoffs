@@ -92,7 +92,6 @@ export default function PlayoffBracket({
     showPredictions = true,
 }) {
     const predictionList = showPredictions ? (predictions || []) : [];
-    const [mobileSection, setMobileSection] = React.useState("east");
 
     const getSeriesByRoundSorted = (round, conference = null) => {
         const filtered = series.filter((s) =>
@@ -202,25 +201,27 @@ export default function PlayoffBracket({
         </p>
     );
 
-    const renderConferenceRoundColumn = (roundKey, gapIdx, conference) => {
+    const renderConferenceRoundColumn = (roundKey, gapIdx, conference, dense = false) => {
         const { pt, gap } = roundColumnSpacing(gapIdx);
+        const densePt = gapIdx === 0 ? "" : gapIdx === 1 ? "pt-2" : "pt-4";
+        const denseGap = gapIdx === 0 ? "space-y-1" : gapIdx === 1 ? "space-y-3" : "space-y-5";
         const side = conference === "East" ? "east" : "west";
         const list = getSeriesByRoundSorted(roundKey, conference);
 
         return (
             <div
-                className={`flex flex-col min-w-0 pl-1 sm:pl-1.5 border-l border-gray-100 first:border-l-0 first:pl-0 ${pt}`}
+                className={`flex flex-col min-w-0 pl-0.5 sm:pl-1 border-l border-gray-100 first:border-l-0 first:pl-0 ${dense ? densePt : pt}`}
             >
-                <h4 className="text-center font-bold text-[8px] sm:text-[9px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 px-0.5 leading-tight line-clamp-2">
+                <h4 className={`text-center font-bold uppercase text-gray-500 px-0.5 leading-tight line-clamp-2 ${dense ? "text-[7px] tracking-[0.06em] mb-1" : "text-[8px] sm:text-[9px] tracking-[0.1em] mb-1.5"}`}>
                     {ROUND_LABELS[roundKey]}
                 </h4>
-                <div className={`${gap} min-w-0`}>
+                <div className={`${dense ? denseGap : gap} min-w-0`}>
                     {list.length === 0 ? (
                         <p className="text-[9px] text-gray-300 text-center py-2 px-0.5">—</p>
                     ) : (
                         list.map((s) => (
                             <div key={seriesKey(s)} className="min-w-0">
-                                {renderSeries(s, { compact: false, side })}
+                                {renderSeries(s, { compact: dense, side })}
                             </div>
                         ))
                     )}
@@ -337,57 +338,47 @@ export default function PlayoffBracket({
                     </div>
                 )}
 
-                <div className="lg:hidden space-y-3 min-w-0">
-                    <div className="grid grid-cols-3 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
-                        <button
-                            type="button"
-                            onClick={() => setMobileSection("east")}
-                            className={`h-8 rounded-md text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${mobileSection === "east"
-                                ? "bg-white text-[#1D428A] shadow-sm"
-                                : "text-gray-500"
-                                }`}
-                        >
-                            East
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setMobileSection("finals")}
-                            className={`h-8 rounded-md text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${mobileSection === "finals"
-                                ? "bg-white text-gray-900 shadow-sm"
-                                : "text-gray-500"
-                                }`}
-                        >
-                            Finals
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setMobileSection("west")}
-                            className={`h-8 rounded-md text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${mobileSection === "west"
-                                ? "bg-white text-[#C8102E] shadow-sm"
-                                : "text-gray-500"
-                                }`}
-                        >
-                            West
-                        </button>
+                <div className="lg:hidden w-full min-w-0">
+                    <div className="grid grid-cols-[1fr_auto_1fr] gap-x-1 mb-2 w-full min-w-0 items-end">
+                        <div className="text-center border-b-2 pb-1 min-w-0" style={{ borderColor: NBA.blue }}>
+                            <p className="text-[8px] font-extrabold uppercase tracking-[0.08em] truncate px-0.5" style={{ color: NBA.blue }}>
+                                Eastern
+                            </p>
+                        </div>
+                        <div className="text-center border-b border-gray-300 pb-1 w-[min(100%,5.25rem)] max-w-full min-w-0 justify-self-center px-0.5">
+                            <Trophy className="w-2.5 h-2.5 text-brand-gold mx-auto mb-0.5" strokeWidth={2} />
+                            <p className="text-[7px] font-extrabold text-gray-900 uppercase tracking-[0.08em] leading-tight">
+                                {ROUND_LABELS[BRACKET_ROUND_KEYS[3]]}
+                            </p>
+                        </div>
+                        <div className="text-center border-b-2 pb-1 min-w-0" style={{ borderColor: NBA.red }}>
+                            <p className="text-[8px] font-extrabold uppercase tracking-[0.08em] truncate px-0.5" style={{ color: NBA.red }}>
+                                Western
+                            </p>
+                        </div>
                     </div>
 
-                    {mobileSection === "east" && renderMobileConference("East", NBA.blue, "Eastern Conference")}
+                    <div className="grid grid-cols-[1fr_auto_1fr] gap-x-1 w-full min-w-0 items-start">
+                        <div className="grid grid-cols-3 gap-x-0.5 min-w-0">
+                            {EAST_ROUND_FLOW.map(({ roundKey, gapIdx }) => (
+                                <React.Fragment key={`east-mobile-${roundKey}`}>
+                                    {renderConferenceRoundColumn(roundKey, gapIdx, "East", true)}
+                                </React.Fragment>
+                            ))}
+                        </div>
 
-                    {mobileSection === "finals" && (
-                        <>
-                            <div className="text-center pb-1 border-b border-gray-200">
-                                <Trophy className="w-3.5 h-3.5 text-brand-gold mx-auto mb-0.5" strokeWidth={2} />
-                                <p className="text-[10px] font-extrabold text-gray-900 uppercase tracking-[0.16em]">
-                                    {ROUND_LABELS[BRACKET_ROUND_KEYS[3]]}
-                                </p>
-                            </div>
-                            <div className="max-w-[12rem] w-full mx-auto min-w-0">
-                                {renderFinalsColumn()}
-                            </div>
-                        </>
-                    )}
+                        <div className="min-w-0 w-full max-w-[5.4rem] justify-self-center self-start">
+                            {renderFinalsColumn()}
+                        </div>
 
-                    {mobileSection === "west" && renderMobileConference("West", NBA.red, "Western Conference")}
+                        <div className="grid grid-cols-3 gap-x-0.5 min-w-0">
+                            {WEST_ROUND_FLOW.map(({ roundKey, gapIdx }) => (
+                                <React.Fragment key={`west-mobile-${roundKey}`}>
+                                    {renderConferenceRoundColumn(roundKey, gapIdx, "West", true)}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="hidden lg:block w-full min-w-0">
