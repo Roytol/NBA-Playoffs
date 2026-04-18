@@ -46,17 +46,21 @@ const AppRoutes = () => {
 };
 
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
 function App() {
 
     return (
-        <AuthProvider>
-            <QueryClientProvider client={queryClientInstance}>
-                <Router>
-                    <AppRoutes />
-                </Router>
-                <Toaster />
-            </QueryClientProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+            <AuthProvider>
+                <QueryClientProvider client={queryClientInstance}>
+                    <Router>
+                        <AppRoutes />
+                    </Router>
+                    <Toaster />
+                </QueryClientProvider>
+            </AuthProvider>
+        </ErrorBoundary>
     )
 }
 

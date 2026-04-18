@@ -697,7 +697,7 @@ export default function PredictionsPage() {
                 >
                     <div className="bg-white p-4 rounded-lg shadow-lg max-w-md w-full mx-4">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                        <p className="text-center text-sm text-gray-700">{submissionMessage || "Saving changes..."}</p>
+                        <p className="text-center text-sm text-gray-700">Saving changes...</p>
                     </div>
                 </motion.div>
             )}

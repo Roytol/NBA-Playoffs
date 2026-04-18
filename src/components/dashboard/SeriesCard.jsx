@@ -294,7 +294,7 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
                                 {isSubmitting ? (
                                     <div className="flex items-center justify-center">
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                        <span>{submissionMessage || "Saving..."}</span>
+                                        <span>Saving...</span>
                                     </div>
                                 ) : (
                                     existingPrediction ? 'Update Prediction' : 'Submit Prediction'
