@@ -9,6 +9,7 @@ import Rules from "@/pages/Rules";
 import Admin from "@/pages/Admin";
 import AllPredictions from "@/pages/AllPredictions";
 import UserPredictions from "@/pages/UserPredictions";
+import PlayoffTree from "@/pages/PlayoffTree";
 import Login from "@/pages/Login";
 import { ROUTES } from "@/routes/paths";
 
@@ -25,6 +26,7 @@ export default function AppRoutes() {
                     <Route path={ROUTES.allPredictions} element={<AllPredictions />} />
                     <Route path={ROUTES.leaderboard} element={<Leaderboard />} />
                     <Route path={ROUTES.rules} element={<Rules />} />
+                    <Route path={ROUTES.playoffTree} element={<PlayoffTree />} />
                     <Route path={ROUTES.userPredictions} element={<UserPredictions />} />
                     <Route path="*" element={<PageNotFound />} />
                 </Route>

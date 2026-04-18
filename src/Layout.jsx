@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, Users } from "lucide-react";
+import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, Users, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
@@ -154,6 +154,17 @@ export default function Layout() {
                         >
                             <Table2 className="w-5 h-5" />
                             Leaderboard
+                        </Link>
+                        <Link
+                            to={createPageUrl("PlayoffTree")}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "PlayoffTree"
+                                ? "surface-status-info text-status-info border"
+                                : "text-gray-700 hover:bg-gray-100"
+                                }`}
+                            onClick={() => setSidebarOpen(false)}
+                        >
+                            <GitBranch className="w-5 h-5" />
+                            Playoff tree
                         </Link>
                         <Link
                             to={createPageUrl("Rules")}

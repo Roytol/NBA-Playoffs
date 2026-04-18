@@ -7,6 +7,7 @@ export const ROUTES = {
     leaderboard: "/Leaderboard",
     rules: "/Rules",
     userPredictions: "/UserPredictions",
+    playoffTree: "/PlayoffTree",
     admin: "/Admin",
 };
 
@@ -17,6 +18,7 @@ const PAGE_ROUTES = {
     Leaderboard: ROUTES.leaderboard,
     Rules: ROUTES.rules,
     UserPredictions: ROUTES.userPredictions,
+    PlayoffTree: ROUTES.playoffTree,
     Admin: ROUTES.admin,
 };
 
