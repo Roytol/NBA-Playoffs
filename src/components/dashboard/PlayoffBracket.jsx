@@ -92,6 +92,7 @@ export default function PlayoffBracket({
     showPredictions = true,
 }) {
     const predictionList = showPredictions ? (predictions || []) : [];
+    const [mobileSection, setMobileSection] = React.useState("east");
 
     const getSeriesByRoundSorted = (round, conference = null) => {
         const filtered = series.filter((s) =>
@@ -336,18 +337,57 @@ export default function PlayoffBracket({
                     </div>
                 )}
 
-                <div className="lg:hidden space-y-5 min-w-0">
-                    {renderMobileConference("East", NBA.blue, "Eastern Conference")}
-                    <div className="text-center pb-1 border-b border-gray-200">
-                        <Trophy className="w-3.5 h-3.5 text-brand-gold mx-auto mb-0.5" strokeWidth={2} />
-                        <p className="text-[10px] font-extrabold text-gray-900 uppercase tracking-[0.16em]">
-                            {ROUND_LABELS[BRACKET_ROUND_KEYS[3]]}
-                        </p>
+                <div className="lg:hidden space-y-3 min-w-0">
+                    <div className="grid grid-cols-3 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1">
+                        <button
+                            type="button"
+                            onClick={() => setMobileSection("east")}
+                            className={`h-8 rounded-md text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${mobileSection === "east"
+                                ? "bg-white text-[#1D428A] shadow-sm"
+                                : "text-gray-500"
+                                }`}
+                        >
+                            East
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setMobileSection("finals")}
+                            className={`h-8 rounded-md text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${mobileSection === "finals"
+                                ? "bg-white text-gray-900 shadow-sm"
+                                : "text-gray-500"
+                                }`}
+                        >
+                            Finals
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setMobileSection("west")}
+                            className={`h-8 rounded-md text-[10px] font-bold uppercase tracking-[0.12em] transition-colors ${mobileSection === "west"
+                                ? "bg-white text-[#C8102E] shadow-sm"
+                                : "text-gray-500"
+                                }`}
+                        >
+                            West
+                        </button>
                     </div>
-                    <div className="max-w-[12rem] w-full mx-auto min-w-0">
-                        {renderFinalsColumn()}
-                    </div>
-                    {renderMobileConference("West", NBA.red, "Western Conference")}
+
+                    {mobileSection === "east" && renderMobileConference("East", NBA.blue, "Eastern Conference")}
+
+                    {mobileSection === "finals" && (
+                        <>
+                            <div className="text-center pb-1 border-b border-gray-200">
+                                <Trophy className="w-3.5 h-3.5 text-brand-gold mx-auto mb-0.5" strokeWidth={2} />
+                                <p className="text-[10px] font-extrabold text-gray-900 uppercase tracking-[0.16em]">
+                                    {ROUND_LABELS[BRACKET_ROUND_KEYS[3]]}
+                                </p>
+                            </div>
+                            <div className="max-w-[12rem] w-full mx-auto min-w-0">
+                                {renderFinalsColumn()}
+                            </div>
+                        </>
+                    )}
+
+                    {mobileSection === "west" && renderMobileConference("West", NBA.red, "Western Conference")}
                 </div>
 
                 <div className="hidden lg:block w-full min-w-0">
