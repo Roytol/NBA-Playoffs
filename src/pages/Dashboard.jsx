@@ -404,6 +404,67 @@ export default function Dashboard() {
                     </AnimatePresence>
                 </motion.div>
             )}
+            {/* Floating Live Games Box */}
+            <AnimatePresence>
+                {(() => {
+                    const activeLiveGames = (liveGames || []).filter(g => 
+                        g.status && 
+                        g.status !== 'Final' && 
+                        !g.status.includes('T') && 
+                        !g.status.includes('Z') &&
+                        !g.status.includes(':00')
+                    );
+                    
+                    if (activeLiveGames.length === 0) return null;
+
+                    return (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                            className="fixed bottom-4 right-4 z-50 w-64 sm:w-72"
+                        >
+                            <div className="bg-white/90 backdrop-blur-md border border-red-100 shadow-2xl rounded-2xl overflow-hidden">
+                                <div className="bg-red-500 px-4 py-2 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                        </span>
+                                        <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Now</span>
+                                    </div>
+                                    <Trophy className="w-3 h-3 text-white/50" />
+                                </div>
+                                <div className="p-3 space-y-3">
+                                    {activeLiveGames.map((game, idx) => (
+                                        <div key={game.id || idx} className="space-y-1">
+                                            <div className="flex items-center justify-between text-xs font-medium text-gray-400 px-1">
+                                                <span>{game.status}</span>
+                                                {game.period && (
+                                                    <span className="text-red-500 font-bold uppercase tracking-tighter">
+                                                        {game.period}{game.period <= 4 ? 'Q' : 'OT'} · {game.time || 'LIVE'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-100">
+                                                <div className="flex flex-col items-center flex-1">
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">{game.home_team?.name || 'Home'}</span>
+                                                    <span className="text-xl font-black text-gray-900 leading-tight">{game.home_team_score}</span>
+                                                </div>
+                                                <div className="px-2 text-[10px] font-bold text-gray-300">VS</div>
+                                                <div className="flex flex-col items-center flex-1">
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">{game.visitor_team?.name || 'Away'}</span>
+                                                    <span className="text-xl font-black text-gray-900 leading-tight">{game.visitor_team_score}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    );
+                })()}
+            </AnimatePresence>
         </motion.div>
     );
 }
