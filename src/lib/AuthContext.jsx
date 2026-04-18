@@ -39,40 +39,53 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
+    // Clean, robust initialization pattern
     useEffect(() => {
+        let isMounted = true;
+
+        // 1. Explicitly initialize session state on mount
+        // This is the official reliable way in React, completely bypassing
+        // the flaky INITIAL_SESSION event from onAuthStateChange.
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+            if (error) {
+                console.error('[Auth] Initial session error:', error);
+                if (isMounted) setIsLoadingAuth(false);
+                return;
+            }
+
+            if (session) {
+                loadAppUser().finally(() => {
+                    if (isMounted) setIsLoadingAuth(false);
+                });
+            } else {
+                if (isMounted) setIsLoadingAuth(false);
+            }
+        });
+
+        // 2. Listen ONLY for subsequent active changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                switch (event) {
-                    case 'INITIAL_SESSION':
-                        // Fires on mount from localStorage — almost instant.
-                        if (session) {
-                            await loadAppUser();
-                        } else {
-                            // No session → user is not logged in, stop loading.
-                            setIsLoadingAuth(false);
-                        }
-                        break;
+            (event, session) => {
+                if (!isMounted) return;
 
-                    case 'SIGNED_IN':
-                        // Fires after a successful login.
-                        await loadAppUser();
-                        break;
-
-                    case 'SIGNED_OUT':
-                        setUser(null);
-                        setIsAuthenticated(false);
-                        setIsLoadingAuth(false);
-                        break;
-
-                    // TOKEN_REFRESHED, USER_UPDATED, PASSWORD_RECOVERY:
-                    // Supabase handles these silently. No UI change needed.
-                    default:
-                        break;
+                if (event === 'SIGNED_IN') {
+                    setIsLoadingAuth(true);
+                    loadAppUser().finally(() => {
+                        if (isMounted) setIsLoadingAuth(false);
+                    });
+                } else if (event === 'SIGNED_OUT') {
+                    setUser(null);
+                    setIsAuthenticated(false);
+                    setIsLoadingAuth(false);
                 }
+                // We completely ignore 'INITIAL_SESSION' here because it's inherently 
+                // subject to race conditions in React 18. Step 1 guarantees initialization.
             }
         );
 
-        return () => subscription.unsubscribe();
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+        };
     }, [loadAppUser]);
 
     const logout = useCallback(async () => {
