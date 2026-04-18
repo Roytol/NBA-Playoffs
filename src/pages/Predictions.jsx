@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { Prediction, Series, Settings } from "@/lib/db";
 import { useAuth } from "@/lib/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,6 +25,14 @@ import { getTeamNames } from "@/api/nbaApi";
 import { useToast } from "@/components/ui/use-toast";
 import { PREDICTION_TABS, ROUND_POINTS_DISPLAY, SETTINGS_KEYS } from "@/constants/app";
 import { NBA_TEAM_NAMES } from "@/constants/nba";
+import {
+    createPrediction,
+    listPredictionsForUser,
+    listSeries,
+    listSettings,
+    redirectToLogin,
+    updatePrediction,
+} from "@/services";
 
 export default function PredictionsPage() {
     const [predictions, setPredictions] = useState([]);
@@ -58,7 +65,7 @@ export default function PredictionsPage() {
 
     const loadMVPStatus = async () => {
         try {
-            const settings = await Settings.list();
+            const settings = await listSettings();
             const mvpStatusSetting = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_STATUS);
             if (mvpStatusSetting) {
                 setMvpStatus(mvpStatusSetting.setting_value);
@@ -79,8 +86,8 @@ export default function PredictionsPage() {
 
         try {
             const [predictionsData, seriesData] = await Promise.all([
-                Prediction.filter({ user_email: user.email }),
-                Series.list()
+                listPredictionsForUser(user.email),
+                listSeries()
             ]);
             setPredictions(predictionsData);
             setSeries(seriesData);
@@ -106,7 +113,7 @@ export default function PredictionsPage() {
     const loadDeadlines = async () => {
         try {
             // Load both deadlines
-            const settings = await Settings.list();
+            const settings = await listSettings();
             const championDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.CHAMPION_PREDICTION_DEADLINE);
             const mvpDeadline = settings.find(s => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE);
 
@@ -138,9 +145,9 @@ export default function PredictionsPage() {
         try {
             const championPred = predictions.find(p => p.prediction_type === "champion");
             if (championPred) {
-                await Prediction.update(championPred.id, { winner: championForm.champion });
+                await updatePrediction(championPred.id, { winner: championForm.champion });
             } else {
-                await Prediction.create({
+                await createPrediction({
                     prediction_type: "champion",
                     winner: championForm.champion,
                     points_earned: 0,
@@ -165,9 +172,9 @@ export default function PredictionsPage() {
         try {
             const mvpPred = predictions.find(p => p.prediction_type === "finals_mvp");
             if (mvpPred) {
-                await Prediction.update(mvpPred.id, { winner: mvpForm.mvp });
+                await updatePrediction(mvpPred.id, { winner: mvpForm.mvp });
             } else {
-                await Prediction.create({
+                await createPrediction({
                     prediction_type: "finals_mvp",
                     winner: mvpForm.mvp,
                     points_earned: 0,
@@ -210,7 +217,7 @@ export default function PredictionsPage() {
                 >
                     <h2 className="text-lg font-semibold mb-2">Sign in to view predictions</h2>
                     <p className="text-gray-600 mb-4 text-sm">You need to be logged in to view your predictions</p>
-                    <Button onClick={() => User.login()}>Sign In</Button>
+                    <Button onClick={() => redirectToLogin()}>Sign In</Button>
                 </motion.div>
             </motion.div>
         );

@@ -1,5 +1,4 @@
 import React from "react";
-import { User, Leaderboard, Settings, Prediction, Series } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,9 +8,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { supabase } from "@/lib/db";
 import { SETTINGS_KEYS } from "@/constants/app";
 import { INTERACTIVE_INFO_LINK_CLASS } from "@/constants/theme";
+import {
+    getCurrentUser,
+    listLeaderboardEntries,
+    listPredictions,
+    listSeries,
+    listSettings,
+    supabase,
+    listUsers,
+} from "@/services";
 
 export default function LeaderboardPage() {
     const [leaderboard, setLeaderboard] = React.useState([]);
@@ -40,7 +47,7 @@ export default function LeaderboardPage() {
 
     const loadSeasonMeta = async () => {
         try {
-            const settings = await Settings.list();
+            const settings = await listSettings();
             const seasonSetting = settings.find(s => s.setting_name === SETTINGS_KEYS.ACTIVE_SEASON);
             if (seasonSetting) setActiveSeason(seasonSetting.setting_value);
 
@@ -78,7 +85,7 @@ export default function LeaderboardPage() {
             }
 
             // Fetch user names
-            const users = await User.list();
+            const users = await listUsers();
             const userMap = Object.fromEntries(users.map(u => [u.email, u.full_name]));
 
             const sorted = Object.entries(userTotals)
@@ -99,14 +106,14 @@ export default function LeaderboardPage() {
         setError(null);
         try {
             try {
-                const userData = await User.me();
+                const userData = await getCurrentUser();
                 setCurrentUser(userData);
             } catch (err) { /* not logged in */ }
 
             const [leaderboardData, allPredictions, allSeries] = await Promise.all([
-                Leaderboard.list(),
-                Prediction.list(),
-                Series.list()
+                listLeaderboardEntries(),
+                listPredictions(),
+                listSeries()
             ]);
 
             if (!leaderboardData) throw new Error("Failed to load leaderboard data");

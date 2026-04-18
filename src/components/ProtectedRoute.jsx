@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { ROUTES } from '@/routes/paths';
 
 const DefaultFallback = () => (
     <div className="fixed inset-0 flex items-center justify-center">
@@ -17,11 +18,11 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, require
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to={ROUTES.login} replace />;
     }
 
     if (requireAdmin && !user?.is_admin) {
-        return <Navigate to="/" replace />;
+        return <Navigate to={ROUTES.dashboard} replace />;
     }
 
     return <Outlet />;

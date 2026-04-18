@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Series, Prediction } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import SeriesCard from "../components/dashboard/SeriesCard";
 import { ChampionPick, FinalsMVPPick } from "../components/dashboard/PrePlayoffPicks";
@@ -13,6 +12,7 @@ import { useAuth } from "@/lib/AuthContext";
 import TeamLogo from "@/components/common/TeamLogo";
 import { formatLiveGameDetail } from "@/utils";
 import { ROUND_SORT_ORDER } from "@/constants/app";
+import { listPredictionsForUser, listSeries, redirectToLogin } from "@/services";
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -52,13 +52,13 @@ export default function Dashboard() {
 
             // Series and user predictions are independent — fetch in parallel
             const [seriesData, predictionsData] = await Promise.all([
-                Series.list().catch(e => {
+                listSeries().catch(e => {
                     console.error("Failed to load series:", e);
                     setError("Failed to load playoff data. Please try refreshing the page.");
                     return [];
                 }),
                 user
-                    ? Prediction.filter({ user_email: user.email }).catch(e => {
+                    ? listPredictionsForUser(user.email).catch(e => {
                         console.error("Failed to load predictions:", e);
                         return [];
                     })
@@ -221,7 +221,7 @@ export default function Dashboard() {
                     >
                         <h2 className="text-base sm:text-lg font-semibold mb-2">Sign in to make predictions</h2>
                         <p className="text-sm text-gray-600 mb-4">Join the competition and track your predictions</p>
-                        <Button onClick={() => User.login()}>Sign In</Button>
+                        <Button onClick={() => redirectToLogin()}>Sign In</Button>
                     </motion.div>
                 )}
 

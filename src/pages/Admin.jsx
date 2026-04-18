@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { User, Settings, Series, Prediction } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -16,7 +15,6 @@ import {
 } from "lucide-react";
 import { forceRefreshAll, getTeamNames } from "@/api/nbaApi";
 import { syncPlayoffSeries } from "@/api/nbaSync";
-import { supabase } from "@/lib/db";
 import { useToast } from "@/components/ui/use-toast";
 import {
     APP_DELAYS,
@@ -26,6 +24,15 @@ import {
     SETTINGS_KEYS,
 } from "@/constants/app";
 import { ADMIN_SUMMARY_COLOR_CLASSES, DANGER_GHOST_BUTTON_CLASS } from "@/constants/theme";
+import {
+    getCurrentUser,
+    listPredictions,
+    listSeries,
+    listSettings,
+    listUsers,
+    supabase,
+    upsertSetting,
+} from "@/services";
 
 
 export default function AdminPage() {
@@ -68,7 +75,7 @@ export default function AdminPage() {
 
     const checkAdmin = async () => {
         try {
-            const userData = await User.me();
+            const userData = await getCurrentUser();
             if (!userData?.is_admin) {
                 setError("Access denied. Admin privileges required.");
                 setLoading(false);
@@ -84,10 +91,10 @@ export default function AdminPage() {
     const loadAllData = async () => {
         try {
             const [usersData, seriesData, predictionsData, settingsData, teams] = await Promise.all([
-                User.list(),
-                Series.list(),
-                Prediction.list(),
-                Settings.list(),
+                listUsers(),
+                listSeries(),
+                listPredictions(),
+                listSettings(),
                 getTeamNames().catch(() => []),
             ]);
 
@@ -142,15 +149,6 @@ export default function AdminPage() {
             setApiSyncMessage(`Sync failed: ${err.message}`);
             toast({ title: "Sync failed", description: err.message, variant: "destructive" });
             setTimeout(() => { setApiSyncMessage(""); setApiSyncing(false); }, APP_DELAYS.TRANSIENT_MESSAGE);
-        }
-    };
-
-    const upsertSetting = async (name, value) => {
-        const existing = await Settings.filter({ setting_name: name });
-        if (existing.length > 0) {
-            await Settings.update(existing[0].id, { setting_value: value });
-        } else {
-            await Settings.create({ setting_name: name, setting_value: value });
         }
     };
 

@@ -1,5 +1,7 @@
+import { getPageRoute } from "@/routes/paths";
+
 export function createPageUrl(pageName: string) {
-    return '/' + pageName.replace(/ /g, '-');
+    return getPageRoute(pageName);
 }
 
 function normalizeLiveClock(time?: string) {

@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Prediction, Series, Settings, Leaderboard } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +12,13 @@ import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getRoundDisplayLabel, PREDICTION_TABS, SETTINGS_KEYS } from "@/constants/app";
+import {
+    listLeaderboardEntries,
+    listLeaderboardEntriesByFilters,
+    listPredictionsForUser,
+    listSeries,
+    listSettings,
+} from "@/services";
 
 export default function UserPredictionsPage() {
     const [searchParams] = useSearchParams();
@@ -33,7 +39,7 @@ export default function UserPredictionsPage() {
 
     const loadAllUsers = async () => {
         try {
-            const leaderboardData = await Leaderboard.list();
+            const leaderboardData = await listLeaderboardEntries();
             setAllUsers(leaderboardData);
         } catch (err) {
             console.error("Error loading users:", err);
@@ -65,10 +71,10 @@ export default function UserPredictionsPage() {
                 settings,
                 leaderboardData
             ] = await Promise.all([
-                Prediction.filter({ user_email: userId }),
-                Series.list(),
-                Settings.list(),
-                Leaderboard.filter({ player_id: userId })
+                listPredictionsForUser(userId),
+                listSeries(),
+                listSettings(),
+                listLeaderboardEntriesByFilters({ player_id: userId })
             ]);
 
             // Get deadlines from settings

@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trophy, Clock, History, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
-import { Prediction } from "@/lib/db";
 import TeamLogo from "../common/TeamLogo";
 import { useToast } from "@/components/ui/use-toast";
 import { getHeadToHeadMatchups } from "@/api/nbaApi";
 import { formatCurrentGameStatus } from "@/utils";
 import { ROUND_POINTS_DISPLAY } from "@/constants/app";
+import { createPrediction, updatePrediction } from "@/services";
 
 export default function SeriesCard({ series, predictions, user, onPredictionMade }) {
     const { toast } = useToast();
@@ -84,13 +84,13 @@ export default function SeriesCard({ series, predictions, user, onPredictionMade
             const isUpdate = !!existingPrediction;
 
             if (isUpdate) {
-                await Prediction.update(existingPrediction.id, {
+                await updatePrediction(existingPrediction.id, {
                     winner: predictionData.winner,
                     games: gamesValue,
                 });
             } else {
                 if (!series.series_id) throw new Error("Invalid series ID");
-                await Prediction.create({
+                await createPrediction({
                     series_id: series.series_id,
                     winner: predictionData.winner,
                     games: gamesValue,

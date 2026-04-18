@@ -1,9 +1,9 @@
 import React from "react";
-import { Settings } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Trophy, AlertCircle, Clock } from "lucide-react";
 import { buildScoringDetails, DEFAULT_SCORING_RULES, SETTINGS_KEYS } from "@/constants/app";
+import { getSettingValue } from "@/services";
 
 export default function RulesPage() {
     const [scoringDetails, setScoringDetails] = React.useState(null);
@@ -15,9 +15,9 @@ export default function RulesPage() {
 
     const loadRules = async () => {
         try {
-            const settings = await Settings.filter({ setting_name: SETTINGS_KEYS.SCORING_RULES });
-            if (settings.length > 0 && settings[0].setting_value) {
-                const parsed = JSON.parse(settings[0].setting_value);
+            const scoringRulesValue = await getSettingValue(SETTINGS_KEYS.SCORING_RULES);
+            if (scoringRulesValue) {
+                const parsed = JSON.parse(scoringRulesValue);
                 setScoringDetails(buildScoringDetails(parsed));
             } else {
                 setScoringDetails(buildScoringDetails(DEFAULT_SCORING_RULES));

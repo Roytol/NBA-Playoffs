@@ -11,7 +11,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { User, supabase } from '@/lib/db';
+import { getCurrentUser, getSession, logoutUser, onAuthStateChange } from '@/services';
 
 const AuthContext = createContext(null);
 
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     // Called only when we have a confirmed Supabase session.
     const loadAppUser = useCallback(async () => {
         try {
-            const appUser = await User.me();
+            const appUser = await getCurrentUser();
             setUser(appUser);
             setIsAuthenticated(true);
         } catch (err) {
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         // 1. Explicitly initialize session state on mount
         // This is the official reliable way in React, completely bypassing
         // the flaky INITIAL_SESSION event from onAuthStateChange.
-        supabase.auth.getSession().then(({ data: { session }, error }) => {
+        getSession().then(({ data: { session }, error }) => {
             if (error) {
                 console.error('[Auth] Initial session error:', error);
                 if (isMounted) setIsLoadingAuth(false);
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
         });
 
         // 2. Listen ONLY for subsequent active changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        const { data: { subscription } } = onAuthStateChange(
             (event, session) => {
                 if (!isMounted) return;
 
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
     }, [loadAppUser]);
 
     const logout = useCallback(async () => {
-        await User.logout();
+        await logoutUser();
         // SIGNED_OUT event above handles state cleanup.
     }, []);
 

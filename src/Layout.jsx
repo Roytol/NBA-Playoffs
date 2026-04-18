@@ -4,11 +4,11 @@ import { createPageUrl } from "@/utils";
 import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { User, Settings } from "@/lib/db";
 import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
 import { useAuth } from "@/lib/AuthContext";
 import { SETTINGS_KEYS } from "@/constants/app";
 import { DANGER_GHOST_BUTTON_CLASS } from "@/constants/theme";
+import { listSettings, redirectToLogin } from "@/services";
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
@@ -22,8 +22,11 @@ export default function Layout() {
 
     // Load active season label once (lightweight, Settings table)
     React.useEffect(() => {
-        Settings.filter({ setting_name: SETTINGS_KEYS.ACTIVE_SEASON })
-            .then(s => { if (s.length > 0) setActiveSeason(s[0].setting_value); })
+        listSettings()
+            .then((settings) => {
+                const activeSeasonSetting = settings.find((s) => s.setting_name === SETTINGS_KEYS.ACTIVE_SEASON);
+                if (activeSeasonSetting) setActiveSeason(activeSeasonSetting.setting_value);
+            })
             .catch(() => {});
     }, []);
 
@@ -99,7 +102,7 @@ export default function Layout() {
                         <div className="px-4 py-3 border-b">
                             <Button
                                 className="w-full justify-center"
-                                onClick={() => User.login()}
+                                onClick={() => redirectToLogin()}
                             >
                                 <LogIn className="w-4 h-4 mr-2" />
                                 Sign In

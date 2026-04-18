@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/db';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle } from 'lucide-react';
 import { AUTH_TAB_TRIGGER_CLASSES } from '@/constants/theme';
+import { signInWithPassword, signUpWithPassword } from '@/services';
 
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
@@ -34,10 +34,7 @@ export default function Login() {
         setIsLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email: loginEmail,
-            password: loginPassword,
-        });
+        const { error } = await signInWithPassword(loginEmail, loginPassword);
 
         if (error) {
             setError(error.message);
@@ -80,14 +77,10 @@ export default function Login() {
         setError(null);
 
         // Sign Up with user_metadata so that User.me() inserts the full_name correctly
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await signUpWithPassword({
             email: registerEmail,
             password: registerPassword,
-            options: {
-                data: {
-                    full_name: registerName,
-                }
-            }
+            full_name: registerName,
         });
 
         if (signUpError) {

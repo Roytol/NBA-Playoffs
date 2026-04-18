@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { User } from '@/lib/db';
 import { Button } from "@/components/ui/button"
 import { useNavigate } from 'react-router-dom';
 import { Home } from "lucide-react";
+import { ROUTES } from '@/routes/paths';
+import { getCurrentUser, redirectToLogin } from '@/services';
 
 export default function PageNotFound() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -11,7 +12,7 @@ export default function PageNotFound() {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const user = await User.me();
+                const user = await getCurrentUser();
                 setIsLoggedIn(!!user);
             } catch (error) {
                 console.error("Auth check failed:", error);
@@ -30,7 +31,7 @@ export default function PageNotFound() {
             </p>
             <div className="flex gap-4">
                 <Button 
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate(ROUTES.dashboard)}
                     className="flex items-center gap-2"
                 >
                     <Home className="w-4 h-4" />
@@ -39,7 +40,7 @@ export default function PageNotFound() {
                 {!isLoggedIn && (
                     <Button 
                         variant="outline"
-                        onClick={() => User.login()}
+                        onClick={() => redirectToLogin()}
                     >
                         Login
                     </Button>

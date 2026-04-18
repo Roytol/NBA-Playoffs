@@ -1,5 +1,4 @@
 import React from "react";
-import { Series, Prediction, Settings, Leaderboard } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +13,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { getRoundGroupLabel, PREDICTION_TABS, SETTINGS_KEYS } from "@/constants/app";
 import { INTERACTIVE_INFO_LINK_CLASS } from "@/constants/theme";
+import { listLeaderboardEntries, listPredictions, listSeries, listSettings } from "@/services";
 
 export default function AllPredictionsPage() {
     const [series, setSeries] = React.useState([]);
@@ -34,10 +34,10 @@ export default function AllPredictionsPage() {
         try {
             // Load all necessary data
             const [seriesData, predictionsData, leaderboard, settings] = await Promise.all([
-                Series.list(),
-                Prediction.list(),
-                Leaderboard.list(),
-                Settings.list()
+                listSeries(),
+                listPredictions(),
+                listLeaderboardEntries(),
+                listSettings()
             ]);
 
             const now = new Date();
