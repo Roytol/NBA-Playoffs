@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNbaSync } from "@/hooks/useNbaSync";
 import { useLiveScores } from "@/hooks/useLiveScores";
 import { useAuth } from "@/lib/AuthContext";
+import TeamLogo from "@/components/common/TeamLogo";
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -448,12 +449,32 @@ export default function Dashboard() {
                                             </div>
                                             <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-100">
                                                 <div className="flex flex-col items-center flex-1">
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">{game.home_team?.name || 'Home'}</span>
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        {game.home_team?.full_name && (
+                                                            <TeamLogo
+                                                                team={game.home_team.full_name}
+                                                                className="w-4 h-4 shrink-0"
+                                                            />
+                                                        )}
+                                                        <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">
+                                                            {game.home_team?.name || 'Home'}
+                                                        </span>
+                                                    </div>
                                                     <span className="text-xl font-black text-gray-900 leading-tight">{game.home_team_score}</span>
                                                 </div>
                                                 <div className="px-2 text-[10px] font-bold text-gray-300">VS</div>
                                                 <div className="flex flex-col items-center flex-1">
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">{game.visitor_team?.name || 'Away'}</span>
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        {game.visitor_team?.full_name && (
+                                                            <TeamLogo
+                                                                team={game.visitor_team.full_name}
+                                                                className="w-4 h-4 shrink-0"
+                                                            />
+                                                        )}
+                                                        <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">
+                                                            {game.visitor_team?.name || 'Away'}
+                                                        </span>
+                                                    </div>
                                                     <span className="text-xl font-black text-gray-900 leading-tight">{game.visitor_team_score}</span>
                                                 </div>
                                             </div>
