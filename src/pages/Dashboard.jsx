@@ -224,7 +224,7 @@ export default function Dashboard() {
                     </motion.div>
                 )}
 
-                {user && !hasChampionPick && (
+                {!loading && user && !hasChampionPick && (
                     <motion.div
                         key="champ-pick"
                         initial={{ opacity: 0, y: 20 }}
@@ -236,7 +236,7 @@ export default function Dashboard() {
                     </motion.div>
                 )}
 
-                {user && !hasFinalsMVPPick && (
+                {!loading && user && !hasFinalsMVPPick && (
                     <motion.div
                         key="mvp-pick"
                         initial={{ opacity: 0, y: 20 }}
