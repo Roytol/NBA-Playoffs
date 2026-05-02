@@ -23,6 +23,19 @@ export const APP_DELAYS = {
 // Example: 2025 means the 2025-26 NBA season.
 export const CURRENT_SEASON = 2025;
 
+// Converts our stored season key into a user-facing NBA season label.
+// Example: 2025 -> "2025-26".
+export function formatSeasonLabel(seasonValue) {
+    const normalizedValue = String(seasonValue ?? "").trim();
+    if (!/^\d{4}$/.test(normalizedValue)) return seasonValue;
+
+    const startYear = Number(normalizedValue);
+    if (!Number.isFinite(startYear)) return seasonValue;
+
+    const endYearShort = String(startYear + 1).slice(-2);
+    return `${startYear}-${endYearShort}`;
+}
+
 // Canonical keys for the Settings table in Supabase.
 // Consumers: Admin, Layout, Leaderboard, Rules, Predictions, AllPredictions,
 // UserPredictions, and the pre-playoff picks components.

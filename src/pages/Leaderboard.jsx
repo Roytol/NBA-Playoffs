@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { SETTINGS_KEYS } from "@/constants/app";
+import { formatSeasonLabel, SETTINGS_KEYS } from "@/constants/app";
 import { INTERACTIVE_INFO_LINK_CLASS } from "@/constants/theme";
 import {
     getCurrentUser,
@@ -49,7 +49,8 @@ export default function LeaderboardPage() {
         try {
             const settings = await listSettings();
             const seasonSetting = settings.find(s => s.setting_name === SETTINGS_KEYS.ACTIVE_SEASON);
-            if (seasonSetting) setActiveSeason(seasonSetting.setting_value);
+            const currentSeasonValue = seasonSetting?.setting_value || null;
+            if (currentSeasonValue) setActiveSeason(currentSeasonValue);
 
             // Find distinct past seasons from archived predictions/series
             const { data } = await supabase
@@ -58,7 +59,12 @@ export default function LeaderboardPage() {
                 .not("season", "is", null);
 
             if (data) {
-                const uniqueSeasons = [...new Set(data.map(d => d.season))].sort((a, b) => b - a);
+                const uniqueSeasons = [...new Set(
+                    data
+                        .map(d => d.season)
+                        .filter(Boolean)
+                        .filter(season => season !== currentSeasonValue)
+                )].sort((a, b) => b - a);
                 setPastSeasons(uniqueSeasons);
             }
         } catch (err) {
@@ -211,12 +217,12 @@ export default function LeaderboardPage() {
 
             <Tabs value={selectedSeason} onValueChange={setSelectedSeason}>
                 {allTabs.length > 1 && (
-                    <TabsList className="mb-4">
+                        <TabsList className="mb-4">
                         <TabsTrigger value="current">
-                            {activeSeason ? `${activeSeason} Season` : "Current Season"}
+                            {activeSeason ? `${formatSeasonLabel(activeSeason)} Season` : "Current Season"}
                         </TabsTrigger>
                         {pastSeasons.map(season => (
-                            <TabsTrigger key={season} value={season}>{season}</TabsTrigger>
+                            <TabsTrigger key={season} value={season}>{formatSeasonLabel(season)}</TabsTrigger>
                         ))}
                     </TabsList>
                 )}
@@ -294,7 +300,7 @@ export default function LeaderboardPage() {
                             <CardHeader className="py-3 px-4 sm:py-4 sm:px-6">
                                 <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                                     <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
-                                    {season} Final Standings
+                                    {formatSeasonLabel(season)} Final Standings
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0">
@@ -316,7 +322,7 @@ export default function LeaderboardPage() {
                                                 {pastLeaderboard.length === 0 ? (
                                                     <TableRow>
                                                         <TableCell colSpan={3} className="text-center py-8 text-gray-500 text-sm">
-                                                            No archived data for {season}
+                                                            No archived data for {formatSeasonLabel(season)}
                                                         </TableCell>
                                                     </TableRow>
                                                 ) : pastLeaderboard.map((entry, index) => (

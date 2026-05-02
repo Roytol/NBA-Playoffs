@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
 import { useAuth } from "@/lib/AuthContext";
-import { SETTINGS_KEYS } from "@/constants/app";
+import { formatSeasonLabel, SETTINGS_KEYS } from "@/constants/app";
 import { DANGER_GHOST_BUTTON_CLASS } from "@/constants/theme";
 import { listSettings, redirectToLogin } from "@/services";
 
@@ -66,7 +66,9 @@ export default function Layout() {
                                 alt="NBA Playoffs Logo"
                                 className="h-10"
                             />
-                            <div className="text-xs text-gray-500">{activeSeason ? `${activeSeason} Prediction Game` : "Prediction Game"}</div>
+                            <div className="text-xs text-gray-500">
+                                {activeSeason ? `${formatSeasonLabel(activeSeason)} Prediction Game` : "Prediction Game"}
+                            </div>
                         </Link>
                         <Button
                             variant="ghost"

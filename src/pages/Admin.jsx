@@ -20,6 +20,7 @@ import {
     APP_DELAYS,
     CURRENT_SEASON,
     DEFAULT_SCORING_RULES,
+    formatSeasonLabel,
     ROUND_LABELS,
     SETTINGS_KEYS,
 } from "@/constants/app";
@@ -319,7 +320,7 @@ export default function AdminPage() {
             <div className="mb-6">
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Admin Dashboard</h1>
                 <p className="text-muted-foreground text-sm mt-1">
-                    Active season: <Badge variant="outline" className="ml-1 font-mono">{activeSeason}</Badge>
+                    Active season: <Badge variant="outline" className="ml-1 font-mono">{formatSeasonLabel(activeSeason)}</Badge>
                 </p>
             </div>
 
@@ -602,7 +603,7 @@ export default function AdminPage() {
                             {/* Current season summary */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {[
-                                    { label: "Active Season", value: activeSeason, color: ADMIN_SUMMARY_COLOR_CLASSES.activeSeason },
+                                    { label: "Active Season", value: formatSeasonLabel(activeSeason), color: ADMIN_SUMMARY_COLOR_CLASSES.activeSeason },
                                     { label: "Total Players", value: allUsers.length, color: "bg-emerald-50 text-emerald-800" },
                                     { label: "Series Played", value: allSeries.filter(s => s.status === "completed").length, color: "bg-purple-50 text-purple-800" },
                                     { label: "Predictions Made", value: allPredictions.length, color: "bg-amber-50 text-amber-800" },
@@ -619,8 +620,8 @@ export default function AdminPage() {
                                 <h3 className="text-sm font-semibold text-gray-700">What "Start New Season" will do:</h3>
                                 <ul className="space-y-1.5">
                                     {[
-                                        `Archive all ${allPredictions.length} predictions under season "${activeSeason}"`,
-                                        `Archive all ${allSeries.length} series under season "${activeSeason}"`,
+                                        `Archive all ${allPredictions.length} predictions under season "${formatSeasonLabel(activeSeason)}"`,
+                                        `Archive all ${allSeries.length} series under season "${formatSeasonLabel(activeSeason)}"`,
                                         `Reset all ${allUsers.length} player point totals to 0`,
                                         "Clear the NBA API cache so fresh data is fetched",
                                         "Update the active season to the new year you specify",
@@ -671,7 +672,7 @@ export default function AdminPage() {
                             Confirm Season Transition
                         </DialogTitle>
                         <DialogDescription>
-                            This will archive the <strong>{activeSeason}</strong> season and reset the app.
+                            This will archive the <strong>{formatSeasonLabel(activeSeason)}</strong> season and reset the app.
                             Type the <strong>new season year</strong> below to confirm.
                         </DialogDescription>
                     </DialogHeader>
@@ -686,7 +687,7 @@ export default function AdminPage() {
                                 maxLength={4}
                             />
                             <p className="text-xs text-center text-gray-500">
-                                You typed: <strong>{newSeasonYear || "—"}</strong>
+                                You typed: <strong>{newSeasonYear ? formatSeasonLabel(newSeasonYear) : "—"}</strong>
                             </p>
                         </div>
                     ) : (
@@ -708,7 +709,7 @@ export default function AdminPage() {
                                 onClick={executeSeasonReset}
                             >
                                 {seasonResetting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
-                                {seasonResetting ? "Transitioning..." : `Start ${newSeasonYear} Season`}
+                                {seasonResetting ? "Transitioning..." : `Start ${newSeasonYear ? formatSeasonLabel(newSeasonYear) : "New"} Season`}
                             </Button>
                         )}
                     </DialogFooter>
