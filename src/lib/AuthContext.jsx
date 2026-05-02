@@ -11,6 +11,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/db';
 import { getCurrentUser, getSession, logoutUser, onAuthStateChange } from '@/services';
 
 const AuthContext = createContext(null);
@@ -87,6 +88,54 @@ export const AuthProvider = ({ children }) => {
             subscription.unsubscribe();
         };
     }, [loadAppUser]);
+
+    // Keep app-level user data live so menu points/admin status stay aligned
+    // after scoring triggers or a season reset update the User table.
+    useEffect(() => {
+        if (!user?.email) return undefined;
+
+        const channel = supabase
+            .channel(`user-profile-${user.email}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'User',
+                    filter: `email=eq.${user.email}`,
+                },
+                async () => {
+                    await loadAppUser();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [loadAppUser, user?.email]);
+
+    // Revalidate on focus/visibility in case the client misses realtime events
+    // while backgrounded or waking from sleep.
+    useEffect(() => {
+        if (!isAuthenticated) return undefined;
+
+        const refreshFromDatabase = () => {
+            if (document.visibilityState === 'visible') {
+                loadAppUser().catch((err) => {
+                    console.error('[Auth] Failed to refresh app user on focus:', err);
+                });
+            }
+        };
+
+        window.addEventListener('focus', refreshFromDatabase);
+        document.addEventListener('visibilitychange', refreshFromDatabase);
+
+        return () => {
+            window.removeEventListener('focus', refreshFromDatabase);
+            document.removeEventListener('visibilitychange', refreshFromDatabase);
+        };
+    }, [isAuthenticated, loadAppUser]);
 
     const logout = useCallback(async () => {
         await logoutUser();
