@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import TeamLogo from "../common/TeamLogo";
 import { BRACKET_ROUND_KEYS, ROUND_LABELS } from "@/constants/app";
 import { sortSeriesForBracketDisplay } from "@/utils/bracketOrder";
@@ -72,13 +72,15 @@ function matchupShellClass(side, status) {
 }
 
 /** Small seed to the left of the logo — subordinate to scores, but readable. */
-function SeedBadge({ value, compact }) {
+function SeedBadge({ value, compact, micro = false }) {
     const v = value ?? "—";
     const two = String(v).length >= 2;
-    const w = two ? (compact ? "w-4" : "w-[1.125rem]") : (compact ? "w-2.5" : "w-3");
+    const w = two
+        ? (micro ? "w-3.5" : compact ? "w-4" : "w-[1.125rem]")
+        : (micro ? "w-2" : compact ? "w-2.5" : "w-3");
     return (
         <span
-            className={`tabular-nums font-medium text-gray-500 leading-none shrink-0 text-right opacity-90 ${compact ? "text-[7px]" : "text-[8px]"} ${w}`}
+            className={`tabular-nums font-medium text-gray-500 leading-none shrink-0 text-right opacity-90 ${micro ? "text-[6px]" : compact ? "text-[7px]" : "text-[8px]"} ${w}`}
             title="Seed"
         >
             {v}
@@ -118,21 +120,25 @@ export default function PlayoffBracket({
         return predictionList.find((p) => p.series_id === seriesId);
     };
 
-    const renderSeries = (seriesData, { compact = false, side = "neutral" } = {}) => {
-        const pad = compact ? "p-1.5" : "p-2";
-        const winSize = compact ? "text-xs" : "text-sm";
-        const logo = compact ? "w-5 h-5" : "w-6 h-6";
+    const renderSeries = (seriesData, { compact = false, micro = false, side = "neutral" } = {}) => {
+        const pad = micro ? "px-1 py-1" : compact ? "p-1.5" : "p-2";
+        const winSize = micro ? "text-[10px]" : compact ? "text-xs" : "text-sm";
+        const logo = micro ? "w-3.5 h-3.5" : compact ? "w-5 h-5" : "w-6 h-6";
+        const rowGap = micro ? "gap-0.5" : "gap-1";
+        const rowMargin = micro ? "mt-0.5" : "mt-1";
+        const liveText = micro ? "text-[7px]" : "text-[9px]";
+        const liveDot = micro ? "h-1 w-1" : "h-1.5 w-1.5";
 
         if (!seriesData) {
             if (side === "finals") {
                 return (
-                    <div className="rounded-lg bg-white p-1 border border-gray-100">
+                    <div className={`rounded-lg bg-white border border-gray-100 ${micro ? "p-0.5" : "p-1"}`}>
                         <div
-                            className="rounded-md border border-dashed border-amber-300/40 bg-amber-50/50 py-2.5 px-2 flex flex-col items-center justify-center gap-0.5"
+                            className={`rounded-md border border-dashed border-amber-300/40 bg-amber-50/50 flex flex-col items-center justify-center gap-0.5 ${micro ? "py-1.5 px-1" : "py-2.5 px-2"}`}
                             aria-label="NBA Finals matchup not yet set"
                         >
-                            <Trophy className="w-3 h-3 text-brand-gold/90 shrink-0" strokeWidth={2} />
-                            <span className="text-[9px] text-gray-400 text-center leading-tight">
+                            <Trophy className={`${micro ? "w-2.5 h-2.5" : "w-3 h-3"} text-brand-gold/90 shrink-0`} strokeWidth={2} />
+                            <span className={`${micro ? "text-[7px]" : "text-[9px]"} text-gray-400 text-center leading-tight`}>
                                 Pending
                             </span>
                         </div>
@@ -151,39 +157,33 @@ export default function PlayoffBracket({
         return (
             <div className={`${shell} ${pad} min-w-0`}>
                 {isLive && (
-                    <div className="absolute top-1 right-1 flex items-center gap-0.5">
-                        <span className="relative flex h-1.5 w-1.5">
+                    <div className={`absolute ${micro ? "top-0.5 right-0.5" : "top-1 right-1"} flex items-center gap-0.5`}>
+                        <span className={`relative flex ${liveDot}`}>
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+                            <span className={`relative inline-flex rounded-full ${liveDot} bg-red-500`} />
                         </span>
-                        <span className="text-[9px] font-bold text-red-600 uppercase tracking-wide">Live</span>
+                        <span className={`${liveText} font-bold text-red-600 uppercase tracking-wide`}>Live</span>
                     </div>
                 )}
-                <div className={`flex justify-between items-center gap-1 min-w-0 ${compact ? "text-sm" : ""}`}>
+                <div className={`flex justify-between items-center ${rowGap} min-w-0 ${compact ? "text-sm" : ""}`}>
                     <div className="flex items-center gap-0.5 min-w-0">
-                        <SeedBadge value={seriesData.team1_seed} compact={compact} />
+                        <SeedBadge value={seriesData.team1_seed} compact={compact} micro={micro} />
                         <TeamLogo team={seriesData.team1} className={`${logo} shrink-0`} />
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
                         <span className={`tabular-nums font-bold text-gray-900 tracking-tight ${winSize}`}>{w1}</span>
-                        {seriesData.status === "completed" && seriesData.winner === seriesData.team1 && (
-                            <Check className="w-3 h-3 text-emerald-600 shrink-0" strokeWidth={2.5} aria-hidden />
-                        )}
                     </div>
                 </div>
-                <div className={`flex justify-between items-center gap-1 mt-1 min-w-0 ${compact ? "text-sm" : ""}`}>
+                <div className={`flex justify-between items-center ${rowGap} ${rowMargin} min-w-0 ${compact ? "text-sm" : ""}`}>
                     <div className="flex items-center gap-0.5 min-w-0">
-                        <SeedBadge value={seriesData.team2_seed} compact={compact} />
+                        <SeedBadge value={seriesData.team2_seed} compact={compact} micro={micro} />
                         <TeamLogo team={seriesData.team2} className={`${logo} shrink-0`} />
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
                         <span className={`tabular-nums font-bold text-gray-900 tracking-tight ${winSize}`}>{w2}</span>
-                        {seriesData.status === "completed" && seriesData.winner === seriesData.team2 && (
-                            <Check className="w-3 h-3 text-emerald-600 shrink-0" strokeWidth={2.5} aria-hidden />
-                        )}
                     </div>
                 </div>
-                {showPredictions && prediction && (
+                {showPredictions && prediction && !micro && (
                     <div className="mt-1.5 text-[10px] text-gray-500 border-t border-black/5 pt-1">
                         Your pick: {prediction.winner} in {prediction.games}
                     </div>
@@ -201,27 +201,31 @@ export default function PlayoffBracket({
         </p>
     );
 
-    const renderConferenceRoundColumn = (roundKey, gapIdx, conference, dense = false) => {
+    const renderConferenceRoundColumn = (roundKey, gapIdx, conference, dense = false, micro = false) => {
         const { pt, gap } = roundColumnSpacing(gapIdx);
-        const densePt = gapIdx === 0 ? "" : gapIdx === 1 ? "pt-2" : "pt-4";
-        const denseGap = gapIdx === 0 ? "space-y-1" : gapIdx === 1 ? "space-y-3" : "space-y-5";
+        const densePt = micro
+            ? (gapIdx === 0 ? "" : gapIdx === 1 ? "pt-[1.35rem]" : "pt-[3.05rem]")
+            : gapIdx === 0 ? "" : gapIdx === 1 ? "pt-2" : "pt-4";
+        const denseGap = micro
+            ? (gapIdx === 0 ? "space-y-0.5" : gapIdx === 1 ? "space-y-[2.8rem]" : "space-y-[5.85rem]")
+            : gapIdx === 0 ? "space-y-1" : gapIdx === 1 ? "space-y-3" : "space-y-5";
         const side = conference === "East" ? "east" : "west";
         const list = getSeriesByRoundSorted(roundKey, conference);
 
         return (
             <div
-                className={`flex flex-col min-w-0 pl-0.5 sm:pl-1 border-l border-gray-100 first:border-l-0 first:pl-0 ${dense ? densePt : pt}`}
+                className={`flex flex-col min-w-0 ${micro ? "pl-px" : "pl-0.5 sm:pl-1"} border-l border-gray-100 first:border-l-0 first:pl-0 ${dense ? densePt : pt}`}
             >
-                <h4 className={`text-center font-bold uppercase text-gray-500 px-0.5 leading-tight line-clamp-2 ${dense ? "text-[7px] tracking-[0.06em] mb-1" : "text-[8px] sm:text-[9px] tracking-[0.1em] mb-1.5"}`}>
+                <h4 className={`text-center font-bold uppercase text-gray-500 px-0.5 leading-tight line-clamp-2 ${micro ? "text-[6px] tracking-[0.04em] mb-0.5" : dense ? "text-[7px] tracking-[0.06em] mb-1" : "text-[8px] sm:text-[9px] tracking-[0.1em] mb-1.5"}`}>
                     {ROUND_LABELS[roundKey]}
                 </h4>
                 <div className={`${dense ? denseGap : gap} min-w-0`}>
                     {list.length === 0 ? (
-                        <p className="text-[9px] text-gray-300 text-center py-2 px-0.5">—</p>
+                        <p className={`${micro ? "text-[7px] py-1" : "text-[9px] py-2"} text-gray-300 text-center px-0.5`}>—</p>
                     ) : (
                         list.map((s) => (
                             <div key={seriesKey(s)} className="min-w-0">
-                                {renderSeries(s, { compact: dense, side })}
+                                {renderSeries(s, { compact: dense, micro, side })}
                             </div>
                         ))
                     )}
@@ -230,71 +234,29 @@ export default function PlayoffBracket({
         );
     };
 
-    const renderFinalsColumn = () => (
+    const renderFinalsColumn = ({ micro = false } = {}) => (
         <div
-            className="w-full min-w-0 mx-auto flex flex-col items-stretch rounded-lg border border-gray-200 bg-gray-50/30 px-1.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+            className={`w-full min-w-0 mx-auto flex flex-col items-stretch rounded-lg border border-gray-200 bg-gray-50/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)] ${micro ? "px-1 py-1" : "px-1.5 py-1.5"}`}
             aria-label="NBA Finals"
         >
             {finalsMatchup ? (
-                renderSeries(finalsMatchup, { side: "neutral" })
+                renderSeries(finalsMatchup, { side: "neutral", micro })
             ) : (
-                renderSeries(null, { side: "finals" })
+                renderSeries(null, { side: "finals", micro })
             )}
 
             {finalsMatchup?.status === "completed" && finalsMatchup.winner && (
-                <div className="mt-2 pt-2 border-t border-gray-100 text-center">
-                    <p className="text-[8px] font-extrabold tracking-[0.18em] text-gray-600 uppercase">
+                <div className={`${micro ? "mt-1 pt-1" : "mt-2 pt-2"} border-t border-gray-100 text-center`}>
+                    <p className={`${micro ? "text-[6px] tracking-[0.12em]" : "text-[8px] tracking-[0.18em]"} font-extrabold text-gray-600 uppercase`}>
                         Champion
                     </p>
-                    <TeamLogo team={finalsMatchup.winner} className="w-9 h-9 mx-auto mt-1.5" />
-                    <p className="text-[10px] font-bold text-gray-900 mt-1 leading-snug px-0.5 line-clamp-3">
+                    <TeamLogo team={finalsMatchup.winner} className={`${micro ? "w-5 h-5 mt-1" : "w-9 h-9 mt-1.5"} mx-auto`} />
+                    <p className={`${micro ? "text-[7px] mt-0.5 line-clamp-2" : "text-[10px] mt-1 line-clamp-3"} font-bold text-gray-900 leading-snug px-0.5`}>
                         {finalsMatchup.winner}
                     </p>
                 </div>
             )}
         </div>
-    );
-
-    const renderMobileConference = (conference, borderColor, title) => (
-        <section className="rounded-lg border border-gray-200/70 bg-white/50 p-3 w-full min-w-0">
-            <h3
-                className="text-center text-[10px] font-extrabold uppercase tracking-[0.16em] pb-2 mb-3 border-b-2"
-                style={{ color: borderColor, borderColor }}
-            >
-                {title}
-            </h3>
-            <div className="space-y-4">
-                {MOBILE_ROUND_ORDER.map((roundKey) => {
-                    const side = conference === "East" ? "east" : "west";
-                    const list = getSeriesByRoundSorted(roundKey, conference);
-                    const oneSlot = list.length <= 1;
-                    return (
-                        <div key={`${conference}-${roundKey}`}>
-                            <h4 className="text-[9px] font-bold uppercase tracking-[0.12em] text-gray-500 mb-2">
-                                {ROUND_LABELS[roundKey]}
-                            </h4>
-                            {list.length === 0 ? (
-                                <p className="text-[10px] text-gray-300 text-center py-2">—</p>
-                            ) : (
-                                <div
-                                    className={
-                                        oneSlot
-                                            ? "grid grid-cols-1 gap-2 max-w-[220px] mx-auto"
-                                            : "grid grid-cols-2 gap-2"
-                                    }
-                                >
-                                    {list.map((s) => (
-                                        <div key={seriesKey(s)} className="min-w-0">
-                                            {renderSeries(s, { compact: true, side })}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-        </section>
     );
 
     return (
@@ -339,44 +301,60 @@ export default function PlayoffBracket({
                 )}
 
                 <div className="lg:hidden w-full min-w-0">
-                    <div className="grid grid-cols-[1fr_auto_1fr] gap-x-1 mb-2 w-full min-w-0 items-end">
-                        <div className="text-center border-b-2 pb-1 min-w-0" style={{ borderColor: NBA.blue }}>
-                            <p className="text-[8px] font-extrabold uppercase tracking-[0.08em] truncate px-0.5" style={{ color: NBA.blue }}>
-                                Eastern
-                            </p>
-                        </div>
-                        <div className="text-center border-b border-gray-300 pb-1 w-[min(100%,5.25rem)] max-w-full min-w-0 justify-self-center px-0.5">
-                            <Trophy className="w-2.5 h-2.5 text-brand-gold mx-auto mb-0.5" strokeWidth={2} />
-                            <p className="text-[7px] font-extrabold text-gray-900 uppercase tracking-[0.08em] leading-tight">
-                                {ROUND_LABELS[BRACKET_ROUND_KEYS[3]]}
-                            </p>
-                        </div>
-                        <div className="text-center border-b-2 pb-1 min-w-0" style={{ borderColor: NBA.red }}>
-                            <p className="text-[8px] font-extrabold uppercase tracking-[0.08em] truncate px-0.5" style={{ color: NBA.red }}>
-                                Western
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-[1fr_auto_1fr] gap-x-1 w-full min-w-0 items-start">
-                        <div className="grid grid-cols-3 gap-x-0.5 min-w-0">
-                            {EAST_ROUND_FLOW.map(({ roundKey, gapIdx }) => (
-                                <React.Fragment key={`east-mobile-${roundKey}`}>
-                                    {renderConferenceRoundColumn(roundKey, gapIdx, "East", true)}
-                                </React.Fragment>
-                            ))}
+                    <div className="rounded-xl border border-gray-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,0.98))] px-2 py-2.5 shadow-[0_12px_35px_rgba(15,23,42,0.06)]">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                            <div>
+                                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-gray-500">
+                                    Full bracket
+                                </p>
+                                <p className="text-[10px] text-gray-600 mt-0.5">
+                                    Compact mobile tree
+                                </p>
+                            </div>
+                            <div className="shrink-0 rounded-full border border-amber-200 bg-amber-50 p-1.5">
+                                <Trophy className="w-3.5 h-3.5 text-brand-gold" strokeWidth={2.2} />
+                            </div>
                         </div>
 
-                        <div className="min-w-0 w-full max-w-[5.4rem] justify-self-center self-start">
-                            {renderFinalsColumn()}
+                        <div className="grid grid-cols-[1fr_2.8rem_1fr] gap-x-1 items-end mb-2">
+                            <div className="text-center border-b-2 pb-1" style={{ borderColor: NBA.blue }}>
+                                <p className="text-[7px] font-extrabold uppercase tracking-[0.06em] text-[#1D428A]">
+                                    East
+                                </p>
+                            </div>
+                            <div className="text-center border-b border-gray-300 pb-1 px-0.5">
+                                <Trophy className="w-2.5 h-2.5 text-brand-gold mx-auto mb-0.5" strokeWidth={2} />
+                                <p className="text-[6px] font-extrabold text-gray-900 uppercase tracking-[0.08em] leading-tight">
+                                    Finals
+                                </p>
+                            </div>
+                            <div className="text-center border-b-2 pb-1" style={{ borderColor: NBA.red }}>
+                                <p className="text-[7px] font-extrabold uppercase tracking-[0.06em] text-[#C8102E]">
+                                    West
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-x-0.5 min-w-0">
-                            {WEST_ROUND_FLOW.map(({ roundKey, gapIdx }) => (
-                                <React.Fragment key={`west-mobile-${roundKey}`}>
-                                    {renderConferenceRoundColumn(roundKey, gapIdx, "West", true)}
-                                </React.Fragment>
-                            ))}
+                        <div className="grid grid-cols-[1fr_2.8rem_1fr] gap-x-1 items-start">
+                            <div className="grid grid-cols-3 gap-x-0.5 min-w-0">
+                                {EAST_ROUND_FLOW.map(({ roundKey, gapIdx }) => (
+                                    <React.Fragment key={`east-mobile-${roundKey}`}>
+                                        {renderConferenceRoundColumn(roundKey, gapIdx, "East", true, true)}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+
+                            <div className="min-w-0 self-start">
+                                {renderFinalsColumn({ micro: true })}
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-x-0.5 min-w-0">
+                                {WEST_ROUND_FLOW.map(({ roundKey, gapIdx }) => (
+                                    <React.Fragment key={`west-mobile-${roundKey}`}>
+                                        {renderConferenceRoundColumn(roundKey, gapIdx, "West", true, true)}
+                                    </React.Fragment>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
