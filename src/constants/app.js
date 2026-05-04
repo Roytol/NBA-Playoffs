@@ -58,6 +58,15 @@ export const STORAGE_KEYS = {
 // Controls how long the iOS add-to-home-screen banner stays dismissed after the user closes it.
 export const HOME_SCREEN_BANNER_DISMISS_DAYS = 1;
 
+// Canonical prediction type identifiers used throughout the app.
+// Series rounds are still represented by their round keys; these exports
+// centralize the special bonus prediction types that were previously
+// duplicated as raw strings across pages and components.
+export const PREDICTION_TYPES = {
+  CHAMPION: "champion",
+  FINALS_MVP: "finals_mvp",
+};
+
 // Source of truth for playoff round metadata.
 // This drives labels, tab text, sort order, and default scoring across Dashboard,
 // Admin, Rules, Predictions, UserPredictions, AllPredictions, and the bracket UI.
@@ -129,6 +138,12 @@ export const ROUND_CONFIG = {
 
 // Ordered list of all supported prediction/round types in the app.
 export const ROUND_KEYS = Object.keys(ROUND_CONFIG);
+
+// Bonus picks are prediction types that are not tied to a specific series id.
+export const BONUS_PREDICTION_TYPES = [
+  PREDICTION_TYPES.CHAMPION,
+  PREDICTION_TYPES.FINALS_MVP,
+];
 
 // Only the rounds that are actual series with winner + games picks.
 // Excludes bonus picks like champion and finals MVP.
@@ -220,4 +235,8 @@ export function getRoundDisplayLabel(roundKey) {
 // Primary consumer: AllPredictions grouped cards.
 export function getRoundGroupLabel(roundKey) {
   return ROUND_CONFIG[roundKey]?.groupLabel || roundKey;
+}
+
+export function isBonusPredictionType(predictionType) {
+  return BONUS_PREDICTION_TYPES.includes(predictionType);
 }

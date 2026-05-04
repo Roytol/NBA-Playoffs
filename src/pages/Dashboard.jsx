@@ -13,7 +13,7 @@ import { useLiveScores } from "@/hooks/useLiveScores";
 import { useAuth } from "@/lib/AuthContext";
 import TeamLogo from "@/components/common/TeamLogo";
 import { formatLiveGameDetail } from "@/utils";
-import { ROUND_SORT_ORDER } from "@/constants/app";
+import { PREDICTION_TYPES, ROUND_SORT_ORDER } from "@/constants/app";
 import {
   listPredictionsForUser,
   listSeries,
@@ -96,13 +96,17 @@ export default function Dashboard() {
 
   const hasChampionPick = React.useMemo(() => {
     return predictions.some(
-      (p) => p.prediction_type === "champion" && p.user_email === user?.email,
+      (p) =>
+        p.prediction_type === PREDICTION_TYPES.CHAMPION &&
+        p.user_email === user?.email,
     );
   }, [predictions, user]);
 
   const hasFinalsMVPPick = React.useMemo(() => {
     return predictions.some(
-      (p) => p.prediction_type === "finals_mvp" && p.user_email === user?.email,
+      (p) =>
+        p.prediction_type === PREDICTION_TYPES.FINALS_MVP &&
+        p.user_email === user?.email,
     );
   }, [predictions, user]);
 

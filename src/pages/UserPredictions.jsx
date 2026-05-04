@@ -8,17 +8,9 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  Trophy,
-  Star,
-  Check,
-  X,
-  AlertTriangle,
-  ArrowLeft,
-  Users,
-} from "lucide-react";
+import { Trophy, Star, AlertTriangle, ArrowLeft, Users } from "lucide-react";
 import TeamLogo from "../components/common/TeamLogo";
+import { PredictionStatusBadge } from "@/components/common/PredictionStatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -33,6 +25,8 @@ import {
 } from "@/components/ui/select";
 import {
   getRoundDisplayLabel,
+  isBonusPredictionType,
+  PREDICTION_TYPES,
   PREDICTION_TABS,
   SETTINGS_KEYS,
 } from "@/constants/app";
@@ -116,11 +110,11 @@ export default function UserPredictionsPage() {
           );
         }
 
-        if (p.prediction_type === "champion") {
+        if (p.prediction_type === PREDICTION_TYPES.CHAMPION) {
           return championDeadline && new Date(championDeadline) < now;
         }
 
-        if (p.prediction_type === "finals_mvp") {
+        if (p.prediction_type === PREDICTION_TYPES.FINALS_MVP) {
           return mvpDeadline && new Date(mvpDeadline) < now;
         }
 
@@ -332,12 +326,14 @@ export default function UserPredictionsPage() {
                       return (
                         <TableRow key={prediction.id}>
                           <TableCell className="py-2 px-2 sm:px-4">
-                            {prediction.prediction_type === "champion" ? (
+                            {prediction.prediction_type ===
+                            PREDICTION_TYPES.CHAMPION ? (
                               <div className="flex items-center gap-1 text-xs sm:text-sm">
                                 <Trophy className="text-brand-gold w-3 h-3 sm:w-4 sm:h-4" />
                                 <span>Champion</span>
                               </div>
-                            ) : prediction.prediction_type === "finals_mvp" ? (
+                            ) : prediction.prediction_type ===
+                              PREDICTION_TYPES.FINALS_MVP ? (
                               <div className="flex items-center gap-1 text-xs sm:text-sm">
                                 <Star className="text-brand-gold w-3 h-3 sm:w-4 sm:h-4" />
                                 <span>Finals MVP</span>
@@ -378,8 +374,9 @@ export default function UserPredictionsPage() {
                             )}
                           </TableCell>
                           <TableCell className="py-2 px-2 sm:px-4">
-                            {prediction.prediction_type === "champion" ||
-                            prediction.prediction_type === "finals_mvp" ? (
+                            {isBonusPredictionType(
+                              prediction.prediction_type,
+                            ) ? (
                               <div className="text-xs sm:text-sm">
                                 {prediction.winner}
                               </div>
@@ -401,16 +398,14 @@ export default function UserPredictionsPage() {
                             {prediction.points_earned || 0}
                           </TableCell>
                           <TableCell className="py-2 px-2 sm:px-4 text-right">
-                            {prediction.is_correct ? (
-                              <Badge className="bg-green-100 text-green-800 text-[10px] sm:text-xs h-5 sm:h-6">
-                                <Check className="w-3 h-3 mr-1" />
-                                {prediction.points_earned}
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-red-100 text-red-800 text-[10px] sm:text-xs h-5 sm:h-6">
-                                <X className="w-3 h-3" />
-                              </Badge>
-                            )}
+                            <PredictionStatusBadge
+                              status={
+                                prediction.is_correct ? "correct" : "incorrect"
+                              }
+                              points={prediction.points_earned}
+                              compact
+                              className="text-[10px] sm:text-xs h-5 sm:h-6"
+                            />
                           </TableCell>
                         </TableRow>
                       );

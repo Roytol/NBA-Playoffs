@@ -9,8 +9,9 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, AlertTriangle, Check, X } from "lucide-react";
+import { Trophy, AlertTriangle } from "lucide-react";
 import TeamLogo from "../components/common/TeamLogo";
+import { PredictionStatusBadge } from "@/components/common/PredictionStatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -20,10 +21,15 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   getRoundGroupLabel,
+  isBonusPredictionType,
+  PREDICTION_TYPES,
   PREDICTION_TABS,
   SETTINGS_KEYS,
 } from "@/constants/app";
-import { INTERACTIVE_INFO_LINK_CLASS } from "@/constants/theme";
+import {
+  INTERACTIVE_INFO_LINK_CLASS,
+  PREDICTION_STATUS_BADGE_CLASSES,
+} from "@/constants/theme";
 import {
   listLeaderboardEntries,
   listPredictions,
@@ -87,11 +93,11 @@ export default function AllPredictionsPage() {
           return closedSeriesIds.includes(p.series_id);
         }
 
-        if (p.prediction_type === "champion") {
+        if (p.prediction_type === PREDICTION_TYPES.CHAMPION) {
           return championDeadline && new Date(championDeadline) < now;
         }
 
-        if (p.prediction_type === "finals_mvp") {
+        if (p.prediction_type === PREDICTION_TYPES.FINALS_MVP) {
           return (
             mvpStatus === "open" && mvpDeadline && new Date(mvpDeadline) < now
           );
@@ -128,27 +134,22 @@ export default function AllPredictionsPage() {
   const getStatusBadge = (prediction, seriesInfo) => {
     if (prediction.is_correct) {
       return (
-        <Badge className="bg-green-100 text-green-800">
-          <Check className="w-3 h-3 mr-1" />
-          Correct ({prediction.points_earned} pts)
-        </Badge>
+        <PredictionStatusBadge
+          status="correct"
+          points={prediction.points_earned}
+        />
       );
     }
 
     if (!seriesInfo || seriesInfo.status === "active") {
-      return <Badge className="bg-blue-100 text-blue-800">Pending</Badge>;
+      return <PredictionStatusBadge status="pending" />;
     }
 
     if (seriesInfo.status === "completed") {
-      return (
-        <Badge className="bg-red-100 text-red-800">
-          <X className="w-3 h-3 mr-1" />
-          Incorrect
-        </Badge>
-      );
+      return <PredictionStatusBadge status="incorrect" />;
     }
 
-    return null;
+    return <PredictionStatusBadge status="unknown" />;
   };
 
   const filteredPredictions =
@@ -304,7 +305,9 @@ export default function AllPredictionsPage() {
                                   </span>{" "}
                                   {getRoundGroupLabel(group.type)}
                                   {group.seriesInfo.status === "completed" && (
-                                    <Badge className="bg-green-100 text-green-800 text-xs p-1 h-auto">
+                                    <Badge
+                                      className={`${PREDICTION_STATUS_BADGE_CLASSES.correctCompact} text-xs p-1 h-auto`}
+                                    >
                                       {group.seriesInfo.winner} in{" "}
                                       {group.seriesInfo.games}
                                     </Badge>
@@ -386,7 +389,8 @@ export default function AllPredictionsPage() {
                                         </Link>
                                       </TableCell>
                                       <TableCell className="py-2 px-3">
-                                        {group.seriesInfo ? (
+                                        {group.seriesInfo &&
+                                        !isBonusPredictionType(group.type) ? (
                                           <div className="flex items-center gap-1">
                                             <TeamLogo
                                               team={prediction.winner}
@@ -405,16 +409,16 @@ export default function AllPredictionsPage() {
                                         {prediction.points_earned || 0}
                                       </TableCell>
                                       <TableCell className="py-2 px-3 text-right">
-                                        {prediction.is_correct ? (
-                                          <Badge className="bg-green-100 text-green-800 text-xs">
-                                            <Check className="w-3 h-3 mr-1" />
-                                            {prediction.points_earned}
-                                          </Badge>
-                                        ) : (
-                                          <Badge className="bg-red-100 text-red-800 text-xs">
-                                            <X className="w-3 h-3" />
-                                          </Badge>
-                                        )}
+                                        <PredictionStatusBadge
+                                          status={
+                                            prediction.is_correct
+                                              ? "correct"
+                                              : "incorrect"
+                                          }
+                                          points={prediction.points_earned}
+                                          compact
+                                          className="text-xs"
+                                        />
                                       </TableCell>
                                     </TableRow>
                                   ))}

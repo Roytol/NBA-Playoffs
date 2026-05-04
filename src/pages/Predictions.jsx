@@ -10,17 +10,9 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  Trophy,
-  Star,
-  Check,
-  X,
-  AlertTriangle,
-  Edit,
-  Clock,
-} from "lucide-react";
+import { Trophy, Star, AlertTriangle, Edit, Clock } from "lucide-react";
 import TeamLogo from "../components/common/TeamLogo";
+import { PredictionStatusBadge } from "@/components/common/PredictionStatusBadge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -44,6 +36,8 @@ import {
 import { getTeamNames } from "@/api/nbaApi";
 import { useToast } from "@/components/ui/use-toast";
 import {
+  isBonusPredictionType,
+  PREDICTION_TYPES,
   PREDICTION_TABS,
   ROUND_POINTS_DISPLAY,
   SETTINGS_KEYS,
@@ -122,10 +116,10 @@ export default function PredictionsPage() {
 
       // Set initial form values if champion/MVP predictions exist
       const championPred = predictionsData.find(
-        (p) => p.prediction_type === "champion",
+        (p) => p.prediction_type === PREDICTION_TYPES.CHAMPION,
       );
       const mvpPred = predictionsData.find(
-        (p) => p.prediction_type === "finals_mvp",
+        (p) => p.prediction_type === PREDICTION_TYPES.FINALS_MVP,
       );
 
       setChampionForm({
@@ -180,7 +174,7 @@ export default function PredictionsPage() {
     setIsSubmitting(true);
     try {
       const championPred = predictions.find(
-        (p) => p.prediction_type === "champion",
+        (p) => p.prediction_type === PREDICTION_TYPES.CHAMPION,
       );
       if (championPred) {
         await updatePrediction(championPred.id, {
@@ -188,7 +182,7 @@ export default function PredictionsPage() {
         });
       } else {
         await createPrediction({
-          prediction_type: "champion",
+          prediction_type: PREDICTION_TYPES.CHAMPION,
           winner: championForm.champion,
           points_earned: 0,
           is_correct: false,
@@ -218,13 +212,13 @@ export default function PredictionsPage() {
     setIsSubmitting(true);
     try {
       const mvpPred = predictions.find(
-        (p) => p.prediction_type === "finals_mvp",
+        (p) => p.prediction_type === PREDICTION_TYPES.FINALS_MVP,
       );
       if (mvpPred) {
         await updatePrediction(mvpPred.id, { winner: mvpForm.mvp });
       } else {
         await createPrediction({
-          prediction_type: "finals_mvp",
+          prediction_type: PREDICTION_TYPES.FINALS_MVP,
           winner: mvpForm.mvp,
           points_earned: 0,
           is_correct: false,
@@ -340,10 +334,7 @@ export default function PredictionsPage() {
   const getPointsInfo = (prediction) => {
     const pointInfo = ROUND_POINTS_DISPLAY[prediction.prediction_type];
 
-    if (
-      prediction.prediction_type === "champion" ||
-      prediction.prediction_type === "finals_mvp"
-    ) {
+    if (isBonusPredictionType(prediction.prediction_type)) {
       return pointInfo?.winner ?? "-";
     } else {
       return pointInfo ? `${pointInfo.winner} / ${pointInfo.max}` : "-";
@@ -353,10 +344,10 @@ export default function PredictionsPage() {
   const getStatusBadge = (prediction) => {
     if (prediction.is_correct) {
       return (
-        <Badge className="bg-green-100 text-green-800 border-green-200">
-          <Check className="w-3 h-3 mr-1" />
-          Correct ({prediction.points_earned} pts)
-        </Badge>
+        <PredictionStatusBadge
+          status="correct"
+          points={prediction.points_earned}
+        />
       );
     }
 
@@ -364,23 +355,14 @@ export default function PredictionsPage() {
       ? getSeriesById(prediction.series_id)
       : null;
     if (!relatedSeries || relatedSeries.status === "active") {
-      return <Badge className="badge-status-info">Pending</Badge>;
+      return <PredictionStatusBadge status="pending" />;
     }
 
     if (relatedSeries.status === "completed") {
-      return (
-        <Badge className="badge-status-danger">
-          <X className="w-3 h-3 mr-1" />
-          Incorrect
-        </Badge>
-      );
+      return <PredictionStatusBadge status="incorrect" />;
     }
 
-    return (
-      <Badge className="bg-gray-100 text-gray-800 border-gray-200">
-        Unknown
-      </Badge>
-    );
+    return <PredictionStatusBadge status="unknown" />;
   };
 
   const filteredPredictions =
@@ -388,9 +370,8 @@ export default function PredictionsPage() {
       ? predictions
       : predictions.filter((p) => p.prediction_type === activeTab);
 
-  const hasChampionMVPPicks = predictions.some(
-    (p) =>
-      p.prediction_type === "champion" || p.prediction_type === "finals_mvp",
+  const hasChampionMVPPicks = predictions.some((p) =>
+    isBonusPredictionType(p.prediction_type),
   );
 
   return (
@@ -421,7 +402,9 @@ export default function PredictionsPage() {
             className="space-y-4"
           >
             {/* Champion Card */}
-            {predictions.some((p) => p.prediction_type === "champion") && (
+            {predictions.some(
+              (p) => p.prediction_type === PREDICTION_TYPES.CHAMPION,
+            ) && (
               <Card className="border-yellow-200">
                 <CardHeader className="bg-yellow-50">
                   <CardTitle className="flex items-center justify-between">
@@ -435,7 +418,10 @@ export default function PredictionsPage() {
                   <Table>
                     <TableBody>
                       {predictions
-                        .filter((p) => p.prediction_type === "champion")
+                        .filter(
+                          (p) =>
+                            p.prediction_type === PREDICTION_TYPES.CHAMPION,
+                        )
                         .map((p) => (
                           <TableRow key={p.id}>
                             <TableCell className="font-medium">
@@ -487,7 +473,9 @@ export default function PredictionsPage() {
             )}
 
             {/* MVP Card */}
-            {predictions.some((p) => p.prediction_type === "finals_mvp") &&
+            {predictions.some(
+              (p) => p.prediction_type === PREDICTION_TYPES.FINALS_MVP,
+            ) &&
               mvpStatus === "open" && (
                 <Card className="border-yellow-200">
                   <CardHeader className="bg-yellow-50">
@@ -502,7 +490,10 @@ export default function PredictionsPage() {
                     <Table>
                       <TableBody>
                         {predictions
-                          .filter((p) => p.prediction_type === "finals_mvp")
+                          .filter(
+                            (p) =>
+                              p.prediction_type === PREDICTION_TYPES.FINALS_MVP,
+                          )
                           .map((p) => (
                             <TableRow key={p.id}>
                               <TableCell className="font-medium">
@@ -629,13 +620,14 @@ export default function PredictionsPage() {
                               className="hover:bg-gray-50"
                             >
                               <TableCell>
-                                {prediction.prediction_type === "champion" ? (
+                                {prediction.prediction_type ===
+                                PREDICTION_TYPES.CHAMPION ? (
                                   <div className="flex items-center gap-2">
                                     <Trophy className="text-brand-gold w-5 h-5" />
                                     <span>NBA Champion</span>
                                   </div>
                                 ) : prediction.prediction_type ===
-                                  "finals_mvp" ? (
+                                  PREDICTION_TYPES.FINALS_MVP ? (
                                   <div className="flex items-center gap-2">
                                     <Star className="text-brand-gold w-5 h-5" />
                                     <span>Finals MVP</span>
@@ -679,8 +671,9 @@ export default function PredictionsPage() {
                                 )}
                               </TableCell>
                               <TableCell>
-                                {prediction.prediction_type === "champion" ||
-                                prediction.prediction_type === "finals_mvp" ? (
+                                {isBonusPredictionType(
+                                  prediction.prediction_type,
+                                ) ? (
                                   <div className="font-medium">
                                     {prediction.winner}
                                   </div>

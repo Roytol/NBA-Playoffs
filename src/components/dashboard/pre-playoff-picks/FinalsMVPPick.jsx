@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { SETTINGS_KEYS } from "@/constants/app";
+import { PREDICTION_TYPES, SETTINGS_KEYS } from "@/constants/app";
 import {
   createPrediction,
   listPredictionsByFilters,
@@ -76,7 +76,7 @@ export default function FinalsMVPPick({ onSave, user }) {
 
       const picks = await listPredictionsByFilters({
         user_email: user.email,
-        prediction_type: "finals_mvp",
+        prediction_type: PREDICTION_TYPES.FINALS_MVP,
       });
 
       if (picks.length > 0) {
@@ -101,7 +101,7 @@ export default function FinalsMVPPick({ onSave, user }) {
         await updatePrediction(existingPick.id, { winner: pick });
       } else {
         await createPrediction({
-          prediction_type: "finals_mvp",
+          prediction_type: PREDICTION_TYPES.FINALS_MVP,
           winner: pick,
           points_earned: 0,
           is_correct: false,

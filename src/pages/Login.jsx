@@ -8,10 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/components/ui/use-toast";
 import { AlertCircle } from "lucide-react";
+import {
+  APP_BRAND_NAME,
+  APP_BRAND_TAGLINE,
+  APP_LOGO_URL,
+} from "@/constants/branding";
 import { AUTH_TAB_TRIGGER_CLASSES } from "@/constants/theme";
 import { signInWithPassword, signUpWithPassword } from "@/services";
-
-const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -112,16 +115,14 @@ export default function Login() {
       {/* Header Brand */}
       <div className="flex flex-col items-center mb-8">
         <img
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/972189_nba-playoffs-seeklogo.png"
-          alt="NBA Playoffs Logo"
+          src={APP_LOGO_URL}
+          alt={`${APP_BRAND_NAME} Logo`}
           className="h-24 mb-4 drop-shadow-md"
         />
         <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
-          NBA Playoffs
+          {APP_BRAND_NAME}
         </h1>
-        <p className="text-gray-500 mt-2">
-          Sign in to make your predictions and view the leaderboard.
-        </p>
+        <p className="text-gray-500 mt-2">{APP_BRAND_TAGLINE}</p>
       </div>
 
       <Card className="w-full max-w-md shadow-xl border-t-4 border-t-red-500">

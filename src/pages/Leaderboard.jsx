@@ -14,6 +14,7 @@ import { Trophy, Medal, AlertTriangle, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { PREDICTION_STATUS_BADGE_CLASSES } from "@/constants/theme";
 import { createPageUrl } from "@/utils";
 import { buildLeaderboardStreaks } from "@/utils/leaderboardStreaks";
 import { formatSeasonLabel, SETTINGS_KEYS } from "@/constants/app";
@@ -347,7 +348,9 @@ export default function LeaderboardPage() {
                                 </span>
                               )}
                               {entry.player_id === currentUser?.email && (
-                                <Badge className="ml-1 bg-blue-100 text-blue-800 text-[10px] uppercase font-bold p-1 h-4 flex items-center">
+                                <Badge
+                                  className={`ml-1 ${PREDICTION_STATUS_BADGE_CLASSES.currentUser} text-[10px] uppercase font-bold p-1 h-4 flex items-center`}
+                                >
                                   You
                                 </Badge>
                               )}

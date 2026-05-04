@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getTeamNames } from "@/api/nbaApi";
-import { SETTINGS_KEYS } from "@/constants/app";
+import { PREDICTION_TYPES, SETTINGS_KEYS } from "@/constants/app";
 import { NBA_TEAM_NAMES } from "@/constants/nba";
 import {
   createPrediction,
@@ -63,7 +63,7 @@ export default function ChampionPick({ onSave, user }) {
 
       const championPicks = await listPredictionsByFilters({
         user_email: user.email,
-        prediction_type: "champion",
+        prediction_type: PREDICTION_TYPES.CHAMPION,
       });
 
       if (championPicks.length > 0) {
@@ -88,7 +88,7 @@ export default function ChampionPick({ onSave, user }) {
         await updatePrediction(existingPick.id, { winner: pick });
       } else {
         await createPrediction({
-          prediction_type: "champion",
+          prediction_type: PREDICTION_TYPES.CHAMPION,
           winner: pick,
           points_earned: 0,
           is_correct: false,

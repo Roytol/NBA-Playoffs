@@ -2,20 +2,70 @@ import React from "react";
 import { Trophy } from "lucide-react";
 import TeamLogo from "../common/TeamLogo";
 import { BRACKET_ROUND_KEYS, ROUND_LABELS } from "@/constants/app";
+import { BRACKET_THEME } from "@/constants/theme";
 import { sortSeriesForBracketDisplay } from "@/utils/bracketOrder";
 
-/** Official-adjacent NBA brand colors (mockup reference) */
-const NBA = {
-  blue: "#1D428A",
-  red: "#C8102E",
-  gold: "hsl(45 93% 47%)",
+const SEED_BADGE_WIDTHS = {
+  compact: {
+    single: "w-2.5",
+    double: "w-4",
+  },
+  regular: {
+    single: "w-3",
+    double: "w-[1.125rem]",
+  },
+  micro: {
+    single: "w-2",
+    double: "w-3.5",
+  },
 };
 
-const MOBILE_ROUND_ORDER = [
-  BRACKET_ROUND_KEYS[0],
-  BRACKET_ROUND_KEYS[1],
-  BRACKET_ROUND_KEYS[2],
-];
+const SEED_BADGE_TEXT_SIZE = {
+  micro: "text-[6px]",
+  compact: "text-[7px]",
+  regular: "text-[8px]",
+};
+
+const SERIES_SIZE_PRESETS = {
+  micro: {
+    pad: "px-1 py-1",
+    score: "text-[10px]",
+    logo: "w-3.5 h-3.5",
+    rowGap: "gap-0.5",
+    rowMargin: "mt-0.5",
+    liveText: "text-[7px]",
+    liveDot: "h-1 w-1",
+  },
+  compact: {
+    pad: "p-1.5",
+    score: "text-xs",
+    logo: "w-5 h-5",
+    rowGap: "gap-1",
+    rowMargin: "mt-1",
+    liveText: "text-[9px]",
+    liveDot: "h-1.5 w-1.5",
+  },
+  regular: {
+    pad: "p-2",
+    score: "text-sm",
+    logo: "w-6 h-6",
+    rowGap: "gap-1",
+    rowMargin: "mt-1",
+    liveText: "text-[9px]",
+    liveDot: "h-1.5 w-1.5",
+  },
+};
+
+const DENSE_ROUND_SPACING = {
+  regular: {
+    pt: ["", "pt-2", "pt-4"],
+    gap: ["space-y-1", "space-y-3", "space-y-5"],
+  },
+  micro: {
+    pt: ["", "pt-[1.35rem]", "pt-[3.05rem]"],
+    gap: ["space-y-0.5", "space-y-[2.8rem]", "space-y-[5.85rem]"],
+  },
+};
 
 function seriesKey(s) {
   return s.series_id ?? s.id ?? `${s.team1}-${s.team2}`;
@@ -47,15 +97,13 @@ const WEST_ROUND_FLOW = [
 
 function matchupShellClass(side, status) {
   const base = "relative rounded-lg border transition-shadow";
-  const eastTint =
-    "bg-white border-[#1D428A]/22 shadow-[inset_0_0_0_1px_rgba(29,66,138,0.04)] hover:border-[#1D428A]/35";
-  const westTint =
-    "bg-white border-[#C8102E]/22 shadow-[inset_0_0_0_1px_rgba(200,16,46,0.04)] hover:border-[#C8102E]/35";
-  const neutral = "bg-white border-gray-200/90";
+  const eastTint = BRACKET_THEME.matchupTint.east;
+  const westTint = BRACKET_THEME.matchupTint.west;
+  const neutral = BRACKET_THEME.matchupTint.neutral;
 
   if (side === "east") {
     if (status === "active") {
-      return `${base} ${eastTint} ring-1 ring-[#1D428A]/25 shadow-sm`;
+      return `${base} ${eastTint} ${BRACKET_THEME.matchupRing.east}`;
     }
     if (status === "completed") {
       return `${base} ${eastTint} opacity-[0.97]`;
@@ -64,7 +112,7 @@ function matchupShellClass(side, status) {
   }
   if (side === "west") {
     if (status === "active") {
-      return `${base} ${westTint} ring-1 ring-[#C8102E]/25 shadow-sm`;
+      return `${base} ${westTint} ${BRACKET_THEME.matchupRing.west}`;
     }
     if (status === "completed") {
       return `${base} ${westTint} opacity-[0.97]`;
@@ -72,7 +120,7 @@ function matchupShellClass(side, status) {
     return `${base} ${westTint}`;
   }
   if (status === "active") {
-    return `${base} ${neutral} ring-1 ring-blue-200/80 shadow-sm`;
+    return `${base} ${neutral} ${BRACKET_THEME.matchupRing.neutral}`;
   }
   return `${base} ${neutral}`;
 }
@@ -81,20 +129,18 @@ function matchupShellClass(side, status) {
 function SeedBadge({ value, compact, micro = false }) {
   const v = value ?? "—";
   const two = String(v).length >= 2;
-  const w = two
-    ? micro
-      ? "w-3.5"
-      : compact
-        ? "w-4"
-        : "w-[1.125rem]"
-    : micro
-      ? "w-2"
-      : compact
-        ? "w-2.5"
-        : "w-3";
+  const sizeKey = micro ? "micro" : compact ? "compact" : "regular";
+  const width = two
+    ? SEED_BADGE_WIDTHS[sizeKey].double
+    : SEED_BADGE_WIDTHS[sizeKey].single;
+  const textSize = micro
+    ? SEED_BADGE_TEXT_SIZE.micro
+    : compact
+      ? SEED_BADGE_TEXT_SIZE.compact
+      : SEED_BADGE_TEXT_SIZE.regular;
   return (
     <span
-      className={`tabular-nums font-medium text-gray-500 leading-none shrink-0 text-right opacity-90 ${micro ? "text-[6px]" : compact ? "text-[7px]" : "text-[8px]"} ${w}`}
+      className={`tabular-nums font-medium text-gray-500 leading-none shrink-0 text-right opacity-90 ${textSize} ${width}`}
       title="Seed"
     >
       {v}
@@ -138,13 +184,11 @@ export default function PlayoffBracket({
     seriesData,
     { compact = false, micro = false, side = "neutral" } = {},
   ) => {
-    const pad = micro ? "px-1 py-1" : compact ? "p-1.5" : "p-2";
-    const winSize = micro ? "text-[10px]" : compact ? "text-xs" : "text-sm";
-    const logo = micro ? "w-3.5 h-3.5" : compact ? "w-5 h-5" : "w-6 h-6";
-    const rowGap = micro ? "gap-0.5" : "gap-1";
-    const rowMargin = micro ? "mt-0.5" : "mt-1";
-    const liveText = micro ? "text-[7px]" : "text-[9px]";
-    const liveDot = micro ? "h-1 w-1" : "h-1.5 w-1.5";
+    const sizePreset = micro
+      ? SERIES_SIZE_PRESETS.micro
+      : compact
+        ? SERIES_SIZE_PRESETS.compact
+        : SERIES_SIZE_PRESETS.regular;
 
     if (!seriesData) {
       if (side === "finals") {
@@ -153,7 +197,7 @@ export default function PlayoffBracket({
             className={`rounded-lg bg-white border border-gray-100 ${micro ? "p-0.5" : "p-1"}`}
           >
             <div
-              className={`rounded-md border border-dashed border-amber-300/40 bg-amber-50/50 flex flex-col items-center justify-center gap-0.5 ${micro ? "py-1.5 px-1" : "py-2.5 px-2"}`}
+              className={`${BRACKET_THEME.finalsPlaceholder} ${micro ? "py-1.5 px-1" : "py-2.5 px-2"}`}
               aria-label="NBA Finals matchup not yet set"
             >
               <Trophy
@@ -180,26 +224,26 @@ export default function PlayoffBracket({
     const shell = matchupShellClass(side, seriesData.status);
 
     return (
-      <div className={`${shell} ${pad} min-w-0`}>
+      <div className={`${shell} ${sizePreset.pad} min-w-0`}>
         {isLive && (
           <div
             className={`absolute ${micro ? "top-0.5 right-0.5" : "top-1 right-1"} flex items-center gap-0.5`}
           >
-            <span className={`relative flex ${liveDot}`}>
+            <span className={`relative flex ${sizePreset.liveDot}`}>
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
               <span
-                className={`relative inline-flex rounded-full ${liveDot} bg-red-500`}
+                className={`relative inline-flex rounded-full ${sizePreset.liveDot} bg-red-500`}
               />
             </span>
             <span
-              className={`${liveText} font-bold text-red-600 uppercase tracking-wide`}
+              className={`${sizePreset.liveText} font-bold text-red-600 uppercase tracking-wide`}
             >
               Live
             </span>
           </div>
         )}
         <div
-          className={`flex justify-between items-center ${rowGap} min-w-0 ${compact ? "text-sm" : ""}`}
+          className={`flex justify-between items-center ${sizePreset.rowGap} min-w-0 ${compact ? "text-sm" : ""}`}
         >
           <div className="flex items-center gap-0.5 min-w-0">
             <SeedBadge
@@ -207,18 +251,21 @@ export default function PlayoffBracket({
               compact={compact}
               micro={micro}
             />
-            <TeamLogo team={seriesData.team1} className={`${logo} shrink-0`} />
+            <TeamLogo
+              team={seriesData.team1}
+              className={`${sizePreset.logo} shrink-0`}
+            />
           </div>
           <div className="flex items-center gap-0.5 shrink-0">
             <span
-              className={`tabular-nums font-bold text-gray-900 tracking-tight ${winSize}`}
+              className={`tabular-nums font-bold text-gray-900 tracking-tight ${sizePreset.score}`}
             >
               {w1}
             </span>
           </div>
         </div>
         <div
-          className={`flex justify-between items-center ${rowGap} ${rowMargin} min-w-0 ${compact ? "text-sm" : ""}`}
+          className={`flex justify-between items-center ${sizePreset.rowGap} ${sizePreset.rowMargin} min-w-0 ${compact ? "text-sm" : ""}`}
         >
           <div className="flex items-center gap-0.5 min-w-0">
             <SeedBadge
@@ -226,11 +273,14 @@ export default function PlayoffBracket({
               compact={compact}
               micro={micro}
             />
-            <TeamLogo team={seriesData.team2} className={`${logo} shrink-0`} />
+            <TeamLogo
+              team={seriesData.team2}
+              className={`${sizePreset.logo} shrink-0`}
+            />
           </div>
           <div className="flex items-center gap-0.5 shrink-0">
             <span
-              className={`tabular-nums font-bold text-gray-900 tracking-tight ${winSize}`}
+              className={`tabular-nums font-bold text-gray-900 tracking-tight ${sizePreset.score}`}
             >
               {w2}
             </span>
@@ -248,7 +298,9 @@ export default function PlayoffBracket({
   const ConferenceLabel = ({ children, variant }) => (
     <p
       className={`text-[9px] font-bold tracking-[0.18em] uppercase mb-2 ${
-        variant === "east" ? "text-[#1D428A]" : "text-[#C8102E]"
+        variant === "east"
+          ? BRACKET_THEME.conferenceText.east
+          : BRACKET_THEME.conferenceText.west
       }`}
     >
       {children}
@@ -264,27 +316,11 @@ export default function PlayoffBracket({
   ) => {
     const { pt, gap } = roundColumnSpacing(gapIdx);
     const densePt = micro
-      ? gapIdx === 0
-        ? ""
-        : gapIdx === 1
-          ? "pt-[1.35rem]"
-          : "pt-[3.05rem]"
-      : gapIdx === 0
-        ? ""
-        : gapIdx === 1
-          ? "pt-2"
-          : "pt-4";
+      ? DENSE_ROUND_SPACING.micro.pt[gapIdx]
+      : DENSE_ROUND_SPACING.regular.pt[gapIdx];
     const denseGap = micro
-      ? gapIdx === 0
-        ? "space-y-0.5"
-        : gapIdx === 1
-          ? "space-y-[2.8rem]"
-          : "space-y-[5.85rem]"
-      : gapIdx === 0
-        ? "space-y-1"
-        : gapIdx === 1
-          ? "space-y-3"
-          : "space-y-5";
+      ? DENSE_ROUND_SPACING.micro.gap[gapIdx]
+      : DENSE_ROUND_SPACING.regular.gap[gapIdx];
     const side = conference === "East" ? "east" : "west";
     const list = getSeriesByRoundSorted(roundKey, conference);
 
@@ -355,12 +391,11 @@ export default function PlayoffBracket({
           className="flex h-1 w-full min-w-0 rounded-full overflow-hidden mb-3 shadow-sm"
           aria-hidden
         >
-          <div className="flex-1 min-w-0 bg-[#1D428A]" />
+          <div className={`flex-1 min-w-0 ${BRACKET_THEME.brandBar.east}`} />
           <div
-            className="w-6 sm:w-7 shrink-0"
-            style={{ backgroundColor: NBA.gold }}
+            className={`w-6 sm:w-7 shrink-0 ${BRACKET_THEME.brandBar.divider}`}
           />
-          <div className="flex-1 min-w-0 bg-[#C8102E]" />
+          <div className={`flex-1 min-w-0 ${BRACKET_THEME.brandBar.west}`} />
         </div>
 
         {hasPlayIn && (
@@ -397,7 +432,7 @@ export default function PlayoffBracket({
         )}
 
         <div className="lg:hidden w-full min-w-0">
-          <div className="rounded-xl border border-gray-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,0.98))] px-2 py-2.5 shadow-[0_12px_35px_rgba(15,23,42,0.06)]">
+          <div className={BRACKET_THEME.mobileShell}>
             <div className="flex items-center justify-between gap-2 mb-2">
               <div>
                 <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-gray-500">
@@ -417,10 +452,11 @@ export default function PlayoffBracket({
 
             <div className="grid grid-cols-[1fr_2.8rem_1fr] gap-x-1 items-end mb-2">
               <div
-                className="text-center border-b-2 pb-1"
-                style={{ borderColor: NBA.blue }}
+                className={`text-center border-b-2 pb-1 ${BRACKET_THEME.conferenceBorder.east}`}
               >
-                <p className="text-[7px] font-extrabold uppercase tracking-[0.06em] text-[#1D428A]">
+                <p
+                  className={`text-[7px] font-extrabold uppercase tracking-[0.06em] ${BRACKET_THEME.conferenceText.east}`}
+                >
                   East
                 </p>
               </div>
@@ -434,10 +470,11 @@ export default function PlayoffBracket({
                 </p>
               </div>
               <div
-                className="text-center border-b-2 pb-1"
-                style={{ borderColor: NBA.red }}
+                className={`text-center border-b-2 pb-1 ${BRACKET_THEME.conferenceBorder.west}`}
               >
-                <p className="text-[7px] font-extrabold uppercase tracking-[0.06em] text-[#C8102E]">
+                <p
+                  className={`text-[7px] font-extrabold uppercase tracking-[0.06em] ${BRACKET_THEME.conferenceText.west}`}
+                >
                   West
                 </p>
               </div>
@@ -482,12 +519,10 @@ export default function PlayoffBracket({
         <div className="hidden lg:block w-full min-w-0">
           <div className="grid grid-cols-[1fr_auto_1fr] gap-x-1 sm:gap-x-2 mb-3 w-full min-w-0 items-end">
             <div
-              className="text-center border-b-2 pb-1 min-w-0"
-              style={{ borderColor: NBA.blue }}
+              className={`text-center border-b-2 pb-1 min-w-0 ${BRACKET_THEME.conferenceBorder.east}`}
             >
               <p
-                className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.14em] truncate px-0.5"
-                style={{ color: NBA.blue }}
+                className={`text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.14em] truncate px-0.5 ${BRACKET_THEME.conferenceText.east}`}
               >
                 Eastern Conference
               </p>
@@ -502,12 +537,10 @@ export default function PlayoffBracket({
               </p>
             </div>
             <div
-              className="text-center border-b-2 pb-1 min-w-0"
-              style={{ borderColor: NBA.red }}
+              className={`text-center border-b-2 pb-1 min-w-0 ${BRACKET_THEME.conferenceBorder.west}`}
             >
               <p
-                className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.14em] truncate px-0.5"
-                style={{ color: NBA.red }}
+                className={`text-[9px] sm:text-[10px] font-extrabold uppercase tracking-[0.14em] truncate px-0.5 ${BRACKET_THEME.conferenceText.west}`}
               >
                 Western Conference
               </p>

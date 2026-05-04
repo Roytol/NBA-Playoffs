@@ -19,11 +19,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
 import { useAuth } from "@/lib/AuthContext";
+import { APP_BRAND_NAME, APP_LOGO_URL } from "@/constants/branding";
 import { formatSeasonLabel, SETTINGS_KEYS } from "@/constants/app";
 import { DANGER_GHOST_BUTTON_CLASS } from "@/constants/theme";
 import { listSettings, redirectToLogin } from "@/services";
-
-const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
 export default function Layout() {
   const location = useLocation();
@@ -89,8 +88,8 @@ export default function Layout() {
               className="flex items-center gap-2"
             >
               <img
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/972189_nba-playoffs-seeklogo.png"
-                alt="NBA Playoffs Logo"
+                src={APP_LOGO_URL}
+                alt={`${APP_BRAND_NAME} Logo`}
                 className="h-10"
               />
               <div className="text-xs text-gray-500">
@@ -260,8 +259,8 @@ export default function Layout() {
 
             <Link to={createPageUrl("Dashboard")} className="flex items-center">
               <img
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/972189_nba-playoffs-seeklogo.png"
-                alt="NBA Playoffs Logo"
+                src={APP_LOGO_URL}
+                alt={`${APP_BRAND_NAME} Logo`}
                 className="h-8"
               />
             </Link>
