@@ -1,7 +1,20 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Trophy, Menu, X, Home, Star, Table2, LogIn, LogOut, BookOpen, Shield, Users, GitBranch } from "lucide-react";
+import {
+  Trophy,
+  Menu,
+  X,
+  Home,
+  Star,
+  Table2,
+  LogIn,
+  LogOut,
+  BookOpen,
+  Shield,
+  Users,
+  GitBranch,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
@@ -13,245 +26,268 @@ import { listSettings, redirectToLogin } from "@/services";
 const NBA_GRADIENT = "bg-gradient-to-r from-blue-600 via-red-500 to-blue-600";
 
 export default function Layout() {
-    const location = useLocation();
-    const currentPageName = location.pathname.substring(1) || "Dashboard";
-    const { user, logout } = useAuth();
+  const location = useLocation();
+  const currentPageName = location.pathname.substring(1) || "Dashboard";
+  const { user, logout } = useAuth();
 
-    const [sidebarOpen, setSidebarOpen] = React.useState(false);
-    const [activeSeason, setActiveSeason] = React.useState("");
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [activeSeason, setActiveSeason] = React.useState("");
 
-    // Load active season label once (lightweight, Settings table)
-    React.useEffect(() => {
-        listSettings()
-            .then((settings) => {
-                const activeSeasonSetting = settings.find((s) => s.setting_name === SETTINGS_KEYS.ACTIVE_SEASON);
-                if (activeSeasonSetting) setActiveSeason(activeSeasonSetting.setting_value);
-            })
-            .catch(() => {});
-    }, []);
+  // Load active season label once (lightweight, Settings table)
+  React.useEffect(() => {
+    listSettings()
+      .then((settings) => {
+        const activeSeasonSetting = settings.find(
+          (s) => s.setting_name === SETTINGS_KEYS.ACTIVE_SEASON,
+        );
+        if (activeSeasonSetting)
+          setActiveSeason(activeSeasonSetting.setting_value);
+      })
+      .catch(() => {});
+  }, []);
 
-    // Prevent body scroll when sidebar is open on mobile
-    React.useEffect(() => {
-        document.body.style.overflow = sidebarOpen ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
-    }, [sidebarOpen]);
-
-    const handleLogout = async () => {
-        try { await logout(); } catch (e) { console.error(e); }
+  // Prevent body scroll when sidebar is open on mobile
+  React.useEffect(() => {
+    document.body.style.overflow = sidebarOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
     };
+  }, [sidebarOpen]);
 
-    return (
-        <div className="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden">
-            {/* iOS Add to Home Screen nudge */}
-            <AddToHomeScreenBanner />
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
-            {/* Mobile sidebar backdrop */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+  return (
+    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden">
+      {/* iOS Add to Home Screen nudge */}
+      <AddToHomeScreenBanner />
 
-            {/* Sidebar */}
-            <aside className={cn(
-                "fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:static lg:translate-x-0",
-                sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            )}>
-                <div className="flex h-full flex-col overflow-y-auto">
-                    <div className="flex items-center justify-between p-4">
-                        <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
-                            <img
-                                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/972189_nba-playoffs-seeklogo.png"
-                                alt="NBA Playoffs Logo"
-                                className="h-10"
-                            />
-                            <div className="text-xs text-gray-500">
-                                {activeSeason ? `${formatSeasonLabel(activeSeason)} Prediction Game` : "Prediction Game"}
-                            </div>
-                        </Link>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="lg:hidden"
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <X className="h-6 w-6" />
-                        </Button>
-                    </div>
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-                    {/* User Profile Section */}
-                    {user ? (
-                        <div className="px-4 py-3 border-b bg-gray-50">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                    <span className="text-indigo-700 font-medium">
-                                        {user.full_name?.charAt(0) || 'U'}
-                                    </span>
-                                </div>
-                                <div>
-                                    <div className="font-medium text-gray-900 truncate max-w-[180px]">
-                                        {user.full_name}
-                                    </div>
-                                    <div className="text-sm text-gray-500 flex items-center gap-1">
-                                        <Trophy className="text-brand-gold w-4 h-4" />
-                                {user?.total_points ?? 0} points
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="px-4 py-3 border-b">
-                            <Button
-                                className="w-full justify-center"
-                                onClick={() => redirectToLogin()}
-                            >
-                                <LogIn className="w-4 h-4 mr-2" />
-                                Sign In
-                            </Button>
-                        </div>
-                    )}
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:static lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex h-full flex-col overflow-y-auto">
+          <div className="flex items-center justify-between p-4">
+            <Link
+              to={createPageUrl("Dashboard")}
+              className="flex items-center gap-2"
+            >
+              <img
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/972189_nba-playoffs-seeklogo.png"
+                alt="NBA Playoffs Logo"
+                className="h-10"
+              />
+              <div className="text-xs text-gray-500">
+                {activeSeason
+                  ? `${formatSeasonLabel(activeSeason)} Prediction Game`
+                  : "Prediction Game"}
+              </div>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+          </div>
 
-                    <nav className="flex-1 px-4 py-2 overflow-y-auto">
-                        <Link
-                            to={createPageUrl("Dashboard")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Dashboard"
-                                ? "surface-status-info text-status-info border"
-                                : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <Home className="w-5 h-5" />
-                            Dashboard
-                        </Link>
-                        <Link
-                            to={createPageUrl("Predictions")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Predictions"
-                                ? "surface-status-info text-status-info border"
-                                : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <Star className="w-5 h-5" />
-                            My Predictions
-                        </Link>
-                        <Link
-                            to={createPageUrl("AllPredictions")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "AllPredictions"
-                                ? "surface-status-info text-status-info border"
-                                : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <Users className="w-5 h-5" />
-                            All Predictions
-                        </Link>
-                        <Link
-                            to={createPageUrl("Leaderboard")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Leaderboard"
-                                ? "surface-status-info text-status-info border"
-                                : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <Table2 className="w-5 h-5" />
-                            Leaderboard
-                        </Link>
-                        <Link
-                            to={createPageUrl("PlayoffTree")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "PlayoffTree"
-                                ? "surface-status-info text-status-info border"
-                                : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <GitBranch className="w-5 h-5" />
-                            Playoff tree
-                        </Link>
-                        <Link
-                            to={createPageUrl("Rules")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Rules"
-                                ? "surface-status-info text-status-info border"
-                                : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <BookOpen className="w-5 h-5" />
-                            Rules
-                        </Link>
-                        {user?.is_admin && (
-                            <Link
-                                to={createPageUrl("Admin")}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentPageName === "Admin"
-                                    ? "surface-status-info text-status-info border"
-                                    : "text-gray-700 hover:bg-gray-100"
-                                    }`}
-                                onClick={() => setSidebarOpen(false)}
-                            >
-                                <Shield className="w-5 h-5" />
-                                Admin
-                            </Link>
-                        )}
-                    </nav>
-
-                    {user && (
-                        <div className="mt-auto p-4 border-t">
-                            <Button
-                                variant="ghost"
-                                className={`w-full justify-start ${DANGER_GHOST_BUTTON_CLASS}`}
-                                onClick={handleLogout}
-                            >
-                                <LogOut className="w-5 h-5 mr-2" />
-                                Sign Out
-                            </Button>
-                        </div>
-                    )}
+          {/* User Profile Section */}
+          {user ? (
+            <div className="px-4 py-3 border-b bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <span className="text-indigo-700 font-medium">
+                    {user.full_name?.charAt(0) || "U"}
+                  </span>
                 </div>
-            </aside>
-
-            {/* Main content */}
-            <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
-                {/* Mobile header */}
-                <header className="lg:hidden bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setSidebarOpen(true)}
-                        >
-                            <Menu className="h-6 w-6" />
-                        </Button>
-
-                        <Link to={createPageUrl("Dashboard")} className="flex items-center">
-                            <img
-                                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/972189_nba-playoffs-seeklogo.png"
-                                alt="NBA Playoffs Logo"
-                                className="h-8"
-                            />
-                        </Link>
-                    </div>
-
-                    {/* Show user info in mobile header */}
-                    {user && (
-                        <div className="flex items-center gap-3">
-                            <div className="text-sm text-gray-500 flex items-center gap-1">
-                                <Trophy className="text-brand-gold w-4 h-4" />
-                                {user?.total_points ?? 0} points
-                            </div>
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                                <span className="text-indigo-700 font-medium text-sm">
-                                    {user.full_name?.charAt(0) || 'U'}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                </header>
-
-                {/* Main content area */}
-                <main className="flex-1 overflow-y-auto">
-                    <Outlet />
-                </main>
+                <div>
+                  <div className="font-medium text-gray-900 truncate max-w-[180px]">
+                    {user.full_name}
+                  </div>
+                  <div className="text-sm text-gray-500 flex items-center gap-1">
+                    <Trophy className="text-brand-gold w-4 h-4" />
+                    {user?.total_points ?? 0} points
+                  </div>
+                </div>
+              </div>
             </div>
+          ) : (
+            <div className="px-4 py-3 border-b">
+              <Button
+                className="w-full justify-center"
+                onClick={() => redirectToLogin()}
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In
+              </Button>
+            </div>
+          )}
+
+          <nav className="flex-1 px-4 py-2 overflow-y-auto">
+            <Link
+              to={createPageUrl("Dashboard")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                currentPageName === "Dashboard"
+                  ? "surface-status-info text-status-info border"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Home className="w-5 h-5" />
+              Dashboard
+            </Link>
+            <Link
+              to={createPageUrl("Predictions")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                currentPageName === "Predictions"
+                  ? "surface-status-info text-status-info border"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Star className="w-5 h-5" />
+              My Predictions
+            </Link>
+            <Link
+              to={createPageUrl("AllPredictions")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                currentPageName === "AllPredictions"
+                  ? "surface-status-info text-status-info border"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Users className="w-5 h-5" />
+              All Predictions
+            </Link>
+            <Link
+              to={createPageUrl("Leaderboard")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                currentPageName === "Leaderboard"
+                  ? "surface-status-info text-status-info border"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Table2 className="w-5 h-5" />
+              Leaderboard
+            </Link>
+            <Link
+              to={createPageUrl("PlayoffTree")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                currentPageName === "PlayoffTree"
+                  ? "surface-status-info text-status-info border"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <GitBranch className="w-5 h-5" />
+              Playoff tree
+            </Link>
+            <Link
+              to={createPageUrl("Rules")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                currentPageName === "Rules"
+                  ? "surface-status-info text-status-info border"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <BookOpen className="w-5 h-5" />
+              Rules
+            </Link>
+            {user?.is_admin && (
+              <Link
+                to={createPageUrl("Admin")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  currentPageName === "Admin"
+                    ? "surface-status-info text-status-info border"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <Shield className="w-5 h-5" />
+                Admin
+              </Link>
+            )}
+          </nav>
+
+          {user && (
+            <div className="mt-auto p-4 border-t">
+              <Button
+                variant="ghost"
+                className={`w-full justify-start ${DANGER_GHOST_BUTTON_CLASS}`}
+                onClick={handleLogout}
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          )}
         </div>
-    );
+      </aside>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+        {/* Mobile header */}
+        <header className="lg:hidden bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+
+            <Link to={createPageUrl("Dashboard")} className="flex items-center">
+              <img
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/972189_nba-playoffs-seeklogo.png"
+                alt="NBA Playoffs Logo"
+                className="h-8"
+              />
+            </Link>
+          </div>
+
+          {/* Show user info in mobile header */}
+          {user && (
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-gray-500 flex items-center gap-1">
+                <Trophy className="text-brand-gold w-4 h-4" />
+                {user?.total_points ?? 0} points
+              </div>
+              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                <span className="text-indigo-700 font-medium text-sm">
+                  {user.full_name?.charAt(0) || "U"}
+                </span>
+              </div>
+            </div>
+          )}
+        </header>
+
+        {/* Main content area */}
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
 }

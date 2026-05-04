@@ -10,160 +10,167 @@
  *   - App user record   → app-level data (is_admin, points) fetched ONCE after session confirmed
  */
 
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/db';
-import { getCurrentUser, getSession, logoutUser, onAuthStateChange } from '@/services';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
+import { supabase } from "@/lib/db";
+import {
+  getCurrentUser,
+  getSession,
+  logoutUser,
+  onAuthStateChange,
+} from "@/services";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    // isLoadingAuth starts true and becomes false after INITIAL_SESSION fires.
-    // For logged-in users this happens almost instantly (localStorage read).
-    const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState(null);
+  // isLoadingAuth starts true and becomes false after INITIAL_SESSION fires.
+  // For logged-in users this happens almost instantly (localStorage read).
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
 
-    // Fetch the app-level User record (is_admin, total_points, etc.)
-    // Called only when we have a confirmed Supabase session.
-    const loadAppUser = useCallback(async () => {
-        try {
-            const appUser = await getCurrentUser();
-            setUser(appUser);
-            setIsAuthenticated(true);
-        } catch (err) {
-            console.error('[Auth] Failed to load app user:', err);
-            // Session exists but no app record — treat as unauthenticated
-            setUser(null);
-            setIsAuthenticated(false);
-        } finally {
-            setIsLoadingAuth(false);
-        }
-    }, []);
+  // Fetch the app-level User record (is_admin, total_points, etc.)
+  // Called only when we have a confirmed Supabase session.
+  const loadAppUser = useCallback(async () => {
+    try {
+      const appUser = await getCurrentUser();
+      setUser(appUser);
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error("[Auth] Failed to load app user:", err);
+      // Session exists but no app record — treat as unauthenticated
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  }, []);
 
-    // Clean, robust initialization pattern
-    useEffect(() => {
-        let isMounted = true;
+  // Clean, robust initialization pattern
+  useEffect(() => {
+    let isMounted = true;
 
-        // 1. Explicitly initialize session state on mount
-        // This is the official reliable way in React, completely bypassing
-        // the flaky INITIAL_SESSION event from onAuthStateChange.
-        getSession().then(({ data: { session }, error }) => {
-            if (error) {
-                console.error('[Auth] Initial session error:', error);
-                if (isMounted) setIsLoadingAuth(false);
-                return;
-            }
+    // 1. Explicitly initialize session state on mount
+    // This is the official reliable way in React, completely bypassing
+    // the flaky INITIAL_SESSION event from onAuthStateChange.
+    getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error("[Auth] Initial session error:", error);
+        if (isMounted) setIsLoadingAuth(false);
+        return;
+      }
 
-            if (session) {
-                loadAppUser().finally(() => {
-                    if (isMounted) setIsLoadingAuth(false);
-                });
-            } else {
-                if (isMounted) setIsLoadingAuth(false);
-            }
+      if (session) {
+        loadAppUser().finally(() => {
+          if (isMounted) setIsLoadingAuth(false);
         });
+      } else {
+        if (isMounted) setIsLoadingAuth(false);
+      }
+    });
 
-        // 2. Listen ONLY for subsequent active changes
-        const { data: { subscription } } = onAuthStateChange(
-            (event, session) => {
-                if (!isMounted) return;
+    // 2. Listen ONLY for subsequent active changes
+    const {
+      data: { subscription },
+    } = onAuthStateChange((event, session) => {
+      if (!isMounted) return;
 
-                if (event === 'SIGNED_IN') {
-                    setIsLoadingAuth(true);
-                    loadAppUser().finally(() => {
-                        if (isMounted) setIsLoadingAuth(false);
-                    });
-                } else if (event === 'SIGNED_OUT') {
-                    setUser(null);
-                    setIsAuthenticated(false);
-                    setIsLoadingAuth(false);
-                }
-                // We completely ignore 'INITIAL_SESSION' here because it's inherently 
-                // subject to race conditions in React 18. Step 1 guarantees initialization.
-            }
-        );
+      if (event === "SIGNED_IN") {
+        setIsLoadingAuth(true);
+        loadAppUser().finally(() => {
+          if (isMounted) setIsLoadingAuth(false);
+        });
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsLoadingAuth(false);
+      }
+      // We completely ignore 'INITIAL_SESSION' here because it's inherently
+      // subject to race conditions in React 18. Step 1 guarantees initialization.
+    });
 
-        return () => {
-            isMounted = false;
-            subscription.unsubscribe();
-        };
-    }, [loadAppUser]);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [loadAppUser]);
 
-    // Keep app-level user data live so menu points/admin status stay aligned
-    // after scoring triggers or a season reset update the User table.
-    useEffect(() => {
-        if (!user?.email) return undefined;
+  // Keep app-level user data live so menu points/admin status stay aligned
+  // after scoring triggers or a season reset update the User table.
+  useEffect(() => {
+    if (!user?.email) return undefined;
 
-        const channel = supabase
-            .channel(`user-profile-${user.email}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'User',
-                    filter: `email=eq.${user.email}`,
-                },
-                async () => {
-                    await loadAppUser();
-                }
-            )
-            .subscribe();
+    const channel = supabase
+      .channel(`user-profile-${user.email}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "User",
+          filter: `email=eq.${user.email}`,
+        },
+        async () => {
+          await loadAppUser();
+        },
+      )
+      .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [loadAppUser, user?.email]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadAppUser, user?.email]);
 
-    // Revalidate on focus/visibility in case the client misses realtime events
-    // while backgrounded or waking from sleep.
-    useEffect(() => {
-        if (!isAuthenticated) return undefined;
+  // Revalidate on focus/visibility in case the client misses realtime events
+  // while backgrounded or waking from sleep.
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
 
-        const refreshFromDatabase = () => {
-            if (document.visibilityState === 'visible') {
-                loadAppUser().catch((err) => {
-                    console.error('[Auth] Failed to refresh app user on focus:', err);
-                });
-            }
-        };
-
-        window.addEventListener('focus', refreshFromDatabase);
-        document.addEventListener('visibilitychange', refreshFromDatabase);
-
-        return () => {
-            window.removeEventListener('focus', refreshFromDatabase);
-            document.removeEventListener('visibilitychange', refreshFromDatabase);
-        };
-    }, [isAuthenticated, loadAppUser]);
-
-    const logout = useCallback(async () => {
-        await logoutUser();
-        // SIGNED_OUT event above handles state cleanup.
-    }, []);
-
-    const value = {
-        user,
-        isAuthenticated,
-        isLoadingAuth,
-        // Keep authChecked as an alias so existing consumers don't break.
-        authChecked: !isLoadingAuth,
-        logout,
-        // Expose refresh for cases where app user data needs manual reload.
-        refreshUser: loadAppUser,
+    const refreshFromDatabase = () => {
+      if (document.visibilityState === "visible") {
+        loadAppUser().catch((err) => {
+          console.error("[Auth] Failed to refresh app user on focus:", err);
+        });
+      }
     };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+    window.addEventListener("focus", refreshFromDatabase);
+    document.addEventListener("visibilitychange", refreshFromDatabase);
+
+    return () => {
+      window.removeEventListener("focus", refreshFromDatabase);
+      document.removeEventListener("visibilitychange", refreshFromDatabase);
+    };
+  }, [isAuthenticated, loadAppUser]);
+
+  const logout = useCallback(async () => {
+    await logoutUser();
+    // SIGNED_OUT event above handles state cleanup.
+  }, []);
+
+  const value = {
+    user,
+    isAuthenticated,
+    isLoadingAuth,
+    // Keep authChecked as an alias so existing consumers don't break.
+    authChecked: !isLoadingAuth,
+    logout,
+    // Expose refresh for cases where app user data needs manual reload.
+    refreshUser: loadAppUser,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

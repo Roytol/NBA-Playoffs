@@ -1,8 +1,10 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import SeriesCard from "../components/dashboard/SeriesCard";
-import { ChampionPick, FinalsMVPPick } from "../components/dashboard/PrePlayoffPicks";
+import {
+  ChampionPick,
+  FinalsMVPPick,
+} from "../components/dashboard/PrePlayoffPicks";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Trophy, RefreshCw, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,480 +14,528 @@ import { useAuth } from "@/lib/AuthContext";
 import TeamLogo from "@/components/common/TeamLogo";
 import { formatLiveGameDetail } from "@/utils";
 import { ROUND_SORT_ORDER } from "@/constants/app";
-import { listPredictionsForUser, listSeries, redirectToLogin } from "@/services";
+import {
+  listPredictionsForUser,
+  listSeries,
+  redirectToLogin,
+} from "@/services";
 
 export default function Dashboard() {
-    const { user } = useAuth();
-    const [series, setSeries] = React.useState([]);
-    const [predictions, setPredictions] = React.useState([]);
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState(null);
-    const [loadRetries, setLoadRetries] = React.useState(0);
-    const [loadingMessage, setLoadingMessage] = React.useState("Loading playoff data...");
-    const [completedExpanded, setCompletedExpanded] = React.useState(false);
+  const { user } = useAuth();
+  const [series, setSeries] = React.useState([]);
+  const [predictions, setPredictions] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [loadRetries, setLoadRetries] = React.useState(0);
+  const [loadingMessage, setLoadingMessage] = React.useState(
+    "Loading playoff data...",
+  );
+  const [completedExpanded, setCompletedExpanded] = React.useState(false);
 
-    // NBA API sync
-    const { syncing, lastSynced, error: syncError, triggerSync } = useNbaSync();
+  // NBA API sync
+  const { syncing, lastSynced, error: syncError, triggerSync } = useNbaSync();
 
-    // Live scores polling via Realtime
-    const { isPolling, liveGames } = useLiveScores(series, React.useCallback((updatedSeries) => {
-        setSeries(prev => prev.map(s => s.id === updatedSeries.id ? updatedSeries : s));
-    }, []));
+  // Live scores polling via Realtime
+  const { isPolling, liveGames } = useLiveScores(
+    series,
+    React.useCallback((updatedSeries) => {
+      setSeries((prev) =>
+        prev.map((s) => (s.id === updatedSeries.id ? updatedSeries : s)),
+      );
+    }, []),
+  );
 
-    // Reload series data silently after background sync completes
-    React.useEffect(() => {
-        if (lastSynced) {
-            loadData(true);
+  // Reload series data silently after background sync completes
+  React.useEffect(() => {
+    if (lastSynced) {
+      loadData(true);
+    }
+  }, [lastSynced]);
+
+  React.useEffect(() => {
+    loadData();
+  }, [loadRetries]);
+
+  const loadData = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
+    setError(null);
+
+    try {
+      if (!isBackground) setLoadingMessage("Loading playoff series...");
+
+      // Series and user predictions are independent — fetch in parallel
+      const [seriesData, predictionsData] = await Promise.all([
+        listSeries().catch((e) => {
+          console.error("Failed to load series:", e);
+          setError(
+            "Failed to load playoff data. Please try refreshing the page.",
+          );
+          return [];
+        }),
+        user
+          ? listPredictionsForUser(user.email).catch((e) => {
+              console.error("Failed to load predictions:", e);
+              return [];
+            })
+          : Promise.resolve([]),
+      ]);
+
+      setSeries(seriesData);
+      setPredictions(predictionsData);
+    } catch (err) {
+      console.error("Error loading dashboard data:", err);
+      setError("Failed to load playoff data. Please try refreshing the page.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setLoadRetries((prev) => prev + 1);
+  };
+
+  const hasChampionPick = React.useMemo(() => {
+    return predictions.some(
+      (p) => p.prediction_type === "champion" && p.user_email === user?.email,
+    );
+  }, [predictions, user]);
+
+  const hasFinalsMVPPick = React.useMemo(() => {
+    return predictions.some(
+      (p) => p.prediction_type === "finals_mvp" && p.user_email === user?.email,
+    );
+  }, [predictions, user]);
+
+  // Update the categorizedSeries memo to include sorting for both active and completed series
+  const categorizedSeries = React.useMemo(() => {
+    if (!series.length) return { active: [], closed: [], completed: [] };
+
+    const now = new Date();
+    const categorized = series.reduce(
+      (acc, s) => {
+        const deadline = new Date(s.prediction_deadline);
+
+        if (s.status === "completed") {
+          acc.completed.push(s);
+        } else if (deadline > now) {
+          acc.active.push(s);
+        } else {
+          acc.closed.push(s);
         }
-    }, [lastSynced]);
 
-    React.useEffect(() => {
-        loadData();
-    }, [loadRetries]);
+        return acc;
+      },
+      { active: [], closed: [], completed: [] },
+    );
 
-    const loadData = async (isBackground = false) => {
-        if (!isBackground) setLoading(true);
-        setError(null);
+    // Sort active series by deadline (earliest first)
+    categorized.active.sort(
+      (a, b) =>
+        new Date(a.prediction_deadline) - new Date(b.prediction_deadline),
+    );
 
-        try {
-            if (!isBackground) setLoadingMessage("Loading playoff series...");
+    // Sort closed series by round order (play-in → finals)
+    categorized.closed.sort(
+      (a, b) =>
+        (ROUND_SORT_ORDER[a.round] ?? 99) - (ROUND_SORT_ORDER[b.round] ?? 99),
+    );
 
-            // Series and user predictions are independent — fetch in parallel
-            const [seriesData, predictionsData] = await Promise.all([
-                listSeries().catch(e => {
-                    console.error("Failed to load series:", e);
-                    setError("Failed to load playoff data. Please try refreshing the page.");
-                    return [];
-                }),
-                user
-                    ? listPredictionsForUser(user.email).catch(e => {
-                        console.error("Failed to load predictions:", e);
-                        return [];
-                    })
-                    : Promise.resolve([]),
-            ]);
+    // Sort completed series by date (latest first)
+    categorized.completed.sort(
+      (a, b) =>
+        new Date(b.prediction_deadline) - new Date(a.prediction_deadline),
+    );
 
-            setSeries(seriesData);
-            setPredictions(predictionsData);
-        } catch (err) {
-            console.error("Error loading dashboard data:", err);
-            setError("Failed to load playoff data. Please try refreshing the page.");
-        } finally {
-            setLoading(false);
-        }
-    };
+    return categorized;
+  }, [series]);
 
-    const handleRetry = () => {
-        setLoadRetries(prev => prev + 1);
-    };
+  // Check if any series has a live game
+  const hasLiveGame = React.useMemo(() => {
+    return series.some((s) => s.current_game?.is_live);
+  }, [series]);
 
-    const hasChampionPick = React.useMemo(() => {
-        return predictions.some(p => p.prediction_type === "champion" && p.user_email === user?.email);
-    }, [predictions, user]);
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-6xl mx-auto p-4 sm:p-6"
+      >
+        <Alert variant="destructive" className="my-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button size="sm" onClick={handleRetry}>
+              Try Again
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </motion.div>
+    );
+  }
 
-    const hasFinalsMVPPick = React.useMemo(() => {
-        return predictions.some(p => p.prediction_type === "finals_mvp" && p.user_email === user?.email);
-    }, [predictions, user]);
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-6xl mx-auto p-3 sm:p-6"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4 sm:mb-6"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2">
+              NBA Playoffs
+            </h1>
+            <p className="text-sm text-gray-500">
+              Make your predictions and compete with others
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Live indicator */}
+            {hasLiveGame && (
+              <div className="surface-status-danger flex items-center gap-1.5 px-2.5 py-1 rounded-full border">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="bg-status-danger-strong relative inline-flex rounded-full h-2 w-2"></span>
+                </span>
+                <span className="text-status-danger text-xs font-medium">
+                  LIVE
+                </span>
+              </div>
+            )}
 
-    // Update the categorizedSeries memo to include sorting for both active and completed series
-    const categorizedSeries = React.useMemo(() => {
-        if (!series.length) return { active: [], closed: [], completed: [] };
+            {/* Sync button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={triggerSync}
+              disabled={syncing}
+              className="text-gray-500"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`}
+              />
+            </Button>
+          </div>
+        </div>
 
-        const now = new Date();
-        const categorized = series.reduce((acc, s) => {
-            const deadline = new Date(s.prediction_deadline);
+        {/* Sync status bar */}
+        {(syncing || syncError) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mt-2"
+          >
+            {syncing && (
+              <div className="surface-status-info text-status-info flex items-center gap-2 text-xs rounded-lg border px-3 py-1.5">
+                <RefreshCw className="h-3 w-3 animate-spin" />
+                Syncing playoff data...
+              </div>
+            )}
+            {syncError && (
+              <div className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-1.5">
+                Sync issue: {syncError} — showing cached data
+              </div>
+            )}
+          </motion.div>
+        )}
+      </motion.div>
 
-            if (s.status === "completed") {
-                acc.completed.push(s);
-            } else if (deadline > now) {
-                acc.active.push(s);
-            } else {
-                acc.closed.push(s);
-            }
+      <AnimatePresence>
+        {!loading && !user && (
+          <motion.div
+            key="login-prompt"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="surface-status-info rounded-lg border p-4 sm:p-6 mb-4 sm:mb-8 text-center"
+          >
+            <h2 className="text-base sm:text-lg font-semibold mb-2">
+              Sign in to make predictions
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Join the competition and track your predictions
+            </p>
+            <Button onClick={() => redirectToLogin()}>Sign In</Button>
+          </motion.div>
+        )}
 
-            return acc;
-        }, { active: [], closed: [], completed: [] });
+        {!loading && user && !hasChampionPick && (
+          <motion.div
+            key="champ-pick"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-4"
+          >
+            <ChampionPick onSave={() => loadData(true)} user={user} />
+          </motion.div>
+        )}
 
-        // Sort active series by deadline (earliest first)
-        categorized.active.sort((a, b) =>
-            new Date(a.prediction_deadline) - new Date(b.prediction_deadline)
-        );
+        {!loading && user && !hasFinalsMVPPick && (
+          <motion.div
+            key="mvp-pick"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-4"
+          >
+            <FinalsMVPPick onSave={() => loadData(true)} user={user} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        // Sort closed series by round order (play-in → finals)
-        categorized.closed.sort((a, b) =>
-            (ROUND_SORT_ORDER[a.round] ?? 99) - (ROUND_SORT_ORDER[b.round] ?? 99)
-        );
-
-        // Sort completed series by date (latest first)
-        categorized.completed.sort((a, b) =>
-            new Date(b.prediction_deadline) - new Date(a.prediction_deadline)
-        );
-
-        return categorized;
-    }, [series]);
-
-    // Check if any series has a live game
-    const hasLiveGame = React.useMemo(() => {
-        return series.some(s => s.current_game?.is_live);
-    }, [series]);
-
-    if (error) {
-        return (
-            <motion.div
+      {loading ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-8 sm:py-12"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white shadow-md">
+            <div className="text-status-info animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-current"></div>
+            <span className="text-sm text-gray-600">{loadingMessage}</span>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="space-y-6 sm:space-y-8"
+        >
+          <AnimatePresence mode="popLayout">
+            {/* Active Series */}
+            {categorizedSeries.active.length > 0 && (
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-6xl mx-auto p-4 sm:p-6"
-            >
-                <Alert variant="destructive" className="my-6">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="flex items-center justify-between">
-                        <span>{error}</span>
-                        <Button size="sm" onClick={handleRetry}>Try Again</Button>
-                    </AlertDescription>
-                </Alert>
-            </motion.div>
-        );
-    }
-
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="max-w-6xl mx-auto p-3 sm:p-6"
-        >
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 sm:mb-6"
-            >
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2">NBA Playoffs</h1>
-                        <p className="text-sm text-gray-500">Make your predictions and compete with others</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {/* Live indicator */}
-                        {hasLiveGame && (
-                            <div className="surface-status-danger flex items-center gap-1.5 px-2.5 py-1 rounded-full border">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                    <span className="bg-status-danger-strong relative inline-flex rounded-full h-2 w-2"></span>
-                                </span>
-                                <span className="text-status-danger text-xs font-medium">LIVE</span>
-                            </div>
-                        )}
-
-                        {/* Sync button */}
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={triggerSync}
-                            disabled={syncing}
-                            className="text-gray-500"
-                        >
-                            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                        </Button>
-                    </div>
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+                  <Trophy className="text-status-info w-4 h-4 sm:w-5 sm:h-5" />
+                  Open for Predictions
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
+                  {categorizedSeries.active.map((seriesItem) => (
+                    <motion.div
+                      key={seriesItem.id || seriesItem.series_id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <SeriesCard
+                        series={seriesItem}
+                        predictions={predictions}
+                        user={user}
+                        onPredictionMade={() => loadData(true)}
+                      />
+                    </motion.div>
+                  ))}
                 </div>
-
-                {/* Sync status bar */}
-                {(syncing || syncError) && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mt-2"
-                    >
-                        {syncing && (
-                            <div className="surface-status-info text-status-info flex items-center gap-2 text-xs rounded-lg border px-3 py-1.5">
-                                <RefreshCw className="h-3 w-3 animate-spin" />
-                                Syncing playoff data...
-                            </div>
-                        )}
-                        {syncError && (
-                            <div className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-1.5">
-                                Sync issue: {syncError} — showing cached data
-                            </div>
-                        )}
-                    </motion.div>
-                )}
-            </motion.div>
-
-            <AnimatePresence>
-                {!loading && !user && (
-                    <motion.div
-                        key="login-prompt"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="surface-status-info rounded-lg border p-4 sm:p-6 mb-4 sm:mb-8 text-center"
-                    >
-                        <h2 className="text-base sm:text-lg font-semibold mb-2">Sign in to make predictions</h2>
-                        <p className="text-sm text-gray-600 mb-4">Join the competition and track your predictions</p>
-                        <Button onClick={() => redirectToLogin()}>Sign In</Button>
-                    </motion.div>
-                )}
-
-                {!loading && user && !hasChampionPick && (
-                    <motion.div
-                        key="champ-pick"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="mb-4"
-                    >
-                        <ChampionPick onSave={() => loadData(true)} user={user} />
-                    </motion.div>
-                )}
-
-                {!loading && user && !hasFinalsMVPPick && (
-                    <motion.div
-                        key="mvp-pick"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="mb-4"
-                    >
-                        <FinalsMVPPick onSave={() => loadData(true)} user={user} />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {loading ? (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center py-8 sm:py-12"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white shadow-md">
-                        <div className="text-status-info animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-current"></div>
-                        <span className="text-sm text-gray-600">{loadingMessage}</span>
-                    </div>
-                </motion.div>
-            ) : (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="space-y-6 sm:space-y-8"
-                >
-                    <AnimatePresence mode="popLayout">
-                        {/* Active Series */}
-                        {categorizedSeries.active.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                            >
-                                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-                                    <Trophy className="text-status-info w-4 h-4 sm:w-5 sm:h-5" />
-                                    Open for Predictions
-                                </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
-                                    {categorizedSeries.active.map((seriesItem) => (
-                                        <motion.div
-                                            key={seriesItem.id || seriesItem.series_id}
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <SeriesCard
-                                                series={seriesItem}
-                                                predictions={predictions}
-                                                user={user}
-                                                onPredictionMade={() => loadData(true)}
-                                            />
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Closed Series */}
-                        {categorizedSeries.closed.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                            >
-                                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-                                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                                    Predictions Closed
-                                </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
-                                    {categorizedSeries.closed.map((seriesItem) => (
-                                        <motion.div
-                                            key={seriesItem.id || seriesItem.series_id}
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <SeriesCard
-                                                series={seriesItem}
-                                                predictions={predictions}
-                                                user={user}
-                                                onPredictionMade={() => loadData(true)}
-                                            />
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Completed Series — collapsed by default */}
-                        {categorizedSeries.completed.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                            >
-                                <button
-                                    onClick={() => setCompletedExpanded(prev => !prev)}
-                                    className="w-full flex items-center justify-between mb-3 sm:mb-4 group"
-                                >
-                                    <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                                        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                                        Completed Series
-                                        <span className="text-sm font-normal text-gray-400 ml-1">
-                                            ({categorizedSeries.completed.length})
-                                        </span>
-                                    </h2>
-                                    <ChevronDown
-                                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                                            completedExpanded ? 'rotate-180' : ''
-                                        }`}
-                                    />
-                                </button>
-
-                                <AnimatePresence>
-                                    {completedExpanded && (
-                                        <motion.div
-                                            key="completed-grid"
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            transition={{ duration: 0.25 }}
-                                            style={{ overflow: 'hidden' }}
-                                        >
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
-                                                {categorizedSeries.completed.map((seriesItem) => (
-                                                    <motion.div
-                                                        key={seriesItem.id || seriesItem.series_id}
-                                                        initial={{ opacity: 0, scale: 0.95 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        transition={{ duration: 0.2 }}
-                                                    >
-                                                        <SeriesCard
-                                                            series={seriesItem}
-                                                            predictions={predictions}
-                                                            user={user}
-                                                            onPredictionMade={() => loadData(true)}
-                                                        />
-                                                    </motion.div>
-                                                ))}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
-                        )}
-
-                        {/* No series message */}
-                        {!categorizedSeries.active.length &&
-                            !categorizedSeries.closed.length &&
-                            !categorizedSeries.completed.length && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="text-center py-8 sm:py-12 text-gray-500 text-sm"
-                                >
-                                    {syncing ? 'Syncing playoff data from NBA API...' : 'No series available at the moment. Playoff data will appear once the season starts.'}
-                                </motion.div>
-                            )}
-                    </AnimatePresence>
-                </motion.div>
+              </motion.div>
             )}
-            {/* Floating Live Games Box */}
-            <AnimatePresence>
-                {(() => {
-                    const activeLiveGames = (liveGames || []).filter(g => 
-                        g.status && 
-                        g.status !== 'Final' && 
-                        !g.status.includes('T') && 
-                        !g.status.includes('Z') &&
-                        !g.status.includes(':00')
-                    );
-                    
-                    if (activeLiveGames.length === 0) return null;
 
-                    return (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                            className="fixed bottom-4 right-4 z-50 w-64 sm:w-72"
-                        >
-                            <div className="bg-white/90 backdrop-blur-md border border-red-100 shadow-2xl rounded-2xl overflow-hidden">
-                                <div className="bg-status-danger-strong px-4 py-2 flex items-center justify-between text-white">
-                                    <div className="flex items-center gap-2">
-                                        <span className="relative flex h-2 w-2">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                                        </span>
-                                        <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Now</span>
-                                    </div>
-                                    <Trophy className="w-3 h-3 text-white/50" />
-                                </div>
-                                <div className="p-3 space-y-3">
-                                    {activeLiveGames.map((game, idx) => (
-                                        <div key={game.id || idx} className="space-y-1">
-                                            <div className="flex items-center justify-between text-xs font-medium text-gray-400 px-1">
-                                                <span>{game.period ? "LIVE" : game.status}</span>
-                                                {game.period && (
-                                                    <span className="text-status-danger font-bold uppercase tracking-tighter">
-                                                        {formatLiveGameDetail(game)}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-100">
-                                                <div className="flex flex-col items-center flex-1">
-                                                    <div className="flex items-center gap-1.5 min-w-0">
-                                                        {game.home_team?.full_name && (
-                                                            <TeamLogo
-                                                                team={game.home_team.full_name}
-                                                                className="w-4 h-4 shrink-0"
-                                                            />
-                                                        )}
-                                                        <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">
-                                                            {game.home_team?.name || 'Home'}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-xl font-black text-gray-900 leading-tight">{game.home_team_score}</span>
-                                                </div>
-                                                <div className="px-2 text-[10px] font-bold text-gray-300">VS</div>
-                                                <div className="flex flex-col items-center flex-1">
-                                                    <div className="flex items-center gap-1.5 min-w-0">
-                                                        {game.visitor_team?.full_name && (
-                                                            <TeamLogo
-                                                                team={game.visitor_team.full_name}
-                                                                className="w-4 h-4 shrink-0"
-                                                            />
-                                                        )}
-                                                        <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">
-                                                            {game.visitor_team?.name || 'Away'}
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-xl font-black text-gray-900 leading-tight">{game.visitor_team_score}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
-                    );
-                })()}
-            </AnimatePresence>
+            {/* Closed Series */}
+            {categorizedSeries.closed.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                  Predictions Closed
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
+                  {categorizedSeries.closed.map((seriesItem) => (
+                    <motion.div
+                      key={seriesItem.id || seriesItem.series_id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <SeriesCard
+                        series={seriesItem}
+                        predictions={predictions}
+                        user={user}
+                        onPredictionMade={() => loadData(true)}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Completed Series — collapsed by default */}
+            {categorizedSeries.completed.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <button
+                  onClick={() => setCompletedExpanded((prev) => !prev)}
+                  className="w-full flex items-center justify-between mb-3 sm:mb-4 group"
+                >
+                  <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
+                    Completed Series
+                    <span className="text-sm font-normal text-gray-400 ml-1">
+                      ({categorizedSeries.completed.length})
+                    </span>
+                  </h2>
+                  <ChevronDown
+                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                      completedExpanded ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {completedExpanded && (
+                    <motion.div
+                      key="completed-grid"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.25 }}
+                      style={{ overflow: "hidden" }}
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
+                        {categorizedSeries.completed.map((seriesItem) => (
+                          <motion.div
+                            key={seriesItem.id || seriesItem.series_id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <SeriesCard
+                              series={seriesItem}
+                              predictions={predictions}
+                              user={user}
+                              onPredictionMade={() => loadData(true)}
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+
+            {/* No series message */}
+            {!categorizedSeries.active.length &&
+              !categorizedSeries.closed.length &&
+              !categorizedSeries.completed.length && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-8 sm:py-12 text-gray-500 text-sm"
+                >
+                  {syncing
+                    ? "Syncing playoff data from NBA API..."
+                    : "No series available at the moment. Playoff data will appear once the season starts."}
+                </motion.div>
+              )}
+          </AnimatePresence>
         </motion.div>
-    );
+      )}
+      {/* Floating Live Games Box */}
+      <AnimatePresence>
+        {(() => {
+          const activeLiveGames = (liveGames || []).filter(
+            (g) =>
+              g.status &&
+              g.status !== "Final" &&
+              !g.status.includes("T") &&
+              !g.status.includes("Z") &&
+              !g.status.includes(":00"),
+          );
+
+          if (activeLiveGames.length === 0) return null;
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              className="fixed bottom-4 right-4 z-50 w-64 sm:w-72"
+            >
+              <div className="bg-white/90 backdrop-blur-md border border-red-100 shadow-2xl rounded-2xl overflow-hidden">
+                <div className="bg-status-danger-strong px-4 py-2 flex items-center justify-between text-white">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span className="text-[10px] font-bold text-white uppercase tracking-widest">
+                      Live Now
+                    </span>
+                  </div>
+                  <Trophy className="w-3 h-3 text-white/50" />
+                </div>
+                <div className="p-3 space-y-3">
+                  {activeLiveGames.map((game, idx) => (
+                    <div key={game.id || idx} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs font-medium text-gray-400 px-1">
+                        <span>{game.period ? "LIVE" : game.status}</span>
+                        {game.period && (
+                          <span className="text-status-danger font-bold uppercase tracking-tighter">
+                            {formatLiveGameDetail(game)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-100">
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {game.home_team?.full_name && (
+                              <TeamLogo
+                                team={game.home_team.full_name}
+                                className="w-4 h-4 shrink-0"
+                              />
+                            )}
+                            <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">
+                              {game.home_team?.name || "Home"}
+                            </span>
+                          </div>
+                          <span className="text-xl font-black text-gray-900 leading-tight">
+                            {game.home_team_score}
+                          </span>
+                        </div>
+                        <div className="px-2 text-[10px] font-bold text-gray-300">
+                          VS
+                        </div>
+                        <div className="flex flex-col items-center flex-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {game.visitor_team?.full_name && (
+                              <TeamLogo
+                                team={game.visitor_team.full_name}
+                                className="w-4 h-4 shrink-0"
+                              />
+                            )}
+                            <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">
+                              {game.visitor_team?.name || "Away"}
+                            </span>
+                          </div>
+                          <span className="text-xl font-black text-gray-900 leading-tight">
+                            {game.visitor_team_score}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+    </motion.div>
+  );
 }

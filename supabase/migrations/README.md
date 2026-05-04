@@ -4,21 +4,21 @@ Each file in this folder is a **single, named SQL migration** that runs exactly 
 
 ## Status Legend
 
-| Icon | Meaning |
-|------|---------|
-| ✅ | Already applied to the live DB |
-| 🔴 | Not yet applied — needs to be run |
+| Icon | Meaning                           |
+| ---- | --------------------------------- |
+| ✅   | Already applied to the live DB    |
+| 🔴   | Not yet applied — needs to be run |
 
 ## Migration Log
 
-| File | Description | Status |
-|------|-------------|--------|
-| `20250417_001_initial_schema.sql` | Leaderboard view + original scoring triggers | ✅ Applied |
-| `20250418_002_season_columns.sql` | Adds `season` column to Series & Prediction | ✅ Applied |
-| `20250418_003_settings_unique.sql` | UNIQUE constraint on `Settings.setting_name` | ✅ Applied |
-| `20250418_004_dynamic_scoring_trigger.sql` | Scoring trigger reads points from Settings | ✅ Applied |
-| `20250418_005_dynamic_awards_trigger.sql` | Awards trigger reads points from Settings | ✅ Applied |
-| `20250418_006_seed_settings.sql` | Seeds `scoring_rules` and `active_season` | ✅ Applied |
+| File                                       | Description                                  | Status     |
+| ------------------------------------------ | -------------------------------------------- | ---------- |
+| `20250417_001_initial_schema.sql`          | Leaderboard view + original scoring triggers | ✅ Applied |
+| `20250418_002_season_columns.sql`          | Adds `season` column to Series & Prediction  | ✅ Applied |
+| `20250418_003_settings_unique.sql`         | UNIQUE constraint on `Settings.setting_name` | ✅ Applied |
+| `20250418_004_dynamic_scoring_trigger.sql` | Scoring trigger reads points from Settings   | ✅ Applied |
+| `20250418_005_dynamic_awards_trigger.sql`  | Awards trigger reads points from Settings    | ✅ Applied |
+| `20250418_006_seed_settings.sql`           | Seeds `scoring_rules` and `active_season`    | ✅ Applied |
 
 ## How to Apply a Migration
 

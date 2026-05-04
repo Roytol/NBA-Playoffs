@@ -7,6 +7,7 @@ A full-stack prediction game for the NBA Playoffs. Players predict series winner
 ## Features
 
 ### For Players
+
 - **Predict every series** — pick the winner and exact game count before each series deadline
 - **Pre-playoff bonus picks** — predict the NBA Champion and Finals MVP before the playoffs begin
 - **Live Dashboard** — see live scores and series progress in real time (Supabase Realtime)
@@ -15,6 +16,7 @@ A full-stack prediction game for the NBA Playoffs. Players predict series winner
 - **Past Seasons** — leaderboard tabs for archived seasons
 
 ### For Admins
+
 - **Series management** — add series, set deadlines, declare winners (auto-scores via Postgres trigger)
 - **Scoring Rules** — edit point values per round from the UI, no SQL needed
 - **Season Awards** — declare Champion & Finals MVP and trigger instant scoring
@@ -25,16 +27,16 @@ A full-stack prediction game for the NBA Playoffs. Players predict series winner
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18 + Vite |
-| Routing | React Router v6 (native nested routes) |
-| UI Components | shadcn/ui + Tailwind CSS |
-| Database | Supabase (Postgres) |
-| Auth | Supabase Auth (email/password) |
-| Realtime | Supabase Realtime WebSockets |
-| Scoring | Postgres Triggers (server-side, tamper-proof) |
-| Deployment | Vercel |
+| Layer         | Technology                                    |
+| ------------- | --------------------------------------------- |
+| Frontend      | React 18 + Vite                               |
+| Routing       | React Router v6 (native nested routes)        |
+| UI Components | shadcn/ui + Tailwind CSS                      |
+| Database      | Supabase (Postgres)                           |
+| Auth          | Supabase Auth (email/password)                |
+| Realtime      | Supabase Realtime WebSockets                  |
+| Scoring       | Postgres Triggers (server-side, tamper-proof) |
+| Deployment    | Vercel                                        |
 
 ---
 
@@ -51,6 +53,7 @@ A full-stack prediction game for the NBA Playoffs. Players predict series winner
 ## Local Development
 
 ### Prerequisites
+
 - Node.js 18+
 - A Supabase project
 - `libpq` (for running DB migrations): `brew install libpq`
@@ -105,6 +108,7 @@ npm run migrate     # Apply all pending migrations
 The runner auto-skips files marked `ALREADY APPLIED`. See [`supabase/migrations/README.md`](supabase/migrations/README.md) for the full migration log.
 
 **When adding a new migration:**
+
 1. Create a new file: `supabase/migrations/YYYYMMDD_NNN_description.sql`
 2. Mark status as `🔴 NEEDS TO BE RUN`
 3. Run `npm run migrate`
@@ -114,15 +118,15 @@ The runner auto-skips files marked `ALREADY APPLIED`. See [`supabase/migrations/
 
 ## Scoring System (defaults — editable from Admin)
 
-| Round | Winner pts | Exact games pts | Max pts |
-|-------|-----------|----------------|---------|
-| Play-In | 1 | — | 1 |
-| First Round | 1 | +2 | 3 |
-| Conference Semifinals | 2 | +2 | 4 |
-| Conference Finals | 3 | +3 | 6 |
-| NBA Finals | 4 | +4 | 8 |
-| Champion Pick | 5 | — | 5 |
-| Finals MVP Pick | 3 | — | 3 |
+| Round                 | Winner pts | Exact games pts | Max pts |
+| --------------------- | ---------- | --------------- | ------- |
+| Play-In               | 1          | —               | 1       |
+| First Round           | 1          | +2              | 3       |
+| Conference Semifinals | 2          | +2              | 4       |
+| Conference Finals     | 3          | +3              | 6       |
+| NBA Finals            | 4          | +4              | 8       |
+| Champion Pick         | 5          | —               | 5       |
+| Finals MVP Pick       | 3          | —               | 3       |
 
 Scoring is handled entirely by Postgres triggers — clients cannot manipulate points.
 
