@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { buildLeaderboardStreaks } from "@/utils/leaderboardStreaks";
 import { formatSeasonLabel, SETTINGS_KEYS } from "@/constants/app";
 import { INTERACTIVE_INFO_LINK_CLASS } from "@/constants/theme";
 import {
@@ -124,40 +125,15 @@ export default function LeaderboardPage() {
 
             if (!leaderboardData) throw new Error("Failed to load leaderboard data");
 
-            // Evaluate hot streaks
-            const completedSeriesIds = new Set((allSeries || []).filter(s => s.status === 'completed').map(s => s.series_id || s.id));
-            const userStreaks = {};
-
-            const settledPredictions = (allPredictions || []).filter(p => {
-                if (p.prediction_type === 'champion' || p.prediction_type === 'finals_mvp') {
-                    return p.points_earned > 0; 
-                }
-                return completedSeriesIds.has(p.series_id);
+            const userStreaks = buildLeaderboardStreaks(allPredictions, allSeries, {
+                hot: 2,
+                cold: 2,
             });
-
-            const groupedByEmail = {};
-            for (let p of settledPredictions) {
-                if (!groupedByEmail[p.user_email]) groupedByEmail[p.user_email] = [];
-                groupedByEmail[p.user_email].push(p);
-            }
-
-            for (let [email, preds] of Object.entries(groupedByEmail)) {
-                // sort by updated_at descending (most recently resolved first)
-                preds.sort((a,b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
-                
-                let streak = 0;
-                for (let p of preds) {
-                    if (p.points_earned > 0) streak++;
-                    else break; // A loss snaps the streak
-                }
-                if (streak >= 3) {
-                    userStreaks[email] = streak;
-                }
-            }
 
             const sorted = [...leaderboardData].map(entry => ({
                 ...entry,
-                hotStreak: userStreaks[entry.player_id] || 0
+                hotStreak: userStreaks[entry.player_id]?.hot || 0,
+                coldStreak: userStreaks[entry.player_id]?.cold || 0,
             })).sort((a, b) => b.total_points - a.total_points);
 
             const latest = sorted.reduce((latest, e) => {
@@ -231,10 +207,16 @@ export default function LeaderboardPage() {
                 <TabsContent value="current">
                     <Card>
                         <CardHeader className="py-3 px-4 sm:py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
-                            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                                <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
-                                Current Standings
-                            </CardTitle>
+                            <div className="space-y-1">
+                                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                                    <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
+                                    Current Standings
+                                </CardTitle>
+                                <div className="text-xs text-gray-500 space-y-0.5">
+                                    <p>🔥 Hot streak = 2 exact completed-series picks in a row</p>
+                                    <p>🧊 Cold streak = 2 completed-series picks in a row with 0 points</p>
+                                </div>
+                            </div>
                             {lastUpdated && (
                                 <div className="text-xs text-gray-500 flex items-center gap-1">
                                     <Clock className="w-3 h-3" />
@@ -268,12 +250,23 @@ export default function LeaderboardPage() {
                                                 <TableCell className="py-2 px-3 sm:px-4 text-xs sm:text-sm">
                                                     <div className="font-medium truncate max-w-[120px] sm:max-w-none flex items-center gap-1.5">
                                                         <Link to={createPageUrl("UserPredictions") + "?id=" + entry.player_id}
-                                                            className={`${entry.hotStreak >= 3 ? 'text-orange-600 hover:text-orange-700 font-bold drop-shadow-sm' : INTERACTIVE_INFO_LINK_CLASS}`}>
+                                                            className={`${
+                                                                entry.hotStreak >= 2
+                                                                    ? 'text-orange-600 hover:text-orange-700 font-bold drop-shadow-sm'
+                                                                    : entry.coldStreak >= 2
+                                                                        ? 'text-blue-600 hover:text-blue-700 font-bold drop-shadow-sm'
+                                                                        : INTERACTIVE_INFO_LINK_CLASS
+                                                            }`}>
                                                             {entry.player_name}
                                                         </Link>
-                                                        {entry.hotStreak >= 3 && (
-                                                            <span title={`${entry.hotStreak} Playoff Prediction Validations in a row!`} className="cursor-help animate-bounce drop-shadow-md pb-1 text-sm">
+                                                        {entry.hotStreak >= 2 && (
+                                                            <span title={`${entry.hotStreak} exact series picks in a row!`} className="cursor-help animate-bounce drop-shadow-md pb-1 text-sm">
                                                                 🔥
+                                                            </span>
+                                                        )}
+                                                        {entry.coldStreak >= 2 && (
+                                                            <span title={`${entry.coldStreak} completed-series picks in a row with 0 points`} className="cursor-help drop-shadow-md pb-1 text-sm">
+                                                                🧊
                                                             </span>
                                                         )}
                                                         {entry.player_id === currentUser?.email && (
