@@ -3,18 +3,19 @@
 
 export const AUTH_TAB_TRIGGER_CLASSES = {
   signIn:
-    "py-3 font-semibold data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 rounded-none",
+    "py-3 font-semibold data-[state=active]:text-status-info-strong data-[state=active]:border-b-2 data-[state=active]:border-status-info rounded-none",
   register:
-    "py-3 font-semibold data-[state=active]:text-red-500 data-[state=active]:border-b-2 data-[state=active]:border-red-500 rounded-none",
+    "py-3 font-semibold data-[state=active]:text-status-danger data-[state=active]:border-b-2 data-[state=active]:border-status-danger rounded-none",
 };
 
 export const INTERACTIVE_INFO_LINK_CLASS =
-  "transition-colors hover:text-blue-600";
+  "transition-colors hover:text-status-info-strong";
 
-export const DANGER_GHOST_BUTTON_CLASS = "text-status-danger hover:bg-red-50";
+export const DANGER_GHOST_BUTTON_CLASS =
+  "text-status-danger hover:bg-status-danger/10";
 
 export const ADMIN_SUMMARY_COLOR_CLASSES = {
-  activeSeason: "bg-blue-50 text-blue-800",
+  activeSeason: "surface-status-info text-status-info-strong border",
 };
 
 export const PREDICTION_STATUS_BADGE_CLASSES = {
@@ -22,8 +23,8 @@ export const PREDICTION_STATUS_BADGE_CLASSES = {
   correctCompact: "bg-green-100 text-green-800",
   pending: "badge-status-info",
   incorrect: "badge-status-danger",
-  unknown: "bg-gray-100 text-gray-800 border-gray-200",
-  currentUser: "bg-blue-100 text-blue-800",
+  unknown: "bg-muted text-muted-foreground border-border",
+  currentUser: "surface-status-info text-status-info-strong border",
 };
 
 export const BRACKET_THEME = {
@@ -41,9 +42,9 @@ export const BRACKET_THEME = {
     west: "border-[hsl(var(--conference-west))]",
   },
   matchupTint: {
-    east: "bg-white border-[hsl(var(--conference-east)/0.22)] shadow-[inset_0_0_0_1px_hsl(var(--conference-east)/0.04)] hover:border-[hsl(var(--conference-east)/0.35)]",
-    west: "bg-white border-[hsl(var(--conference-west)/0.22)] shadow-[inset_0_0_0_1px_hsl(var(--conference-west)/0.04)] hover:border-[hsl(var(--conference-west)/0.35)]",
-    neutral: "bg-white border-gray-200/90",
+    east: "bg-card border-[hsl(var(--conference-east)/0.22)] shadow-[inset_0_0_0_1px_hsl(var(--conference-east)/0.08)] hover:border-[hsl(var(--conference-east)/0.35)]",
+    west: "bg-card border-[hsl(var(--conference-west)/0.22)] shadow-[inset_0_0_0_1px_hsl(var(--conference-west)/0.08)] hover:border-[hsl(var(--conference-west)/0.35)]",
+    neutral: "bg-card border-border",
   },
   matchupRing: {
     east: "ring-1 ring-[hsl(var(--conference-east)/0.25)] shadow-sm",
@@ -51,7 +52,7 @@ export const BRACKET_THEME = {
     neutral: "ring-1 ring-blue-200/80 shadow-sm",
   },
   finalsPlaceholder:
-    "rounded-md border border-dashed border-amber-300/40 bg-amber-50/50 flex flex-col items-center justify-center gap-0.5",
+    "rounded-md border border-dashed border-amber-400/30 bg-amber-500/10 flex flex-col items-center justify-center gap-0.5",
   mobileShell:
-    "rounded-xl border border-gray-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.95),rgba(255,255,255,0.98))] px-2 py-2.5 shadow-[0_12px_35px_rgba(15,23,42,0.06)]",
+    "rounded-xl border border-border/80 bg-[linear-gradient(180deg,hsl(var(--card)/0.96),hsl(var(--background)/0.98))] px-2 py-2.5 shadow-[0_12px_35px_hsl(var(--foreground)/0.08)]",
 };

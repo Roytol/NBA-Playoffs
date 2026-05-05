@@ -109,13 +109,13 @@ export default function ChampionPick({ onSave, user }) {
   if (!user) return null;
 
   return (
-    <Card className="border-yellow-200 bg-yellow-50 mb-6">
+    <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-900/50 dark:bg-yellow-900/10 mb-6">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-yellow-800">
-          <Trophy className="w-6 h-6 text-yellow-600" />
+        <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500">
+          <Trophy className="w-6 h-6 text-yellow-600 dark:text-yellow-500" />
           NBA Champion Prediction
           {deadline && (
-            <div className="text-sm font-normal text-gray-600 ml-auto flex items-center">
+            <div className="text-sm font-normal text-muted-foreground ml-auto flex items-center">
               <Clock className="w-4 h-4 mr-1" />
               {isDeadlinePassed
                 ? "Deadline passed"
@@ -143,18 +143,18 @@ export default function ChampionPick({ onSave, user }) {
 
         {existingPick && isDeadlinePassed ? (
           <div className="space-y-3">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Your Champion Prediction (5 points):
             </div>
             <div className="font-medium">{existingPick.winner}</div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-muted-foreground">
               This prediction is now locked.
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             {existingPick && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Current pick:{" "}
                 <span className="font-medium">{existingPick.winner}</span>
               </div>

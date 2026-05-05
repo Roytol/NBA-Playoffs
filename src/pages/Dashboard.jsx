@@ -35,9 +35,22 @@ export default function Dashboard() {
   // NBA API sync
   const { syncing, lastSynced, error: syncError, triggerSync } = useNbaSync();
 
+  // Determine if we should poll for live scores (primitive boolean — stable across re-renders)
+  const shouldPollLive = React.useMemo(() => {
+    if (!series || series.length === 0) return false;
+    const hasActive = series.some((s) => s.status === "active");
+    if (!hasActive) return false;
+
+    const hasLive = series.some((s) => s.current_game?.is_live);
+    if (hasLive) return true;
+
+    const today = new Date().toISOString().split("T")[0];
+    return series.some((s) => s.current_game?.date === today);
+  }, [series]);
+
   // Live scores polling via Realtime
   const { isPolling, liveGames } = useLiveScores(
-    series,
+    shouldPollLive,
     React.useCallback((updatedSeries) => {
       setSeries((prev) =>
         prev.map((s) => (s.id === updatedSeries.id ? updatedSeries : s)),
@@ -299,9 +312,9 @@ export default function Dashboard() {
           animate={{ opacity: 1 }}
           className="text-center py-8 sm:py-12"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white shadow-md">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 shadow-md">
             <div className="text-status-info animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-current"></div>
-            <span className="text-sm text-gray-600">{loadingMessage}</span>
+            <span className="text-sm text-muted-foreground">{loadingMessage}</span>
           </div>
         </motion.div>
       ) : (
@@ -314,6 +327,7 @@ export default function Dashboard() {
             {/* Active Series */}
             {categorizedSeries.active.length > 0 && (
               <motion.div
+                key="active-series"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -346,6 +360,7 @@ export default function Dashboard() {
             {/* Closed Series */}
             {categorizedSeries.closed.length > 0 && (
               <motion.div
+                key="closed-series"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -378,6 +393,7 @@ export default function Dashboard() {
             {/* Completed Series — collapsed by default */}
             {categorizedSeries.completed.length > 0 && (
               <motion.div
+                key="completed-series"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -438,9 +454,10 @@ export default function Dashboard() {
               !categorizedSeries.closed.length &&
               !categorizedSeries.completed.length && (
                 <motion.div
+                  key="empty-state"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center py-8 sm:py-12 text-gray-500 text-sm"
+                  className="text-center py-8 sm:py-12 text-muted-foreground text-sm"
                 >
                   {syncing
                     ? "Syncing playoff data from NBA API..."
@@ -466,12 +483,13 @@ export default function Dashboard() {
 
           return (
             <motion.div
+              key="floating-live-games"
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
               className="fixed bottom-4 right-4 z-50 w-64 sm:w-72"
             >
-              <div className="bg-white/90 backdrop-blur-md border border-red-100 shadow-2xl rounded-2xl overflow-hidden">
+              <div className="overflow-hidden rounded-2xl border border-status-danger/30 bg-card/95 shadow-2xl backdrop-blur-md">
                 <div className="bg-status-danger-strong px-4 py-2 flex items-center justify-between text-white">
                   <div className="flex items-center gap-2">
                     <span className="relative flex h-2 w-2">
@@ -487,7 +505,7 @@ export default function Dashboard() {
                 <div className="p-3 space-y-3">
                   {activeLiveGames.map((game, idx) => (
                     <div key={game.id || idx} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs font-medium text-gray-400 px-1">
+                      <div className="flex items-center justify-between px-1 text-xs font-medium text-muted-foreground">
                         <span>{game.period ? "LIVE" : game.status}</span>
                         {game.period && (
                           <span className="text-status-danger font-bold uppercase tracking-tighter">
@@ -495,7 +513,7 @@ export default function Dashboard() {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-100">
+                      <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 p-2">
                         <div className="flex flex-col items-center flex-1">
                           <div className="flex items-center gap-1.5 min-w-0">
                             {game.home_team?.full_name && (
@@ -504,15 +522,15 @@ export default function Dashboard() {
                                 className="w-4 h-4 shrink-0"
                               />
                             )}
-                            <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">
+                            <span className="w-20 truncate text-center text-[10px] font-bold uppercase text-muted-foreground">
                               {game.home_team?.name || "Home"}
                             </span>
                           </div>
-                          <span className="text-xl font-black text-gray-900 leading-tight">
+                          <span className="text-xl font-black leading-tight text-foreground">
                             {game.home_team_score}
                           </span>
                         </div>
-                        <div className="px-2 text-[10px] font-bold text-gray-300">
+                        <div className="px-2 text-[10px] font-bold text-border">
                           VS
                         </div>
                         <div className="flex flex-col items-center flex-1">
@@ -523,11 +541,11 @@ export default function Dashboard() {
                                 className="w-4 h-4 shrink-0"
                               />
                             )}
-                            <span className="text-[10px] text-gray-500 font-bold uppercase truncate w-20 text-center">
+                            <span className="w-20 truncate text-center text-[10px] font-bold uppercase text-muted-foreground">
                               {game.visitor_team?.name || "Away"}
                             </span>
                           </div>
-                          <span className="text-xl font-black text-gray-900 leading-tight">
+                          <span className="text-xl font-black leading-tight text-foreground">
                             {game.visitor_team_score}
                           </span>
                         </div>

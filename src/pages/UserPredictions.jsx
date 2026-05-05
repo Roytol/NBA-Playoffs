@@ -171,16 +171,16 @@ export default function UserPredictionsPage() {
         <div className="flex items-center gap-2 mb-6">
           <Link
             to={createPageUrl("Leaderboard")}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold">User Predictions</h1>
         </div>
         <div className="flex justify-center items-center py-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-md">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span className="text-sm text-gray-600">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 shadow-md">
+            <div className="text-status-info h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
+            <span className="text-sm text-muted-foreground">
               Loading predictions...
             </span>
           </div>
@@ -199,7 +199,7 @@ export default function UserPredictionsPage() {
         <div className="flex items-center gap-2 mb-6">
           <Link
             to={createPageUrl("Leaderboard")}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -223,7 +223,7 @@ export default function UserPredictionsPage() {
         <div className="flex items-center gap-2 mb-2">
           <Link
             to={createPageUrl("Leaderboard")}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -235,7 +235,7 @@ export default function UserPredictionsPage() {
             <div className="text-base sm:text-lg font-semibold">
               {userData.name}
             </div>
-            <div className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
+            <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
               <Trophy className="text-brand-gold w-3 h-3 sm:w-4 sm:h-4" />
               Total points: {userData.points}
             </div>
@@ -246,8 +246,8 @@ export default function UserPredictionsPage() {
         {allUsers.length > 0 && (
           <div className="mt-3 sm:mt-4 ml-7 max-w-xs">
             <div className="flex items-center gap-1 mb-1">
-              <Users className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
-              <span className="text-xs sm:text-sm text-gray-500">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 View another user
               </span>
             </div>
@@ -311,7 +311,7 @@ export default function UserPredictionsPage() {
                     <TableRow>
                       <TableCell
                         colSpan={4}
-                        className="text-center py-6 text-xs sm:text-sm text-gray-500"
+                        className="text-center py-6 text-xs sm:text-sm text-muted-foreground"
                       >
                         No predictions available
                       </TableCell>
@@ -358,7 +358,7 @@ export default function UserPredictionsPage() {
                                     {seriesInfo.team2} ({seriesInfo.team2_seed})
                                   </span>
                                 </div>
-                                <div className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                                <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                                   {seriesInfo.conference} ·{" "}
                                   {seriesInfo.round
                                     .split("_")

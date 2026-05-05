@@ -12,6 +12,7 @@
 
     <!-- iOS PWA support -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
@@ -20,6 +21,30 @@
     <link rel="apple-touch-icon" href="/icon.png" />
 
     <title>NBA Playoffs</title>
+    <script>
+      (() => {
+        const storageKey = "theme_preference";
+        const root = document.documentElement;
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        const savedTheme = window.localStorage.getItem(storageKey);
+        const theme =
+          savedTheme === "light" || savedTheme === "dark"
+            ? savedTheme
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+
+        root.classList.toggle("dark", theme === "dark");
+        root.style.colorScheme = theme;
+
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute(
+            "content",
+            theme === "dark" ? "#020817" : "#0a1628",
+          );
+        }
+      })();
+    </script>
   </head>
 
   <body>

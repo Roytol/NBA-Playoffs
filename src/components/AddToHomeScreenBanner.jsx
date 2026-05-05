@@ -70,7 +70,7 @@ export default function AddToHomeScreenBanner() {
           transition={{ type: "spring", damping: 22, stiffness: 260 }}
           className="fixed bottom-4 left-3 right-3 z-50"
         >
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 flex items-start gap-3">
+          <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-2xl">
             {/* App icon */}
             <img
               src="/icon.png"
@@ -80,16 +80,16 @@ export default function AddToHomeScreenBanner() {
 
             {/* Text */}
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 text-sm leading-tight">
+              <p className="text-sm font-semibold leading-tight text-foreground">
                 Add NBA Playoffs to Home Screen
               </p>
-              <p className="text-xs text-gray-500 mt-1 leading-snug">
+              <p className="mt-1 text-xs leading-snug text-muted-foreground">
                 Tap{" "}
                 <span className="text-status-info inline-flex items-center gap-0.5 font-medium">
                   <Share className="w-3 h-3" /> Share
                 </span>{" "}
                 then{" "}
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-foreground">
                   "Add to Home Screen"
                 </span>{" "}
                 for the best experience.
@@ -99,7 +99,7 @@ export default function AddToHomeScreenBanner() {
             {/* Dismiss */}
             <button
               onClick={dismiss}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600 p-1 -mt-1 -mr-1"
+              className="-mr-1 -mt-1 flex-shrink-0 p-1 text-muted-foreground transition-colors hover:text-foreground"
               aria-label="Dismiss"
             >
               <X className="w-4 h-4" />
@@ -108,7 +108,7 @@ export default function AddToHomeScreenBanner() {
 
           {/* Arrow pointing down toward the share button */}
           <div className="flex justify-center mt-1">
-            <div className="w-3 h-3 bg-white border-r border-b border-gray-100 rotate-45 shadow-sm" />
+            <div className="h-3 w-3 rotate-45 border-r border-b border-border bg-card shadow-sm" />
           </div>
         </motion.div>
       )}

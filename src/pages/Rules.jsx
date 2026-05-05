@@ -41,7 +41,7 @@ export default function RulesPage() {
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
       <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Rules</h1>
-      <p className="text-gray-500 mb-4 sm:mb-6 text-sm">
+      <p className="text-muted-foreground mb-4 sm:mb-6 text-sm">
         Learn how to play and score points
       </p>
 
@@ -52,7 +52,7 @@ export default function RulesPage() {
             <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
             Scoring System
             {loading && (
-              <span className="text-xs text-gray-400 font-normal ml-1">
+              <span className="ml-1 text-xs font-normal text-muted-foreground">
                 (loading...)
               </span>
             )}
@@ -61,11 +61,11 @@ export default function RulesPage() {
         <CardContent className="pb-3 px-4 sm:pb-6 sm:px-6">
           <div className="grid gap-2 sm:gap-4">
             {Object.entries(details).map(([key, rule]) => (
-              <div key={key} className="bg-gray-50 rounded-lg p-2 sm:p-4">
+              <div key={key} className="rounded-lg bg-muted p-2 sm:p-4">
                 <h3 className="font-medium mb-1 text-sm sm:text-base">
                   {rule.description}
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-600">
+                <p className="text-xs text-muted-foreground sm:text-sm">
                   {rule.games === null || rule.games === 0 ? (
                     `${rule.winner} point${rule.winner !== 1 ? "s" : ""} for correct pick`
                   ) : (
@@ -74,7 +74,7 @@ export default function RulesPage() {
                       {rule.games > 0 && (
                         <span className="text-status-info ml-2">
                           +{rule.games} for exact games{" "}
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground/80">
                             ({rule.winner + rule.games} max)
                           </span>
                         </span>
@@ -109,7 +109,7 @@ export default function RulesPage() {
               <h3 className="font-medium mb-1 text-sm sm:text-base">
                 Series Predictions
               </h3>
-              <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-gray-600 pl-1">
+              <ul className="list-disc list-inside space-y-1 pl-1 text-xs text-muted-foreground sm:text-sm">
                 <li>Pick winner and games for each series</li>
                 <li>Edit until series deadline</li>
                 <li>Points for correct winner and exact game count</li>
@@ -120,7 +120,7 @@ export default function RulesPage() {
               <h3 className="font-medium mb-1 text-sm sm:text-base">
                 Champion Pick
               </h3>
-              <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-gray-600 pl-1">
+              <ul className="list-disc list-inside space-y-1 pl-1 text-xs text-muted-foreground sm:text-sm">
                 <li>Pick before playoffs begin</li>
                 <li>Worth {details.champion?.winner ?? 5} points</li>
               </ul>
@@ -130,7 +130,7 @@ export default function RulesPage() {
               <h3 className="font-medium mb-1 text-sm sm:text-base">
                 Finals MVP
               </h3>
-              <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-gray-600 pl-1">
+              <ul className="list-disc list-inside space-y-1 pl-1 text-xs text-muted-foreground sm:text-sm">
                 <li>Pick before Finals begin</li>
                 <li>Worth {details.finals_mvp?.winner ?? 3} points</li>
               </ul>

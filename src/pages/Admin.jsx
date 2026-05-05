@@ -477,7 +477,7 @@ export default function AdminPage() {
         <TabsContent value="series" className="space-y-6">
           {/* API Sync */}
           <Card>
-            <CardHeader className="bg-slate-50 border-b pb-4">
+            <CardHeader className="bg-muted/50 border-b pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <RefreshCw className="text-status-info h-5 w-5" />
                 API Sync
@@ -510,7 +510,7 @@ export default function AdminPage() {
 
           {/* Prediction Deadlines */}
           <Card>
-            <CardHeader className="bg-slate-50 border-b pb-4">
+            <CardHeader className="bg-muted/50 border-b pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <CalendarIcon className="h-5 w-5 text-indigo-600" />
                 Pre-Playoff Deadlines
@@ -587,7 +587,7 @@ export default function AdminPage() {
 
           {/* Player Roster */}
           <Card>
-            <CardHeader className="bg-slate-50 border-b pb-4">
+            <CardHeader className="bg-muted/50 border-b pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="h-5 w-5 text-emerald-600" />
                 Player Roster ({allUsers.length})
@@ -621,10 +621,10 @@ export default function AdminPage() {
                     allUsers.map((u) => (
                       <TableRow key={u.email}>
                         <TableCell>
-                          <div className="font-medium text-slate-900 text-sm">
+                          <div className="font-medium text-foreground text-sm">
                             {u.full_name}
                           </div>
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs text-muted-foreground">
                             {u.email}
                           </div>
                         </TableCell>
@@ -677,7 +677,7 @@ export default function AdminPage() {
         {/* ============================================ */}
         <TabsContent value="results">
           <Card>
-            <CardHeader className="bg-amber-50 border-b pb-4">
+            <CardHeader className="bg-amber-50 dark:bg-amber-900/20 border-b pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-amber-600" />
                 Season Awards
@@ -744,7 +744,7 @@ export default function AdminPage() {
         {/* ============================================ */}
         <TabsContent value="scoring">
           <Card>
-            <CardHeader className="bg-slate-50 border-b pb-4">
+            <CardHeader className="bg-muted/50 border-b pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <SettingsIcon className="h-5 w-5 text-slate-600" />
                 Scoring Rules
@@ -803,7 +803,7 @@ export default function AdminPage() {
                               className="w-20 mx-auto text-center h-8"
                             />
                           ) : (
-                            <span className="text-gray-400 text-xs">N/A</span>
+                            <span className="text-muted-foreground text-xs">N/A</span>
                           )}
                         </TableCell>
                         <TableCell className="text-status-info text-center font-semibold">
@@ -833,7 +833,7 @@ export default function AdminPage() {
               </div>
               <Alert className="surface-status-info mt-4 border">
                 <AlertTriangle className="text-status-info h-4 w-4" />
-                <AlertDescription className="text-blue-800 text-xs">
+                <AlertDescription className="text-blue-800 dark:text-blue-300 text-xs">
                   Saving updates the database immediately. The Postgres trigger
                   reads these values on the next series completion — no SQL
                   re-run needed.
@@ -847,9 +847,9 @@ export default function AdminPage() {
         {/* TAB 4: SEASON TRANSITION                    */}
         {/* ============================================ */}
         <TabsContent value="season">
-          <Card className="border-orange-200">
-            <CardHeader className="bg-orange-50 border-b border-orange-200 pb-4">
-              <CardTitle className="text-lg flex items-center gap-2 text-orange-800">
+          <Card className="border-orange-200 dark:border-orange-900/50">
+            <CardHeader className="bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-900/50 pb-4">
+              <CardTitle className="text-lg flex items-center gap-2 text-orange-800 dark:text-orange-400">
                 <RotateCcw className="h-5 w-5" />
                 Season Transition
               </CardTitle>
@@ -869,18 +869,18 @@ export default function AdminPage() {
                   {
                     label: "Total Players",
                     value: allUsers.length,
-                    color: "bg-emerald-50 text-emerald-800",
+                    color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-400",
                   },
                   {
                     label: "Series Played",
                     value: allSeries.filter((s) => s.status === "completed")
                       .length,
-                    color: "bg-purple-50 text-purple-800",
+                    color: "bg-purple-50 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400",
                   },
                   {
                     label: "Predictions Made",
                     value: allPredictions.length,
-                    color: "bg-amber-50 text-amber-800",
+                    color: "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400",
                   },
                 ].map((stat) => (
                   <div
@@ -895,7 +895,7 @@ export default function AdminPage() {
 
               {/* What will happen checklist */}
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-700">
+                <h3 className="text-sm font-semibold text-muted-foreground">
                   What "Start New Season" will do:
                 </h3>
                 <ul className="space-y-1.5">
@@ -908,7 +908,7 @@ export default function AdminPage() {
                   ].map((step, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-2 text-sm text-gray-600"
+                      className="flex items-start gap-2 text-sm text-muted-foreground"
                     >
                       <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-xs flex items-center justify-center font-semibold">
                         {i + 1}
@@ -945,7 +945,7 @@ export default function AdminPage() {
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 text-center">
             <Loader2 className="text-status-info h-8 w-8 animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-muted-foreground">
               {processingState.message || "Processing..."}
             </p>
           </div>
@@ -977,7 +977,7 @@ export default function AdminPage() {
                 className="text-center text-xl font-mono font-bold tracking-widest"
                 maxLength={4}
               />
-              <p className="text-xs text-center text-gray-500">
+              <p className="text-xs text-center text-muted-foreground">
                 You typed:{" "}
                 <strong>
                   {newSeasonYear ? formatSeasonLabel(newSeasonYear) : "—"}
@@ -985,9 +985,9 @@ export default function AdminPage() {
               </p>
             </div>
           ) : (
-            <div className="bg-slate-50 rounded-lg p-3 space-y-1 max-h-48 overflow-y-auto">
+            <div className="bg-muted/50 rounded-lg p-3 space-y-1 max-h-48 overflow-y-auto">
               {seasonResetLog.map((line, i) => (
-                <p key={i} className="text-xs font-mono text-slate-700">
+                <p key={i} className="text-xs font-mono text-muted-foreground">
                   {line}
                 </p>
               ))}

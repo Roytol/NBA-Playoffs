@@ -26,8 +26,10 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-blue-100 bg-white text-gray-900 shadow-blue-600/5",
-        destructive: "border-red-200 bg-red-50 text-red-900 shadow-red-600/5",
+        default:
+          "border-border bg-card text-card-foreground shadow-[0_10px_30px_hsl(var(--foreground)/0.08)]",
+        destructive:
+          "border-status-danger bg-[hsl(var(--status-danger-bg))] text-status-danger-strong shadow-[0_10px_30px_hsl(var(--status-danger-bg-strong)/0.15)]",
       },
     },
     defaultVariants: {
@@ -66,7 +68,7 @@ const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
   <button
     ref={ref}
     className={cn(
-      "absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-gray-400 opacity-0 transition-opacity hover:text-gray-900 hover:bg-gray-100 focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
+      "absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-accent-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
       className,
     )}
     toast-close=""
@@ -80,7 +82,7 @@ ToastClose.displayName = "ToastClose";
 const ToastTitle = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm font-semibold text-gray-900", className)}
+    className={cn("text-sm font-semibold text-foreground", className)}
     {...props}
   />
 ));
@@ -89,7 +91,7 @@ ToastTitle.displayName = "ToastTitle";
 const ToastDescription = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-xs text-gray-500", className)}
+    className={cn("text-xs text-muted-foreground", className)}
     {...props}
   />
 ));

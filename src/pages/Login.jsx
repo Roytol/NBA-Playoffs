@@ -15,6 +15,7 @@ import {
 } from "@/constants/branding";
 import { AUTH_TAB_TRIGGER_CLASSES } from "@/constants/theme";
 import { signInWithPassword, signUpWithPassword } from "@/services";
+import Logo from "@/components/common/Logo";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -111,148 +112,146 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gray-50">
+    <div className="min-h-screen bg-background p-4 text-foreground">
       {/* Header Brand */}
-      <div className="flex flex-col items-center mb-8">
-        <img
-          src={APP_LOGO_URL}
-          alt={`${APP_BRAND_NAME} Logo`}
-          className="h-24 mb-4 drop-shadow-md"
-        />
-        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
-          {APP_BRAND_NAME}
-        </h1>
-        <p className="text-gray-500 mt-2">{APP_BRAND_TAGLINE}</p>
-      </div>
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Logo className="mb-4 h-24 drop-shadow-md" />
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            {APP_BRAND_NAME}
+          </h1>
+          <p className="mt-2 text-muted-foreground">{APP_BRAND_TAGLINE}</p>
+        </div>
 
-      <Card className="w-full max-w-md shadow-xl border-t-4 border-t-red-500">
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 rounded-t-lg rounded-b-none p-0 h-auto">
-            <TabsTrigger
-              value="signin"
-              className={AUTH_TAB_TRIGGER_CLASSES.signIn}
-            >
-              Sign In
-            </TabsTrigger>
-            <TabsTrigger
-              value="register"
-              className={AUTH_TAB_TRIGGER_CLASSES.register}
-            >
-              Register
-            </TabsTrigger>
-          </TabsList>
+        <Card className="w-full border-t-4 border-t-status-danger-strong shadow-xl">
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid h-auto w-full grid-cols-2 rounded-t-lg rounded-b-none border-b border-border bg-muted/40 p-0">
+              <TabsTrigger
+                value="signin"
+                className={AUTH_TAB_TRIGGER_CLASSES.signIn}
+              >
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger
+                value="register"
+                className={AUTH_TAB_TRIGGER_CLASSES.register}
+              >
+                Register
+              </TabsTrigger>
+            </TabsList>
 
-          <CardHeader className="pt-6 pb-2">
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-          </CardHeader>
+            <CardHeader className="pb-2 pt-6">
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+            </CardHeader>
 
-          <CardContent>
-            {/* SIGN IN TAB */}
-            <TabsContent value="signin" className="mt-0">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="fan@nba.com"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    required
-                    className="h-11"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
+            <CardContent>
+              {/* SIGN IN TAB */}
+              <TabsContent value="signin" className="mt-0">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="fan@nba.com"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      required
+                      className="h-11"
+                    />
                   </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                    className="h-11"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="bg-status-info-strong hover:opacity-90 w-full h-11 mt-6"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Signing in..." : "Sign In"}
-                </Button>
-              </form>
-            </TabsContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Password</Label>
+                    </div>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="mt-6 h-11 w-full bg-status-info-strong text-primary-foreground hover:opacity-90"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </form>
+              </TabsContent>
 
-            {/* REGISTER TAB */}
-            <TabsContent value="register" className="mt-0">
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="LeBron James"
-                    value={registerName}
-                    onChange={(e) => setRegisterName(e.target.value)}
-                    required
-                    className="border-status-danger h-11 focus-visible:ring-status-danger"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-email">Email</Label>
-                  <Input
-                    id="reg-email"
-                    type="email"
-                    placeholder="king@lakers.com"
-                    value={registerEmail}
-                    onChange={(e) => setRegisterEmail(e.target.value)}
-                    required
-                    className="border-status-danger h-11 focus-visible:ring-status-danger"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-password">Password</Label>
-                  <Input
-                    id="reg-password"
-                    type="password"
-                    value={registerPassword}
-                    onChange={(e) => setRegisterPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    className="border-status-danger h-11 focus-visible:ring-status-danger"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-confirm-password">Confirm Password</Label>
-                  <Input
-                    id="reg-confirm-password"
-                    type="password"
-                    value={registerConfirmPassword}
-                    onChange={(e) => setRegisterConfirmPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    className="border-status-danger h-11 focus-visible:ring-status-danger"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="bg-status-danger-strong hover:opacity-90 w-full h-11 mt-6"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Creating account..." : "Create Account"}
-                </Button>
-              </form>
-            </TabsContent>
-          </CardContent>
-        </Tabs>
-      </Card>
+              {/* REGISTER TAB */}
+              <TabsContent value="register" className="mt-0">
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="LeBron James"
+                      value={registerName}
+                      onChange={(e) => setRegisterName(e.target.value)}
+                      required
+                      className="border-status-danger h-11 focus-visible:ring-status-danger"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reg-email">Email</Label>
+                    <Input
+                      id="reg-email"
+                      type="email"
+                      placeholder="king@lakers.com"
+                      value={registerEmail}
+                      onChange={(e) => setRegisterEmail(e.target.value)}
+                      required
+                      className="border-status-danger h-11 focus-visible:ring-status-danger"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reg-password">Password</Label>
+                    <Input
+                      id="reg-password"
+                      type="password"
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="border-status-danger h-11 focus-visible:ring-status-danger"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reg-confirm-password">Confirm Password</Label>
+                    <Input
+                      id="reg-confirm-password"
+                      type="password"
+                      value={registerConfirmPassword}
+                      onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="border-status-danger h-11 focus-visible:ring-status-danger"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="mt-6 h-11 w-full bg-status-danger-strong text-primary-foreground hover:opacity-90"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Creating account..." : "Create Account"}
+                  </Button>
+                </form>
+              </TabsContent>
+            </CardContent>
+          </Tabs>
+        </Card>
+      </div>
     </div>
   );
 }

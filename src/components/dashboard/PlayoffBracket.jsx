@@ -140,7 +140,7 @@ function SeedBadge({ value, compact, micro = false }) {
       : SEED_BADGE_TEXT_SIZE.regular;
   return (
     <span
-      className={`tabular-nums font-medium text-gray-500 leading-none shrink-0 text-right opacity-90 ${textSize} ${width}`}
+      className={`shrink-0 text-right tabular-nums font-medium leading-none text-muted-foreground opacity-90 ${textSize} ${width}`}
       title="Seed"
     >
       {v}
@@ -194,7 +194,7 @@ export default function PlayoffBracket({
       if (side === "finals") {
         return (
           <div
-            className={`rounded-lg bg-white border border-gray-100 ${micro ? "p-0.5" : "p-1"}`}
+            className={`rounded-lg border border-border bg-card ${micro ? "p-0.5" : "p-1"}`}
           >
             <div
               className={`${BRACKET_THEME.finalsPlaceholder} ${micro ? "py-1.5 px-1" : "py-2.5 px-2"}`}
@@ -205,7 +205,7 @@ export default function PlayoffBracket({
                 strokeWidth={2}
               />
               <span
-                className={`${micro ? "text-[7px]" : "text-[9px]"} text-gray-400 text-center leading-tight`}
+                className={`${micro ? "text-[7px]" : "text-[9px]"} text-center leading-tight text-muted-foreground`}
               >
                 Pending
               </span>
@@ -258,7 +258,7 @@ export default function PlayoffBracket({
           </div>
           <div className="flex items-center gap-0.5 shrink-0">
             <span
-              className={`tabular-nums font-bold text-gray-900 tracking-tight ${sizePreset.score}`}
+              className={`tabular-nums font-bold tracking-tight text-foreground ${sizePreset.score}`}
             >
               {w1}
             </span>
@@ -280,14 +280,14 @@ export default function PlayoffBracket({
           </div>
           <div className="flex items-center gap-0.5 shrink-0">
             <span
-              className={`tabular-nums font-bold text-gray-900 tracking-tight ${sizePreset.score}`}
+              className={`tabular-nums font-bold tracking-tight text-foreground ${sizePreset.score}`}
             >
               {w2}
             </span>
           </div>
         </div>
         {showPredictions && prediction && !micro && (
-          <div className="mt-1.5 text-[10px] text-gray-500 border-t border-black/5 pt-1">
+          <div className="mt-1.5 border-t border-border pt-1 text-[10px] text-muted-foreground">
             Your pick: {prediction.winner} in {prediction.games}
           </div>
         )}
@@ -326,17 +326,17 @@ export default function PlayoffBracket({
 
     return (
       <div
-        className={`flex flex-col min-w-0 ${micro ? "pl-px" : "pl-0.5 sm:pl-1"} border-l border-gray-100 first:border-l-0 first:pl-0 ${dense ? densePt : pt}`}
+        className={`flex min-w-0 flex-col border-l border-border ${micro ? "pl-px" : "pl-0.5 sm:pl-1"} first:border-l-0 first:pl-0 ${dense ? densePt : pt}`}
       >
         <h4
-          className={`text-center font-bold uppercase text-gray-500 px-0.5 leading-tight line-clamp-2 ${micro ? "text-[6px] tracking-[0.04em] mb-0.5" : dense ? "text-[7px] tracking-[0.06em] mb-1" : "text-[8px] sm:text-[9px] tracking-[0.1em] mb-1.5"}`}
+          className={`line-clamp-2 px-0.5 text-center font-bold uppercase leading-tight text-muted-foreground ${micro ? "mb-0.5 text-[6px] tracking-[0.04em]" : dense ? "mb-1 text-[7px] tracking-[0.06em]" : "mb-1.5 text-[8px] tracking-[0.1em] sm:text-[9px]"}`}
         >
           {ROUND_LABELS[roundKey]}
         </h4>
         <div className={`${dense ? denseGap : gap} min-w-0`}>
           {list.length === 0 ? (
             <p
-              className={`${micro ? "text-[7px] py-1" : "text-[9px] py-2"} text-gray-300 text-center px-0.5`}
+              className={`${micro ? "text-[7px] py-1" : "text-[9px] py-2"} px-0.5 text-center text-border`}
             >
               —
             </p>
@@ -354,7 +354,7 @@ export default function PlayoffBracket({
 
   const renderFinalsColumn = ({ micro = false } = {}) => (
     <div
-      className={`w-full min-w-0 mx-auto flex flex-col items-stretch rounded-lg border border-gray-200 bg-gray-50/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)] ${micro ? "px-1 py-1" : "px-1.5 py-1.5"}`}
+      className={`mx-auto flex w-full min-w-0 flex-col items-stretch rounded-lg border border-border bg-muted/30 shadow-[0_1px_2px_hsl(var(--foreground)/0.08)] ${micro ? "px-1 py-1" : "px-1.5 py-1.5"}`}
       aria-label="NBA Finals"
     >
       {finalsMatchup
@@ -363,10 +363,10 @@ export default function PlayoffBracket({
 
       {finalsMatchup?.status === "completed" && finalsMatchup.winner && (
         <div
-          className={`${micro ? "mt-1 pt-1" : "mt-2 pt-2"} border-t border-gray-100 text-center`}
+          className={`${micro ? "mt-1 pt-1" : "mt-2 pt-2"} border-t border-border text-center`}
         >
           <p
-            className={`${micro ? "text-[6px] tracking-[0.12em]" : "text-[8px] tracking-[0.18em]"} font-extrabold text-gray-600 uppercase`}
+            className={`${micro ? "text-[6px] tracking-[0.12em]" : "text-[8px] tracking-[0.18em]"} font-extrabold uppercase text-muted-foreground`}
           >
             Champion
           </p>
@@ -375,7 +375,7 @@ export default function PlayoffBracket({
             className={`${micro ? "w-5 h-5 mt-1" : "w-9 h-9 mt-1.5"} mx-auto`}
           />
           <p
-            className={`${micro ? "text-[7px] mt-0.5 line-clamp-2" : "text-[10px] mt-1 line-clamp-3"} font-bold text-gray-900 leading-snug px-0.5`}
+            className={`${micro ? "mt-0.5 text-[7px] line-clamp-2" : "mt-1 text-[10px] line-clamp-3"} px-0.5 font-bold leading-snug text-foreground`}
           >
             {finalsMatchup.winner}
           </p>
@@ -385,7 +385,7 @@ export default function PlayoffBracket({
   );
 
   return (
-    <div className="w-full max-w-full min-w-0 overflow-hidden rounded-lg border border-gray-200/60 bg-white shadow-sm">
+    <div className="w-full max-w-full min-w-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       <div className="w-full max-w-full min-w-0 px-2 sm:px-3 pt-3 pb-4 lg:px-4">
         <div
           className="flex h-1 w-full min-w-0 rounded-full overflow-hidden mb-3 shadow-sm"
@@ -400,14 +400,14 @@ export default function PlayoffBracket({
 
         {hasPlayIn && (
           <div className="mb-5">
-            <h3 className="text-center font-semibold text-xs text-gray-800 mb-0.5">
+            <h3 className="mb-0.5 text-center text-xs font-semibold text-foreground">
               {ROUND_LABELS.play_in}
             </h3>
-            <p className="text-center text-[9px] font-medium text-gray-400 uppercase tracking-[0.18em] mb-3">
+            <p className="mb-3 text-center text-[9px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
               Play-In tournament
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 min-w-0">
-              <div className="sm:pr-5 sm:border-r border-gray-100 min-w-0">
+              <div className="min-w-0 sm:border-r sm:border-border sm:pr-5">
                 <ConferenceLabel variant="east">Eastern</ConferenceLabel>
                 <div className="space-y-1.5">
                   {playInEast.map((s) => (
@@ -435,14 +435,14 @@ export default function PlayoffBracket({
           <div className={BRACKET_THEME.mobileShell}>
             <div className="flex items-center justify-between gap-2 mb-2">
               <div>
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-gray-500">
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground">
                   Full bracket
                 </p>
-                <p className="text-[10px] text-gray-600 mt-0.5">
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
                   Compact mobile tree
                 </p>
               </div>
-              <div className="shrink-0 rounded-full border border-amber-200 bg-amber-50 p-1.5">
+              <div className="shrink-0 rounded-full border border-amber-400/30 bg-amber-500/10 p-1.5">
                 <Trophy
                   className="w-3.5 h-3.5 text-brand-gold"
                   strokeWidth={2.2}
@@ -460,12 +460,12 @@ export default function PlayoffBracket({
                   East
                 </p>
               </div>
-              <div className="text-center border-b border-gray-300 pb-1 px-0.5">
+              <div className="px-0.5 pb-1 text-center border-b border-border">
                 <Trophy
                   className="w-2.5 h-2.5 text-brand-gold mx-auto mb-0.5"
                   strokeWidth={2}
                 />
-                <p className="text-[6px] font-extrabold text-gray-900 uppercase tracking-[0.08em] leading-tight">
+                <p className="text-[6px] font-extrabold uppercase tracking-[0.08em] leading-tight text-foreground">
                   Finals
                 </p>
               </div>
@@ -527,12 +527,12 @@ export default function PlayoffBracket({
                 Eastern Conference
               </p>
             </div>
-            <div className="text-center border-b border-gray-300 pb-1 w-[min(100%,6.5rem)] max-w-full min-w-0 justify-self-center px-0.5">
+            <div className="w-[min(100%,6.5rem)] max-w-full min-w-0 justify-self-center px-0.5 pb-1 text-center border-b border-border">
               <Trophy
                 className="w-3 h-3 text-brand-gold mx-auto mb-0.5"
                 strokeWidth={2}
               />
-              <p className="text-[8px] sm:text-[9px] font-extrabold text-gray-900 uppercase tracking-[0.12em] leading-tight">
+              <p className="text-[8px] font-extrabold uppercase tracking-[0.12em] leading-tight text-foreground sm:text-[9px]">
                 {ROUND_LABELS[BRACKET_ROUND_KEYS[3]]}
               </p>
             </div>

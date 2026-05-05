@@ -257,7 +257,7 @@ export default function PredictionsPage() {
         <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
           My Predictions
         </h1>
-        <p className="text-gray-500 mb-4 sm:mb-6 text-sm">
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm">
           Track all your NBA playoff predictions
         </p>
 
@@ -269,7 +269,7 @@ export default function PredictionsPage() {
           <h2 className="text-lg font-semibold mb-2">
             Sign in to view predictions
           </h2>
-          <p className="text-gray-600 mb-4 text-sm">
+          <p className="text-muted-foreground mb-4 text-sm">
             You need to be logged in to view your predictions
           </p>
           <Button onClick={() => redirectToLogin()}>Sign In</Button>
@@ -288,14 +288,14 @@ export default function PredictionsPage() {
         <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
           My Predictions
         </h1>
-        <p className="text-gray-500 mb-4 sm:mb-6 text-sm">
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm">
           Track all your NBA playoff predictions
         </p>
 
         <div className="flex justify-center items-center py-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-md">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span className="text-sm text-gray-600">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 shadow-md">
+            <div className="text-status-info h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
+            <span className="text-sm text-muted-foreground">
               Loading predictions...
             </span>
           </div>
@@ -314,7 +314,7 @@ export default function PredictionsPage() {
         <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
           My Predictions
         </h1>
-        <p className="text-gray-500 mb-4 sm:mb-6 text-sm">
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm">
           Track all your NBA playoff predictions
         </p>
 
@@ -387,7 +387,7 @@ export default function PredictionsPage() {
         <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
           My Predictions
         </h1>
-        <p className="text-gray-500 mb-4 sm:mb-6 text-sm">
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm">
           Track all your NBA playoff predictions
         </p>
       </motion.div>
@@ -405,10 +405,10 @@ export default function PredictionsPage() {
             {predictions.some(
               (p) => p.prediction_type === PREDICTION_TYPES.CHAMPION,
             ) && (
-              <Card className="border-yellow-200">
-                <CardHeader className="bg-yellow-50">
+              <Card className="border-yellow-200 dark:border-yellow-900/50">
+                <CardHeader className="bg-yellow-50 dark:bg-yellow-900/10">
                   <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500">
                       <Trophy className="text-brand-gold w-5 h-5" />
                       Champion Prediction
                     </div>
@@ -453,7 +453,7 @@ export default function PredictionsPage() {
                     </TableBody>
                   </Table>
                   {championMVPDeadline && (
-                    <div className="px-4 py-2 text-xs text-gray-500 flex items-center gap-1 border-t">
+                    <div className="px-4 py-2 text-xs text-muted-foreground flex items-center gap-1 border-t">
                       <Clock className="w-3 h-3" />
                       {isDeadlinePassed ? (
                         "Prediction deadline has passed"
@@ -477,10 +477,10 @@ export default function PredictionsPage() {
               (p) => p.prediction_type === PREDICTION_TYPES.FINALS_MVP,
             ) &&
               mvpStatus === "open" && (
-                <Card className="border-yellow-200">
-                  <CardHeader className="bg-yellow-50">
+                <Card className="border-yellow-200 dark:border-yellow-900/50">
+                  <CardHeader className="bg-yellow-50 dark:bg-yellow-900/10">
                     <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500">
                         <Star className="text-brand-gold w-5 h-5" />
                         Finals MVP Prediction
                       </div>
@@ -525,7 +525,7 @@ export default function PredictionsPage() {
                       </TableBody>
                     </Table>
                     {championMVPDeadline && (
-                      <div className="px-4 py-2 text-xs text-gray-500 flex items-center gap-1 border-t">
+                      <div className="px-4 py-2 text-xs text-muted-foreground flex items-center gap-1 border-t">
                         <Clock className="w-3 h-3" />
                         {isDeadlinePassed ? (
                           "Prediction deadline has passed"
@@ -579,7 +579,7 @@ export default function PredictionsPage() {
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader className="bg-gray-50">
+                    <TableHeader className="bg-muted/50">
                       <TableRow>
                         <TableHead className="w-[250px]">
                           Series/Category
@@ -602,7 +602,7 @@ export default function PredictionsPage() {
                         <TableRow>
                           <TableCell
                             colSpan={4}
-                            className="text-center py-8 text-gray-500"
+                            className="text-center py-8 text-muted-foreground"
                           >
                             No predictions made yet for this category
                           </TableCell>
@@ -617,7 +617,7 @@ export default function PredictionsPage() {
                           return (
                             <TableRow
                               key={prediction.id}
-                              className="hover:bg-gray-50"
+                              className="hover:bg-muted/50"
                             >
                               <TableCell>
                                 {prediction.prediction_type ===
@@ -654,7 +654,7 @@ export default function PredictionsPage() {
                                         {seriesInfo.team2_seed})
                                       </span>
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-1">
+                                    <div className="text-xs text-muted-foreground mt-1">
                                       {seriesInfo.conference} ·{" "}
                                       {seriesInfo.round
                                         .split("_")

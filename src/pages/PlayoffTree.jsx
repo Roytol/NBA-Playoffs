@@ -127,7 +127,7 @@ export default function PlayoffTree() {
             </div>
           )}
           {syncError && (
-            <div className="text-xs text-amber-800 bg-amber-50 rounded-lg border border-amber-200 px-3 py-2">
+            <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
               Sync issue: {syncError} — showing saved data
             </div>
           )}
@@ -135,11 +135,11 @@ export default function PlayoffTree() {
       )}
 
       {loading ? (
-        <div className="rounded-lg border bg-white p-8 text-center text-gray-500 text-sm">
+        <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Loading bracket…
         </div>
       ) : series.length === 0 ? (
-        <div className="rounded-lg border bg-white p-8 text-center text-gray-600 text-sm">
+        <div className="rounded-lg border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           No playoff series yet. Use Refresh after games are scheduled, or check
           back soon.
         </div>

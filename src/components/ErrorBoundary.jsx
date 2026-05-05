@@ -19,18 +19,18 @@ export class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
-          <div className="bg-white border border-gray-200 shadow-xl rounded-xl p-8 max-w-md w-full text-center space-y-4">
+        <div className="flex min-h-screen items-center justify-center bg-background p-6">
+          <div className="w-full max-w-md space-y-4 rounded-xl border border-border bg-card p-8 text-center shadow-xl">
             <div className="flex justify-center">
               <div className="badge-status-danger h-16 w-16 rounded-full flex items-center justify-center border">
                 <AlertTriangle className="text-status-danger h-8 w-8" />
               </div>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="mb-2 text-2xl font-bold text-foreground">
                 Something went wrong
               </h2>
-              <p className="text-sm text-gray-600 mb-6 px-4">
+              <p className="mb-6 px-4 text-sm text-muted-foreground">
                 The application encountered an unexpected error and needs to be
                 reloaded.
               </p>
@@ -44,7 +44,7 @@ export class ErrorBoundary extends React.Component {
             </div>
             <Button
               onClick={() => window.location.reload()}
-              className="bg-status-info-strong hover:opacity-90 w-full h-12 text-base"
+              className="h-12 w-full bg-status-info-strong text-primary-foreground hover:opacity-90 text-base"
             >
               <RefreshCcw className="w-4 h-4 mr-2" />
               Reload Application

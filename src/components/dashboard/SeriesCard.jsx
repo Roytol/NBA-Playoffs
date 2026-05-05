@@ -143,7 +143,7 @@ export default function SeriesCard({
 
   return (
     <Card
-      className={`${series.status === "completed" ? "bg-gray-50" : ""} ${isLive ? "ring-2 ring-red-200" : ""}`}
+      className={`${series.status === "completed" ? "bg-muted/40" : ""} ${isLive ? "ring-2 ring-status-danger/40" : ""}`}
     >
       <CardHeader className="pb-2 py-3 px-3 sm:py-4 sm:px-6">
         <CardTitle className="text-base sm:text-lg flex items-center justify-between">
@@ -174,7 +174,7 @@ export default function SeriesCard({
               </span>
             )}
           </div>
-          <div className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground sm:text-sm">
             <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
             {renderDeadline()}
           </div>
@@ -192,11 +192,11 @@ export default function SeriesCard({
                 />
               )}
               <span
-                className={`text-sm sm:text-base font-medium flex-1 ${series.winner === series.team1 ? "text-green-600" : ""}`}
+                className={`text-sm sm:text-base font-medium flex-1 ${series.winner === series.team1 ? "text-green-600 dark:text-green-400" : ""}`}
               >
                 {series.team1}
               </span>
-              <span className="text-xs sm:text-sm text-gray-500">
+              <span className="text-xs text-muted-foreground sm:text-sm">
                 ({series.team1_seed})
               </span>
               {/* Series win count */}
@@ -205,15 +205,15 @@ export default function SeriesCard({
                   <span
                     className={`text-lg sm:text-xl font-bold min-w-[24px] text-center ${
                       series.winner === series.team1
-                        ? "text-green-600"
-                        : "text-gray-700"
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-foreground"
                     }`}
                   >
                     {series.team1_wins}
                   </span>
                 )}
               {series.winner === series.team1 && (
-                <span className="text-xs sm:text-sm text-green-600 font-medium">
+                <span className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
                   ✓
                 </span>
               )}
@@ -226,11 +226,11 @@ export default function SeriesCard({
                 />
               )}
               <span
-                className={`text-sm sm:text-base font-medium flex-1 ${series.winner === series.team2 ? "text-green-600" : ""}`}
+                className={`text-sm sm:text-base font-medium flex-1 ${series.winner === series.team2 ? "text-green-600 dark:text-green-400" : ""}`}
               >
                 {series.team2}
               </span>
-              <span className="text-xs sm:text-sm text-gray-500">
+              <span className="text-xs text-muted-foreground sm:text-sm">
                 ({series.team2_seed})
               </span>
               {/* Series win count */}
@@ -239,15 +239,15 @@ export default function SeriesCard({
                   <span
                     className={`text-lg sm:text-xl font-bold min-w-[24px] text-center ${
                       series.winner === series.team2
-                        ? "text-green-600"
-                        : "text-gray-700"
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-foreground"
                     }`}
                   >
                     {series.team2_wins}
                   </span>
                 )}
               {series.winner === series.team2 && (
-                <span className="text-xs sm:text-sm text-green-600 font-medium">
+                <span className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">
                   ✓
                 </span>
               )}
@@ -264,16 +264,16 @@ export default function SeriesCard({
               </div>
               <div className="flex items-center justify-center gap-4 mt-1.5">
                 <div className="text-center">
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-muted-foreground">
                     {currentGame.home_team?.split(" ").pop()}
                   </div>
                   <div className="text-xl font-bold">
                     {currentGame.home_team_score || 0}
                   </div>
                 </div>
-                <div className="text-gray-400 text-sm">—</div>
+                <div className="text-sm text-muted-foreground">—</div>
                 <div className="text-center">
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-muted-foreground">
                     {currentGame.visitor_team?.split(" ").pop()}
                   </div>
                   <div className="text-xl font-bold">
@@ -308,24 +308,24 @@ export default function SeriesCard({
 
           {/* Head to Head Accordion */}
           {!isPlayIn && series.team1 && series.team2 && (
-            <div className="bg-gray-50 border border-gray-100 rounded-lg overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-border bg-muted/40">
               <button
                 onClick={toggleH2H}
-                className="w-full flex items-center justify-between p-3 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+                className="flex w-full items-center justify-between p-3 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground sm:text-sm"
               >
                 <span className="flex items-center gap-2">
-                  <History className="w-4 h-4 text-blue-500" />
+                  <History className="h-4 w-4 text-status-info" />
                   Regular Season Head-to-Head
                 </span>
                 <ChevronDown
-                  className={`w-4 h-4 text-gray-400 transition-transform ${h2hExpanded ? "rotate-180" : ""}`}
+                  className={`h-4 w-4 text-muted-foreground transition-transform ${h2hExpanded ? "rotate-180" : ""}`}
                 />
               </button>
               {h2hExpanded && (
-                <div className="p-3 border-t border-gray-100 bg-white">
+                <div className="border-t border-border bg-card p-3">
                   {h2hLoading ? (
                     <div className="flex justify-center p-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-status-info"></div>
                     </div>
                   ) : h2hData ? (
                     <div className="space-y-3">
@@ -338,7 +338,7 @@ export default function SeriesCard({
                             {series.team1.split(" ").pop()}
                           </div>
                         </div>
-                        <div className="text-gray-400 text-[10px] uppercase tracking-widest font-bold">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                           VS
                         </div>
                         <div className="text-center">
@@ -352,33 +352,33 @@ export default function SeriesCard({
                       </div>
                       {h2hData.games?.length > 0 && (
                         <div className="space-y-1.5">
-                          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                             Game Results
                           </div>
                           {h2hData.games.map((g, i) => (
                             <div
                               key={i}
-                              className="flex justify-between items-center text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-100"
+                              className="flex items-center justify-between rounded border border-border bg-muted/40 p-2 text-xs text-muted-foreground"
                             >
-                              <span className="font-medium text-gray-500">
+                              <span className="font-medium text-muted-foreground">
                                 {format(new Date(g.date), "MMM d")}
                               </span>
                               <div className="font-mono tracking-tighter text-sm flex gap-2">
                                 <span
                                   className={
                                     g.team1Score > g.team2Score
-                                      ? "font-bold text-gray-900"
-                                      : "text-gray-400"
+                                      ? "font-bold text-foreground"
+                                      : "text-muted-foreground"
                                   }
                                 >
                                   {g.team1Score}
                                 </span>
-                                <span className="text-gray-300">-</span>
+                                <span className="text-border">-</span>
                                 <span
                                   className={
                                     g.team2Score > g.team1Score
-                                      ? "font-bold text-gray-900"
-                                      : "text-gray-400"
+                                      ? "font-bold text-foreground"
+                                      : "text-muted-foreground"
                                   }
                                 >
                                   {g.team2Score}
@@ -390,7 +390,7 @@ export default function SeriesCard({
                       )}
                     </div>
                   ) : (
-                    <div className="text-center text-xs text-gray-500 py-2">
+                    <div className="py-2 text-center text-xs text-muted-foreground">
                       No matchup data found
                     </div>
                   )}
@@ -400,7 +400,7 @@ export default function SeriesCard({
           )}
 
           {/* Points Info */}
-          <div className="text-xs sm:text-sm text-gray-500">
+          <div className="text-xs text-muted-foreground sm:text-sm">
             {isPlayIn
               ? `Points: ${ROUND_POINTS_DISPLAY.play_in.winner} for correct winner`
               : `Points: ${
@@ -412,8 +412,8 @@ export default function SeriesCard({
 
           {/* Series Result for completed series */}
           {series.status === "completed" && (
-            <div className="bg-green-50 p-3 rounded-lg">
-              <div className="font-medium text-green-800">
+            <div className="rounded-lg bg-green-500/10 p-3">
+              <div className="font-medium text-green-700 dark:text-green-400">
                 {series.winner} won{" "}
                 {isPlayIn ? "the game" : `in ${series.games} games`}
               </div>
@@ -480,9 +480,9 @@ export default function SeriesCard({
               </Button>
             </div>
           ) : existingPrediction ? (
-            <div className="bg-gray-50 p-3 rounded-lg">
+            <div className="rounded-lg bg-muted p-3">
               <div className="text-sm font-medium">Your Prediction:</div>
-              <div className="text-gray-600">
+              <div className="text-muted-foreground">
                 {isPlayIn ? (
                   <>{existingPrediction.winner} to win</>
                 ) : (
@@ -492,13 +492,13 @@ export default function SeriesCard({
                 )}
               </div>
               {isDeadlinePassed && (
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="mt-2 text-xs text-muted-foreground">
                   Predictions are locked
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-sm text-gray-500 italic">
+            <div className="text-sm italic text-muted-foreground">
               {!user
                 ? "Sign in to make predictions"
                 : isDeadlinePassed

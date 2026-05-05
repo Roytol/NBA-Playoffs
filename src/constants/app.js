@@ -53,6 +53,7 @@ export const SETTINGS_KEYS = {
 // Right now this is only used by the add-to-home-screen banner dismissal state.
 export const STORAGE_KEYS = {
   HOME_SCREEN_BANNER_DISMISSED: "hs_banner_dismissed",
+  THEME_PREFERENCE: "theme_preference",
 };
 
 // Controls how long the iOS add-to-home-screen banner stays dismissed after the user closes it.

@@ -23,12 +23,12 @@ export default function PageNotFound() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-      <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+      <h1 className="mb-4 text-6xl font-bold text-foreground">404</h1>
+      <h2 className="mb-4 text-2xl font-semibold text-foreground/80">
         Page Not Found
       </h2>
-      <p className="text-gray-500 mb-8 max-w-md">
+      <p className="mb-8 max-w-md text-muted-foreground">
         Oops! The page you are looking for doesn't exist or has been moved.
       </p>
       <div className="flex gap-4">

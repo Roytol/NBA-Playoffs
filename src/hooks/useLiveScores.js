@@ -1,6 +1,9 @@
 /**
  * Hook for polling live NBA game scores every 60 seconds.
  * Only polls when there are active/in-progress games.
+ *
+ * @param {boolean} shouldPoll - Whether polling should be active (derived by caller)
+ * @param {Function|null} onRealtimeUpdate - Callback for Supabase Realtime updates
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -11,13 +14,15 @@ import { APP_DELAYS } from "@/constants/app";
 
 const POLL_INTERVAL = APP_DELAYS.LIVE_POLL;
 
-export function useLiveScores(activeSeries = [], onRealtimeUpdate = null) {
+export function useLiveScores(shouldPoll = false, onRealtimeUpdate = null) {
   const [liveGames, setLiveGames] = useState([]);
   const [isPolling, setIsPolling] = useState(false);
   const [lastPolled, setLastPolled] = useState(null);
-  const intervalRef = useRef(null);
 
-  // Setup Supabase Realtime Subscription
+  // Setup Supabase Realtime Subscription (debounced to prevent event flood)
+  const pendingUpdatesRef = useRef(new Map());
+  const debounceTimerRef = useRef(null);
+
   useEffect(() => {
     if (!onRealtimeUpdate) return;
 
@@ -27,38 +32,28 @@ export function useLiveScores(activeSeries = [], onRealtimeUpdate = null) {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "Series" },
         (payload) => {
-          console.log("[LiveScores] Realtime DB Update Received!", payload.new);
-          onRealtimeUpdate(payload.new);
+          // Batch updates by series ID — only keep the latest version
+          pendingUpdatesRef.current.set(payload.new.id, payload.new);
+
+          // Debounce: flush all pending updates after 1 second of quiet
+          clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = setTimeout(() => {
+            const updates = Array.from(pendingUpdatesRef.current.values());
+            pendingUpdatesRef.current.clear();
+
+            for (const updated of updates) {
+              onRealtimeUpdate(updated);
+            }
+          }, 1000);
         },
       )
       .subscribe();
 
     return () => {
+      clearTimeout(debounceTimerRef.current);
       supabase.removeChannel(channel);
     };
   }, [onRealtimeUpdate]);
-
-  // Check if any game might be live right now
-  const shouldPoll = useCallback(() => {
-    if (!activeSeries || activeSeries.length === 0) return false;
-
-    // Check if any series has an active status
-    const hasActiveSeries = activeSeries.some((s) => s.status === "active");
-    if (!hasActiveSeries) return false;
-
-    // Check if any series has a current_game that's live
-    const hasLiveGame = activeSeries.some((s) => s.current_game?.is_live);
-    if (hasLiveGame) return true;
-
-    // Check if today's date matches any game date
-    const today = new Date().toISOString().split("T")[0];
-    const hasGameToday = activeSeries.some((s) => {
-      const gameDate = s.current_game?.date;
-      return gameDate === today;
-    });
-
-    return hasGameToday;
-  }, [activeSeries]);
 
   const pollOnce = useCallback(async () => {
     try {
@@ -88,30 +83,23 @@ export function useLiveScores(activeSeries = [], onRealtimeUpdate = null) {
     }
   }, []);
 
-  // Start/stop polling based on whether we should poll
+  // Start/stop polling based on the caller-provided boolean
   useEffect(() => {
-    const active = shouldPoll();
-
-    if (active && !intervalRef.current) {
-      // Start polling
-      setIsPolling(true);
-      pollOnce(); // Immediate first poll
-
-      intervalRef.current = setInterval(() => {
-        pollOnce();
-      }, POLL_INTERVAL);
-    } else if (!active && intervalRef.current) {
-      // Stop polling
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    if (!shouldPoll) {
       setIsPolling(false);
+      return;
     }
 
+    setIsPolling(true);
+    pollOnce(); // Immediate first poll
+
+    const intervalId = setInterval(() => {
+      pollOnce();
+    }, POLL_INTERVAL);
+
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      clearInterval(intervalId);
+      setIsPolling(false);
     };
   }, [shouldPoll, pollOnce]);
 

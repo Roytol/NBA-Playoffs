@@ -130,11 +130,11 @@ export default function FinalsMVPPick({ onSave, user }) {
   return (
     <Card className="surface-status-info mb-6 border">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-blue-800">
+        <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-400">
           <Star className="text-status-info w-6 h-6" />
           Finals MVP Prediction
           {deadline && (
-            <div className="text-sm font-normal text-gray-600 ml-auto flex items-center">
+            <div className="text-sm font-normal text-muted-foreground ml-auto flex items-center">
               <Clock className="w-4 h-4 mr-1" />
               {isDeadlinePassed
                 ? "Deadline passed"
@@ -162,18 +162,18 @@ export default function FinalsMVPPick({ onSave, user }) {
 
         {existingPick && isDeadlinePassed ? (
           <div className="space-y-3">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Your Finals MVP Prediction (3 points):
             </div>
             <div className="font-medium">{existingPick.winner}</div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-muted-foreground">
               This prediction is now locked.
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             {existingPick && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Current pick:{" "}
                 <span className="font-medium">{existingPick.winner}</span>
               </div>

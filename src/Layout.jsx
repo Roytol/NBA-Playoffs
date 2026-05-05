@@ -14,6 +14,8 @@ import {
   Shield,
   Users,
   GitBranch,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,11 +25,14 @@ import { APP_BRAND_NAME, APP_LOGO_URL } from "@/constants/branding";
 import { formatSeasonLabel, SETTINGS_KEYS } from "@/constants/app";
 import { DANGER_GHOST_BUTTON_CLASS } from "@/constants/theme";
 import { listSettings, redirectToLogin } from "@/services";
+import { useTheme } from "@/components/theme/ThemeProvider";
+import Logo from "@/components/common/Logo";
 
 export default function Layout() {
   const location = useLocation();
   const currentPageName = location.pathname.substring(1) || "Dashboard";
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [activeSeason, setActiveSeason] = React.useState("");
@@ -61,15 +66,22 @@ export default function Layout() {
     }
   };
 
+  const navLinkClassName = (pageName) =>
+    `flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+      currentPageName === pageName
+        ? "surface-status-info text-status-info border-status-info"
+        : "border-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+    }`;
+
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden bg-background lg:flex-row">
       {/* iOS Add to Home Screen nudge */}
       <AddToHomeScreenBanner />
 
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -77,51 +89,65 @@ export default function Layout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:static lg:translate-x-0",
+          "fixed top-0 left-0 z-50 h-full w-64 border-r border-border bg-card shadow-lg transform transition-transform duration-200 ease-in-out lg:static lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <div className="flex h-full flex-col overflow-y-auto">
-          <div className="flex items-center justify-between p-4">
+          <div className="flex items-center justify-between gap-2 border-b border-border p-4">
             <Link
               to={createPageUrl("Dashboard")}
               className="flex items-center gap-2"
             >
-              <img
-                src={APP_LOGO_URL}
-                alt={`${APP_BRAND_NAME} Logo`}
-                className="h-10"
-              />
-              <div className="text-xs text-gray-500">
+              <Logo className="h-10" />
+              <div className="text-xs text-muted-foreground">
                 {activeSeason
                   ? `${formatSeasonLabel(activeSeason)} Prediction Game`
                   : "Prediction Game"}
               </div>
             </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="h-6 w-6" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground"
+                onClick={toggleTheme}
+                aria-label={
+                  isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+                }
+                title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDarkMode ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground lg:hidden"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
           </div>
 
           {/* User Profile Section */}
           {user ? (
-            <div className="px-4 py-3 border-b bg-gray-50">
+            <div className="border-b border-border bg-muted/40 px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <span className="text-indigo-700 font-medium">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-status-info-strong/15">
+                  <span className="font-medium text-status-info-strong">
                     {user.full_name?.charAt(0) || "U"}
                   </span>
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900 truncate max-w-[180px]">
+                  <div className="max-w-[180px] truncate font-medium text-foreground">
                     {user.full_name}
                   </div>
-                  <div className="text-sm text-gray-500 flex items-center gap-1">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Trophy className="text-brand-gold w-4 h-4" />
                     {user?.total_points ?? 0} points
                   </div>
@@ -129,7 +155,7 @@ export default function Layout() {
               </div>
             </div>
           ) : (
-            <div className="px-4 py-3 border-b">
+            <div className="border-b border-border px-4 py-3">
               <Button
                 className="w-full justify-center"
                 onClick={() => redirectToLogin()}
@@ -143,11 +169,7 @@ export default function Layout() {
           <nav className="flex-1 px-4 py-2 overflow-y-auto">
             <Link
               to={createPageUrl("Dashboard")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                currentPageName === "Dashboard"
-                  ? "surface-status-info text-status-info border"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className={navLinkClassName("Dashboard")}
               onClick={() => setSidebarOpen(false)}
             >
               <Home className="w-5 h-5" />
@@ -155,11 +177,7 @@ export default function Layout() {
             </Link>
             <Link
               to={createPageUrl("Predictions")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                currentPageName === "Predictions"
-                  ? "surface-status-info text-status-info border"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className={navLinkClassName("Predictions")}
               onClick={() => setSidebarOpen(false)}
             >
               <Star className="w-5 h-5" />
@@ -167,11 +185,7 @@ export default function Layout() {
             </Link>
             <Link
               to={createPageUrl("AllPredictions")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                currentPageName === "AllPredictions"
-                  ? "surface-status-info text-status-info border"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className={navLinkClassName("AllPredictions")}
               onClick={() => setSidebarOpen(false)}
             >
               <Users className="w-5 h-5" />
@@ -179,11 +193,7 @@ export default function Layout() {
             </Link>
             <Link
               to={createPageUrl("Leaderboard")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                currentPageName === "Leaderboard"
-                  ? "surface-status-info text-status-info border"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className={navLinkClassName("Leaderboard")}
               onClick={() => setSidebarOpen(false)}
             >
               <Table2 className="w-5 h-5" />
@@ -191,11 +201,7 @@ export default function Layout() {
             </Link>
             <Link
               to={createPageUrl("PlayoffTree")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                currentPageName === "PlayoffTree"
-                  ? "surface-status-info text-status-info border"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className={navLinkClassName("PlayoffTree")}
               onClick={() => setSidebarOpen(false)}
             >
               <GitBranch className="w-5 h-5" />
@@ -203,11 +209,7 @@ export default function Layout() {
             </Link>
             <Link
               to={createPageUrl("Rules")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                currentPageName === "Rules"
-                  ? "surface-status-info text-status-info border"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+              className={navLinkClassName("Rules")}
               onClick={() => setSidebarOpen(false)}
             >
               <BookOpen className="w-5 h-5" />
@@ -216,11 +218,7 @@ export default function Layout() {
             {user?.is_admin && (
               <Link
                 to={createPageUrl("Admin")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  currentPageName === "Admin"
-                    ? "surface-status-info text-status-info border"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
+                className={navLinkClassName("Admin")}
                 onClick={() => setSidebarOpen(false)}
               >
                 <Shield className="w-5 h-5" />
@@ -230,7 +228,7 @@ export default function Layout() {
           </nav>
 
           {user && (
-            <div className="mt-auto p-4 border-t">
+            <div className="mt-auto border-t border-border p-4">
               <Button
                 variant="ghost"
                 className={`w-full justify-start ${DANGER_GHOST_BUTTON_CLASS}`}
@@ -247,34 +245,47 @@ export default function Layout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Mobile header */}
-        <header className="lg:hidden bg-white border-b px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 backdrop-blur lg:hidden">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(true)}
+              className="text-muted-foreground"
             >
               <Menu className="h-6 w-6" />
             </Button>
 
             <Link to={createPageUrl("Dashboard")} className="flex items-center">
-              <img
-                src={APP_LOGO_URL}
-                alt={`${APP_BRAND_NAME} Logo`}
-                className="h-8"
-              />
+              <Logo className="h-8" />
             </Link>
           </div>
 
           {/* Show user info in mobile header */}
           {user && (
             <div className="flex items-center gap-3">
-              <div className="text-sm text-gray-500 flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground"
+                onClick={toggleTheme}
+                aria-label={
+                  isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+                }
+                title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDarkMode ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </Button>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Trophy className="text-brand-gold w-4 h-4" />
                 {user?.total_points ?? 0} points
               </div>
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                <span className="text-indigo-700 font-medium text-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-status-info-strong/15">
+                <span className="text-sm font-medium text-status-info-strong">
                   {user.full_name?.charAt(0) || "U"}
                 </span>
               </div>

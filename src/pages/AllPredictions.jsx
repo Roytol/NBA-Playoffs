@@ -191,13 +191,13 @@ export default function AllPredictionsPage() {
         <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
           All Predictions
         </h1>
-        <p className="text-gray-500 mb-4 sm:mb-6 text-sm">
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm">
           View all user predictions for completed series
         </p>
         <div className="flex justify-center items-center py-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-md">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span className="text-sm text-gray-600">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 shadow-md">
+            <div className="text-status-info h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
+            <span className="text-sm text-muted-foreground">
               Loading predictions...
             </span>
           </div>
@@ -216,7 +216,7 @@ export default function AllPredictionsPage() {
         <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
           All Predictions
         </h1>
-        <p className="text-gray-500 mb-4 sm:mb-6 text-sm">
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm">
           View all user predictions for completed series
         </p>
         <Alert variant="destructive">

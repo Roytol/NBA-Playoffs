@@ -80,16 +80,16 @@
     --brand-gold: 45 93% 47%;
     --conference-east: 218 64% 33%;
     --conference-west: 351 85% 42%;
-    --status-info-bg: 214 100% 97%;
-    --status-info-bg-strong: 221 91% 60%;
-    --status-info-border: 214 95% 93%;
-    --status-info-fg: 221 83% 53%;
-    --status-info-fg-strong: 224 76% 48%;
-    --status-danger-bg: 0 86% 97%;
-    --status-danger-bg-strong: 0 84.2% 60.2%;
-    --status-danger-border: 0 93% 94%;
-    --status-danger-fg: 0 74% 42%;
-    --status-danger-fg-strong: 0 70% 35%;
+    --status-info-bg: 221 39% 16%;
+    --status-info-bg-strong: 217 91% 60%;
+    --status-info-border: 221 39% 24%;
+    --status-info-fg: 213 94% 68%;
+    --status-info-fg-strong: 210 100% 78%;
+    --status-danger-bg: 0 32% 16%;
+    --status-danger-bg-strong: 0 72% 58%;
+    --status-danger-border: 0 32% 24%;
+    --status-danger-fg: 0 84% 73%;
+    --status-danger-fg-strong: 0 100% 86%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -146,6 +146,14 @@
 
   .border-status-danger {
     border-color: hsl(var(--status-danger-border));
+  }
+
+  .border-status-info-strong {
+    border-color: hsl(var(--status-info-bg-strong));
+  }
+
+  .border-status-danger-strong {
+    border-color: hsl(var(--status-danger-bg-strong));
   }
 
   .ring-status-danger {

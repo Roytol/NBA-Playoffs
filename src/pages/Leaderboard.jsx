@@ -50,7 +50,7 @@ export default function LeaderboardPage() {
       <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
         Leaderboard
       </h1>
-      <p className="text-gray-500 mb-4 sm:mb-6 text-sm">
+      <p className="text-muted-foreground mb-4 sm:mb-6 text-sm">
         See how players stack up
       </p>
     </>
@@ -199,9 +199,9 @@ export default function LeaderboardPage() {
 
   const RankIcon = ({ index }) => {
     if (index === 0) return <Trophy className="text-brand-gold w-5 h-5" />;
-    if (index === 1) return <Medal className="w-5 h-5 text-gray-400" />;
+    if (index === 1) return <Medal className="w-5 h-5 text-muted-foreground" />;
     if (index === 2) return <Medal className="w-5 h-5 text-amber-600" />;
-    return <span className="text-sm text-gray-500">{index + 1}</span>;
+    return <span className="text-sm text-muted-foreground">{index + 1}</span>;
   };
 
   if (loading) {
@@ -259,7 +259,7 @@ export default function LeaderboardPage() {
                   <Trophy className="text-brand-gold w-4 h-4 sm:w-5 sm:h-5" />
                   Current Standings
                 </CardTitle>
-                <div className="text-xs text-gray-500 space-y-0.5">
+                <div className="text-xs text-muted-foreground space-y-0.5">
                   <p>🔥 Hot streak = 2 exact completed-series picks in a row</p>
                   <p>
                     🧊 Cold streak = 2 completed-series picks in a row with 0
@@ -268,7 +268,7 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               {lastUpdated && (
-                <div className="text-xs text-gray-500 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   Live — updates automatically
                 </div>
@@ -277,7 +277,7 @@ export default function LeaderboardPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-gray-50">
+                  <TableHeader className="bg-muted/50">
                     <TableRow>
                       <TableHead className="w-12 sm:w-14 py-2 px-3 sm:px-4 text-xs sm:text-sm">
                         Rank
@@ -295,7 +295,7 @@ export default function LeaderboardPage() {
                       <TableRow>
                         <TableCell
                           colSpan={3}
-                          className="text-center py-8 text-gray-500"
+                          className="text-center py-8 text-muted-foreground"
                         >
                           No predictions made yet
                         </TableCell>
@@ -389,7 +389,7 @@ export default function LeaderboardPage() {
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
-                      <TableHeader className="bg-gray-50">
+                      <TableHeader className="bg-muted/50">
                         <TableRow>
                           <TableHead className="w-12 py-2 px-3 text-xs">
                             Rank
@@ -407,7 +407,7 @@ export default function LeaderboardPage() {
                           <TableRow>
                             <TableCell
                               colSpan={3}
-                              className="text-center py-8 text-gray-500 text-sm"
+                              className="text-center py-8 text-muted-foreground text-sm"
                             >
                               No archived data for {formatSeasonLabel(season)}
                             </TableCell>
