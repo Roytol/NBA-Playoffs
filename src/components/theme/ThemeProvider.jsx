@@ -26,10 +26,9 @@ function applyTheme(theme) {
   root.classList.toggle("dark", theme === "dark");
   root.style.colorScheme = theme;
 
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-  if (themeColorMeta) {
-    themeColorMeta.setAttribute("content", THEME_META_COLOR[theme]);
-  }
+  const themeColorMetas = document.querySelectorAll('meta[name="theme-color"]');
+  const color = THEME_META_COLOR[theme];
+  themeColorMetas.forEach((meta) => meta.setAttribute("content", color));
 }
 
 export function ThemeProvider({ children }) {
