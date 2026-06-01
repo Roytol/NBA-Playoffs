@@ -268,7 +268,18 @@ export default function AllPredictionsPage() {
                 <AnimatePresence mode="popLayout">
                   {Object.entries(
                     groupPredictionsByType(filteredPredictions),
-                  ).map(([key, group]) => (
+                  )
+                    .sort(([, a], [, b]) => {
+                      // Bonus types (Champion, MVP) at top, then series sorted newest-first by deadline
+                      const aTime = a.seriesInfo
+                        ? new Date(a.seriesInfo.prediction_deadline).getTime()
+                        : Infinity;
+                      const bTime = b.seriesInfo
+                        ? new Date(b.seriesInfo.prediction_deadline).getTime()
+                        : Infinity;
+                      return bTime - aTime;
+                    })
+                    .map(([key, group]) => (
                     <motion.div
                       key={key}
                       initial={{ opacity: 0, y: 20 }}
