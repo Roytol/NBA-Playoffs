@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Dialog,
@@ -33,7 +32,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { getTeamNames } from "@/api/nbaApi";
+import { getPlayersForTeams, getTeamNames } from "@/api/nbaApi";
 import { useToast } from "@/components/ui/use-toast";
 import {
   isBonusPredictionType,
@@ -69,8 +68,9 @@ export default function PredictionsPage() {
   const [championMVPDeadline, setChampionMVPDeadline] = useState(null);
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mvpStatus, setMvpStatus] = React.useState("closed");
   const [nbaTeams, setNbaTeams] = useState(NBA_TEAM_NAMES);
+  const [finalsMvpPlayers, setFinalsMvpPlayers] = useState([]);
+  const [finalsMvpPlayersLoading, setFinalsMvpPlayersLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -80,22 +80,7 @@ export default function PredictionsPage() {
       .then((t) => t?.length > 0 && setNbaTeams(t))
       .catch(() => {});
     loadDeadlines();
-    loadMVPStatus();
   }, []);
-
-  const loadMVPStatus = async () => {
-    try {
-      const settings = await listSettings();
-      const mvpStatusSetting = settings.find(
-        (s) => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_STATUS,
-      );
-      if (mvpStatusSetting) {
-        setMvpStatus(mvpStatusSetting.setting_value);
-      }
-    } catch (error) {
-      console.error("Error loading MVP status:", error);
-    }
-  };
 
   const loadData = async () => {
     setLoading(true);
@@ -113,6 +98,7 @@ export default function PredictionsPage() {
       ]);
       setPredictions(predictionsData);
       setSeries(seriesData);
+      loadFinalsMvpPlayers(seriesData);
 
       // Set initial form values if champion/MVP predictions exist
       const championPred = predictionsData.find(
@@ -133,6 +119,31 @@ export default function PredictionsPage() {
       setError("Failed to load predictions. Please try refreshing the page.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFinalsMvpPlayers = async (seriesData) => {
+    const finalsSeries =
+      seriesData.find((s) => s.round === "finals" && s.status === "active") ||
+      seriesData.find((s) => s.round === "finals" && !s.season) ||
+      seriesData.find((s) => s.round === "finals");
+    if (!finalsSeries?.team1 || !finalsSeries?.team2) {
+      setFinalsMvpPlayers([]);
+      return;
+    }
+
+    setFinalsMvpPlayersLoading(true);
+    try {
+      const players = await getPlayersForTeams([
+        finalsSeries.team1,
+        finalsSeries.team2,
+      ]);
+      setFinalsMvpPlayers(players);
+    } catch (err) {
+      console.error("Error loading Finals MVP player options:", err);
+      setFinalsMvpPlayers([]);
+    } finally {
+      setFinalsMvpPlayersLoading(false);
     }
   };
 
@@ -245,6 +256,20 @@ export default function PredictionsPage() {
     if (!series || !seriesId) return null;
     return series.find((s) => s.series_id === seriesId);
   };
+
+  const finalsMvpPlayerOptions = React.useMemo(() => {
+    if (
+      !mvpForm.mvp ||
+      finalsMvpPlayers.some((player) => player.full_name === mvpForm.mvp)
+    ) {
+      return finalsMvpPlayers;
+    }
+
+    return [
+      { id: `selected-${mvpForm.mvp}`, full_name: mvpForm.mvp },
+      ...finalsMvpPlayers,
+    ];
+  }, [finalsMvpPlayers, mvpForm.mvp]);
 
   // Skip the rest of the rendering if not logged in
   if (!user && !loading) {
@@ -475,74 +500,73 @@ export default function PredictionsPage() {
             {/* MVP Card */}
             {predictions.some(
               (p) => p.prediction_type === PREDICTION_TYPES.FINALS_MVP,
-            ) &&
-              mvpStatus === "open" && (
-                <Card className="border-yellow-200 dark:border-yellow-900/50">
-                  <CardHeader className="bg-yellow-50 dark:bg-yellow-900/10">
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500">
-                        <Star className="text-brand-gold w-5 h-5" />
-                        Finals MVP Prediction
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableBody>
-                        {predictions
-                          .filter(
-                            (p) =>
-                              p.prediction_type === PREDICTION_TYPES.FINALS_MVP,
-                          )
-                          .map((p) => (
-                            <TableRow key={p.id}>
-                              <TableCell className="font-medium">
-                                Finals MVP
-                              </TableCell>
-                              <TableCell>{p.winner}</TableCell>
-                              <TableCell className="text-center">
-                                {getPointsInfo(p)} pts
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                  {!isDeadlinePassed && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        setMvpForm({ mvp: p.winner });
-                                        setEditingMVP(true);
-                                      }}
-                                    >
-                                      <Edit className="w-4 h-4 mr-1" /> Edit
-                                    </Button>
-                                  )}
-                                  {getStatusBadge(p)}
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                    {championMVPDeadline && (
-                      <div className="px-4 py-2 text-xs text-muted-foreground flex items-center gap-1 border-t">
-                        <Clock className="w-3 h-3" />
-                        {isDeadlinePassed ? (
-                          "Prediction deadline has passed"
-                        ) : (
-                          <>
-                            Deadline:{" "}
-                            {format(
-                              championMVPDeadline,
-                              "MMM d, yyyy 'at' h:mm a",
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+            ) && (
+              <Card className="border-yellow-200 dark:border-yellow-900/50">
+                <CardHeader className="bg-yellow-50 dark:bg-yellow-900/10">
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-500">
+                      <Star className="text-brand-gold w-5 h-5" />
+                      Finals MVP Prediction
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableBody>
+                      {predictions
+                        .filter(
+                          (p) =>
+                            p.prediction_type === PREDICTION_TYPES.FINALS_MVP,
+                        )
+                        .map((p) => (
+                          <TableRow key={p.id}>
+                            <TableCell className="font-medium">
+                              Finals MVP
+                            </TableCell>
+                            <TableCell>{p.winner}</TableCell>
+                            <TableCell className="text-center">
+                              {getPointsInfo(p)} pts
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {!isDeadlinePassed && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setMvpForm({ mvp: p.winner });
+                                      setEditingMVP(true);
+                                    }}
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" /> Edit
+                                  </Button>
+                                )}
+                                {getStatusBadge(p)}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                  {championMVPDeadline && (
+                    <div className="px-4 py-2 text-xs text-muted-foreground flex items-center gap-1 border-t">
+                      <Clock className="w-3 h-3" />
+                      {isDeadlinePassed ? (
+                        "Prediction deadline has passed"
+                      ) : (
+                        <>
+                          Deadline:{" "}
+                          {format(
+                            championMVPDeadline,
+                            "MMM d, yyyy 'at' h:mm a",
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </motion.div>
         )}
 
@@ -788,11 +812,30 @@ export default function PredictionsPage() {
                 <Star className="text-brand-gold w-4 h-4" />
                 Finals MVP (3 points)
               </label>
-              <Input
-                placeholder="Enter Finals MVP prediction"
+              <Select
                 value={mvpForm.mvp}
-                onChange={(e) => setMvpForm({ mvp: e.target.value })}
-              />
+                onValueChange={(v) => setMvpForm({ mvp: v })}
+                disabled={
+                  finalsMvpPlayersLoading || finalsMvpPlayerOptions.length === 0
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      finalsMvpPlayersLoading
+                        ? "Loading Finals players..."
+                        : "Select Finals MVP"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {finalsMvpPlayerOptions.map((player) => (
+                    <SelectItem key={player.id} value={player.full_name}>
+                      {player.label ?? player.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -802,7 +845,12 @@ export default function PredictionsPage() {
             </Button>
             <Button
               onClick={() => handleUpdateMVP()}
-              disabled={isSubmitting || !mvpForm.mvp}
+              disabled={
+                isSubmitting ||
+                !mvpForm.mvp ||
+                finalsMvpPlayersLoading ||
+                finalsMvpPlayerOptions.length === 0
+              }
             >
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>

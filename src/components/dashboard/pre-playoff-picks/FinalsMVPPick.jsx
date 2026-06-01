@@ -3,12 +3,20 @@ import { format } from "date-fns";
 import { Star, AlertTriangle, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getPlayersForTeams } from "@/api/nbaApi";
 import { PREDICTION_TYPES, SETTINGS_KEYS } from "@/constants/app";
 import {
   createPrediction,
   listPredictionsByFilters,
+  listSeries,
   listSettings,
   updatePrediction,
 } from "@/services";
@@ -23,12 +31,14 @@ export default function FinalsMVPPick({ onSave, user }) {
   const [isDeadlinePassed, setIsDeadlinePassed] = React.useState(false);
   const [isBeforeStart, setIsBeforeStart] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
-  const [mvpStatus, setMvpStatus] = React.useState("closed");
+  const [players, setPlayers] = React.useState([]);
+  const [playerPoolLoading, setPlayerPoolLoading] = React.useState(true);
+  const [playerPoolError, setPlayerPoolError] = React.useState(null);
 
   React.useEffect(() => {
     loadDeadline();
     loadExistingPick();
-    loadMVPStatus();
+    loadFinalsPlayerPool();
   }, [user]);
 
   const loadDeadline = async () => {
@@ -58,18 +68,6 @@ export default function FinalsMVPPick({ onSave, user }) {
     }
   };
 
-  const loadMVPStatus = async () => {
-    try {
-      const settings = await listSettings();
-      const mvpStatusSetting = settings.find(
-        (s) => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_STATUS,
-      );
-      if (mvpStatusSetting) setMvpStatus(mvpStatusSetting.setting_value);
-    } catch (loadError) {
-      console.error("Error loading MVP status:", loadError);
-    }
-  };
-
   const loadExistingPick = async () => {
     try {
       if (!user) return;
@@ -87,6 +85,41 @@ export default function FinalsMVPPick({ onSave, user }) {
       console.error("Error loading existing pick:", loadError);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFinalsPlayerPool = async () => {
+    setPlayerPoolLoading(true);
+    setPlayerPoolError(null);
+
+    try {
+      const series = await listSeries();
+      const finalsSeries =
+        series.find((s) => s.round === "finals" && s.status === "active") ||
+        series.find((s) => s.round === "finals" && !s.season) ||
+        series.find((s) => s.round === "finals");
+
+      if (!finalsSeries?.team1 || !finalsSeries?.team2) {
+        setPlayers([]);
+        setPlayerPoolError("Finals teams are not available yet.");
+        return;
+      }
+
+      const playerPool = await getPlayersForTeams([
+        finalsSeries.team1,
+        finalsSeries.team2,
+      ]);
+
+      setPlayers(playerPool);
+      if (playerPool.length === 0) {
+        setPlayerPoolError("No players found for the Finals teams yet.");
+      }
+    } catch (loadError) {
+      console.error("Error loading Finals player pool:", loadError);
+      setPlayers([]);
+      setPlayerPoolError("Failed to load Finals players. Please try again.");
+    } finally {
+      setPlayerPoolLoading(false);
     }
   };
 
@@ -119,12 +152,15 @@ export default function FinalsMVPPick({ onSave, user }) {
     }
   };
 
-  if (
-    !user ||
-    (existingPick && !isDeadlinePassed) ||
-    isBeforeStart ||
-    mvpStatus === "closed"
-  )
+  const playerOptions = React.useMemo(() => {
+    if (!pick || players.some((player) => player.full_name === pick)) {
+      return players;
+    }
+
+    return [{ id: `selected-${pick}`, full_name: pick }, ...players];
+  }, [pick, players]);
+
+  if (!user || isBeforeStart || (isDeadlinePassed && !existingPick))
     return null;
 
   return (
@@ -181,19 +217,43 @@ export default function FinalsMVPPick({ onSave, user }) {
 
             <div className="space-y-2">
               <label className="font-medium">Finals MVP (3 points)</label>
-              <Input
-                placeholder="Enter Finals MVP prediction"
+              <Select
                 value={pick}
-                onChange={(e) => setPick(e.target.value)}
-                disabled={isDeadlinePassed || loading}
-              />
+                onValueChange={setPick}
+                disabled={
+                  isDeadlinePassed ||
+                  loading ||
+                  playerPoolLoading ||
+                  playerOptions.length === 0
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      playerPoolLoading
+                        ? "Loading Finals players..."
+                        : "Select Finals MVP"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {playerOptions.map((player) => (
+                    <SelectItem key={player.id} value={player.full_name}>
+                      {player.label ?? player.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {playerPoolError && (
+                <p className="text-status-danger text-sm">{playerPoolError}</p>
+              )}
             </div>
 
             {!isDeadlinePassed && (
               <Button
                 className="w-full"
                 onClick={submitPick}
-                disabled={isSubmitting || !pick || loading}
+                disabled={isSubmitting || !pick || loading || playerPoolLoading}
               >
                 {isSubmitting
                   ? "Saving..."

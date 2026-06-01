@@ -115,14 +115,6 @@ export default function Dashboard() {
     );
   }, [predictions, user]);
 
-  const hasFinalsMVPPick = React.useMemo(() => {
-    return predictions.some(
-      (p) =>
-        p.prediction_type === PREDICTION_TYPES.FINALS_MVP &&
-        p.user_email === user?.email,
-    );
-  }, [predictions, user]);
-
   // Update the categorizedSeries memo to include sorting for both active and completed series
   const categorizedSeries = React.useMemo(() => {
     if (!series.length) return { active: [], closed: [], completed: [] };
@@ -293,7 +285,7 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {!loading && user && !hasFinalsMVPPick && (
+        {!loading && user && (
           <motion.div
             key="mvp-pick"
             initial={{ opacity: 0, y: 20 }}
@@ -314,7 +306,9 @@ export default function Dashboard() {
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 shadow-md">
             <div className="text-status-info animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-current"></div>
-            <span className="text-sm text-muted-foreground">{loadingMessage}</span>
+            <span className="text-sm text-muted-foreground">
+              {loadingMessage}
+            </span>
           </div>
         </motion.div>
       ) : (

@@ -72,9 +72,6 @@ export default function AllPredictionsPage() {
       const mvpDeadline = settings.find(
         (s) => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE,
       )?.setting_value;
-      const mvpStatus = settings.find(
-        (s) => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_STATUS,
-      )?.setting_value;
 
       // Only keep series where prediction deadline has passed
       const closedSeries = seriesData.filter(
@@ -87,7 +84,7 @@ export default function AllPredictionsPage() {
       // Filter predictions:
       // 1. Series predictions where deadline has passed
       // 2. Champion predictions where champion deadline has passed
-      // 3. MVP predictions where MVP is open and deadline has passed
+      // 3. MVP predictions where the MVP deadline has passed
       const validPredictions = predictionsData.filter((p) => {
         if (p.series_id) {
           return closedSeriesIds.includes(p.series_id);
@@ -98,9 +95,7 @@ export default function AllPredictionsPage() {
         }
 
         if (p.prediction_type === PREDICTION_TYPES.FINALS_MVP) {
-          return (
-            mvpStatus === "open" && mvpDeadline && new Date(mvpDeadline) < now
-          );
+          return mvpDeadline && new Date(mvpDeadline) < now;
         }
 
         return false;

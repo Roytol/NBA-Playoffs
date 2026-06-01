@@ -49,7 +49,11 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import { forceRefreshAll, getTeamNames } from "@/api/nbaApi";
+import {
+  forceRefreshAll,
+  getPlayersForTeams,
+  getTeamNames,
+} from "@/api/nbaApi";
 import { syncPlayoffSeries } from "@/api/nbaSync";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -88,6 +92,8 @@ export default function AdminPage() {
   const [apiSyncing, setApiSyncing] = useState(false);
   const [apiSyncMessage, setApiSyncMessage] = useState("");
   const [nbaTeams, setNbaTeams] = useState([]);
+  const [finalsMvpPlayers, setFinalsMvpPlayers] = useState([]);
+  const [finalsMvpPlayersLoading, setFinalsMvpPlayersLoading] = useState(false);
 
   // Settings
   const [championDeadline, setChampionDeadline] = useState("");
@@ -149,6 +155,7 @@ export default function AdminPage() {
       setAllSeries(seriesData || []);
       setAllPredictions(predictionsData || []);
       if (teams?.length > 0) setNbaTeams(teams);
+      loadFinalsMvpPlayers(seriesData || []);
 
       // Parse settings
       for (const s of settingsData || []) {
@@ -178,6 +185,50 @@ export default function AdminPage() {
       setLoading(false);
     }
   };
+
+  const loadFinalsMvpPlayers = async (seriesData) => {
+    const finalsSeries =
+      seriesData.find((s) => s.round === "finals" && s.status === "active") ||
+      seriesData.find((s) => s.round === "finals" && !s.season) ||
+      seriesData.find((s) => s.round === "finals");
+    if (!finalsSeries?.team1 || !finalsSeries?.team2) {
+      setFinalsMvpPlayers([]);
+      return;
+    }
+
+    setFinalsMvpPlayersLoading(true);
+    try {
+      const players = await getPlayersForTeams([
+        finalsSeries.team1,
+        finalsSeries.team2,
+      ]);
+      setFinalsMvpPlayers(players);
+    } catch (err) {
+      console.error("Failed to load Finals MVP players:", err);
+      setFinalsMvpPlayers([]);
+    } finally {
+      setFinalsMvpPlayersLoading(false);
+    }
+  };
+
+  const finalsMvpPlayerOptions = React.useMemo(() => {
+    if (
+      !championSettings.mvp ||
+      finalsMvpPlayers.some(
+        (player) => player.full_name === championSettings.mvp,
+      )
+    ) {
+      return finalsMvpPlayers;
+    }
+
+    return [
+      {
+        id: `selected-${championSettings.mvp}`,
+        full_name: championSettings.mvp,
+      },
+      ...finalsMvpPlayers,
+    ];
+  }, [championSettings.mvp, finalsMvpPlayers]);
 
   // ---- Processing Helpers ----
   const startProcessing = (operation, message) =>
@@ -712,16 +763,33 @@ export default function AdminPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Actual Finals MVP</label>
-                <Input
-                  placeholder="Enter MVP Player Name"
+                <Select
                   value={championSettings.mvp}
-                  onChange={(e) =>
-                    setChampionSettings((prev) => ({
-                      ...prev,
-                      mvp: e.target.value,
-                    }))
+                  onValueChange={(val) =>
+                    setChampionSettings((prev) => ({ ...prev, mvp: val }))
                   }
-                />
+                  disabled={
+                    finalsMvpPlayersLoading ||
+                    finalsMvpPlayerOptions.length === 0
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        finalsMvpPlayersLoading
+                          ? "Loading Finals players..."
+                          : "Select Finals MVP"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {finalsMvpPlayerOptions.map((player) => (
+                      <SelectItem key={player.id} value={player.full_name}>
+                        {player.label ?? player.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <Button
                 onClick={saveChampionMVPSettings}
@@ -803,7 +871,9 @@ export default function AdminPage() {
                               className="w-20 mx-auto text-center h-8"
                             />
                           ) : (
-                            <span className="text-muted-foreground text-xs">N/A</span>
+                            <span className="text-muted-foreground text-xs">
+                              N/A
+                            </span>
                           )}
                         </TableCell>
                         <TableCell className="text-status-info text-center font-semibold">
@@ -869,18 +939,21 @@ export default function AdminPage() {
                   {
                     label: "Total Players",
                     value: allUsers.length,
-                    color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-400",
+                    color:
+                      "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-400",
                   },
                   {
                     label: "Series Played",
                     value: allSeries.filter((s) => s.status === "completed")
                       .length,
-                    color: "bg-purple-50 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400",
+                    color:
+                      "bg-purple-50 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400",
                   },
                   {
                     label: "Predictions Made",
                     value: allPredictions.length,
-                    color: "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400",
+                    color:
+                      "bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400",
                   },
                 ].map((stat) => (
                   <div

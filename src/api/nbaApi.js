@@ -17,6 +17,7 @@ export { CURRENT_SEASON };
 // Cache TTLs in milliseconds
 export const CACHE_TTL = {
   TEAMS: TIME_MS.DAY, // 24 hours
+  PLAYERS: TIME_MS.DAY, // 24 hours
   STANDINGS: 30 * TIME_MS.DAY, // 30 days — playoff seeds never change mid-season
   PLAYOFF_GAMES: 5 * TIME_MS.MINUTE, // 5 minutes
   LIVE_GAMES: TIME_MS.MINUTE, // 60 seconds
@@ -379,6 +380,92 @@ export async function getHeadToHeadMatchups(
       return null;
     }
   });
+}
+
+/**
+ * Get active roster players for the supplied NBA team names.
+ */
+export async function getPlayersForTeams(teamNames = []) {
+  const normalizedTeamNames = [...new Set(teamNames.filter(Boolean))].sort();
+  if (normalizedTeamNames.length === 0) return [];
+
+  const teams = await getTeams();
+  const teamInfos = normalizedTeamNames
+    .map((teamName) => {
+      const team = teams.find(
+        (t) => t.full_name === teamName || t.name === teamName,
+      );
+      return team
+        ? {
+            id: team.id,
+            abbreviation: team.abbreviation?.toLowerCase(),
+            full_name: team.full_name,
+          }
+        : null;
+    })
+    .filter((team) => team?.abbreviation)
+    .sort((a, b) => a.id - b.id);
+
+  if (teamInfos.length === 0) return [];
+
+  const cacheKey = `active_rosters_${teamInfos
+    .map((team) => team.abbreviation)
+    .join("_")}`;
+
+  return getFromCacheOrFetch(cacheKey, CACHE_TTL.PLAYERS, async () => {
+    const rosterResponses = await Promise.all(
+      teamInfos.map(async (team) => {
+        const response = await fetch(
+          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${team.abbreviation}/roster`,
+        );
+        if (!response.ok) {
+          throw new Error(
+            `ESPN roster HTTP ${response.status} for ${team.full_name}`,
+          );
+        }
+        return { team, roster: await response.json() };
+      }),
+    );
+
+    return rosterResponses
+      .flatMap(({ team, roster }) =>
+        getRosterAthletes(roster).map((player) => ({
+          id: `${team.abbreviation}-${player.id}`,
+          first_name: player.firstName,
+          last_name: player.lastName,
+          full_name: player.fullName || player.displayName,
+          team_id: team.id,
+          team_name: team.full_name,
+          team_abbreviation: team.abbreviation.toUpperCase(),
+          status: player.status?.type,
+        })),
+      )
+      .filter(
+        (player) =>
+          player.full_name && (!player.status || player.status === "active"),
+      )
+      .filter(
+        (player, index, allPlayers) =>
+          allPlayers.findIndex(
+            (candidate) => candidate.full_name === player.full_name,
+          ) === index,
+      )
+      .map((player) => ({
+        ...player,
+        label: `${player.full_name} · ${player.team_abbreviation}`,
+      }))
+      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+  });
+}
+
+function getRosterAthletes(roster) {
+  if (Array.isArray(roster?.athletes)) {
+    return roster.athletes.flatMap((group) =>
+      Array.isArray(group?.items) ? group.items : group,
+    );
+  }
+
+  return [];
 }
 
 /**
