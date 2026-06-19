@@ -71,6 +71,7 @@ export default function PredictionsPage() {
   const [nbaTeams, setNbaTeams] = useState(NBA_TEAM_NAMES);
   const [finalsMvpPlayers, setFinalsMvpPlayers] = useState([]);
   const [finalsMvpPlayersLoading, setFinalsMvpPlayersLoading] = useState(false);
+  const [awardsWinners, setAwardsWinners] = useState(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -157,6 +158,16 @@ export default function PredictionsPage() {
       const mvpDeadline = settings.find(
         (s) => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE,
       );
+
+      // Load declared winners (if any)
+      const winnersRow = settings.find(
+        (s) => s.setting_name === SETTINGS_KEYS.CHAMPION_MVP_WINNERS,
+      );
+      if (winnersRow) {
+        try {
+          setAwardsWinners(JSON.parse(winnersRow.setting_value));
+        } catch (e) {}
+      }
 
       // Use the later of the two deadlines (if both exist)
       let finalDeadline = null;
@@ -374,6 +385,16 @@ export default function PredictionsPage() {
           points={prediction.points_earned}
         />
       );
+    }
+
+    // For bonus predictions (Champion / MVP), check if winners have been declared
+    if (isBonusPredictionType(prediction.prediction_type)) {
+      if (awardsWinners) {
+        // Winners declared — this prediction was wrong
+        return <PredictionStatusBadge status="incorrect" />;
+      }
+      // No winners declared yet
+      return <PredictionStatusBadge status="pending" />;
     }
 
     const relatedSeries = prediction.series_id

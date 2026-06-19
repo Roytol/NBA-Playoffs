@@ -49,6 +49,7 @@ export default function UserPredictionsPage() {
   const [error, setError] = React.useState(null);
   const [activeTab, setActiveTab] = React.useState("all");
   const [allUsers, setAllUsers] = React.useState([]);
+  const [awardsWinners, setAwardsWinners] = React.useState(null);
 
   React.useEffect(() => {
     loadData();
@@ -98,6 +99,16 @@ export default function UserPredictionsPage() {
       const mvpDeadline = settings.find(
         (s) => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE,
       )?.setting_value;
+
+      // Load declared winners (if any)
+      const winnersRow = settings.find(
+        (s) => s.setting_name === SETTINGS_KEYS.CHAMPION_MVP_WINNERS,
+      );
+      if (winnersRow) {
+        try {
+          setAwardsWinners(JSON.parse(winnersRow.setting_value));
+        } catch (e) {}
+      }
 
       // Filter predictions based on deadlines
       const validPredictions = predictionsData.filter((p) => {
@@ -160,6 +171,61 @@ export default function UserPredictionsPage() {
     activeTab === "all"
       ? predictions
       : predictions.filter((p) => p.prediction_type === activeTab);
+
+  const getStatusBadge = (prediction) => {
+    if (prediction.is_correct) {
+      return (
+        <PredictionStatusBadge
+          status="correct"
+          points={prediction.points_earned}
+          compact
+          className="text-[10px] sm:text-xs h-5 sm:h-6"
+        />
+      );
+    }
+
+    // For bonus predictions, check if winners have been declared
+    if (isBonusPredictionType(prediction.prediction_type)) {
+      if (awardsWinners) {
+        return (
+          <PredictionStatusBadge
+            status="incorrect"
+            compact
+            className="text-[10px] sm:text-xs h-5 sm:h-6"
+          />
+        );
+      }
+      return (
+        <PredictionStatusBadge
+          status="pending"
+          compact
+          className="text-[10px] sm:text-xs h-5 sm:h-6"
+        />
+      );
+    }
+
+    // For series predictions, check series status
+    const relatedSeries = prediction.series_id
+      ? getSeriesById(prediction.series_id)
+      : null;
+    if (!relatedSeries || relatedSeries.status === "active") {
+      return (
+        <PredictionStatusBadge
+          status="pending"
+          compact
+          className="text-[10px] sm:text-xs h-5 sm:h-6"
+        />
+      );
+    }
+
+    return (
+      <PredictionStatusBadge
+        status="incorrect"
+        compact
+        className="text-[10px] sm:text-xs h-5 sm:h-6"
+      />
+    );
+  };
 
   if (loading) {
     return (
@@ -398,14 +464,7 @@ export default function UserPredictionsPage() {
                             {prediction.points_earned || 0}
                           </TableCell>
                           <TableCell className="py-2 px-2 sm:px-4 text-right">
-                            <PredictionStatusBadge
-                              status={
-                                prediction.is_correct ? "correct" : "incorrect"
-                              }
-                              points={prediction.points_earned}
-                              compact
-                              className="text-[10px] sm:text-xs h-5 sm:h-6"
-                            />
+                            {getStatusBadge(prediction)}
                           </TableCell>
                         </TableRow>
                       );

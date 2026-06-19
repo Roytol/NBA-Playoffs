@@ -19,6 +19,7 @@ Each file in this folder is a **single, named SQL migration** that runs exactly 
 | `20250418_004_dynamic_scoring_trigger.sql` | Scoring trigger reads points from Settings   | ✅ Applied |
 | `20250418_005_dynamic_awards_trigger.sql`  | Awards trigger reads points from Settings    | ✅ Applied |
 | `20250418_006_seed_settings.sql`           | Seeds `scoring_rules` and `active_season`    | ✅ Applied |
+| `20260616_007_fix_resolve_season_awards.sql` | Fix awards trigger filtering (`season IS NULL` instead of `points_earned IS NULL`) | ✅ Applied |
 
 ## How to Apply a Migration
 

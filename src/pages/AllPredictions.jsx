@@ -44,6 +44,7 @@ export default function AllPredictionsPage() {
   const [error, setError] = React.useState(null);
   const [activeRound, setActiveRound] = React.useState("all");
   const [expandedKey, setExpandedKey] = React.useState(null);
+  const [awardsWinners, setAwardsWinners] = React.useState(null);
 
   React.useEffect(() => {
     loadData();
@@ -72,6 +73,16 @@ export default function AllPredictionsPage() {
       const mvpDeadline = settings.find(
         (s) => s.setting_name === SETTINGS_KEYS.MVP_PREDICTION_DEADLINE,
       )?.setting_value;
+
+      // Load declared winners (if any)
+      const winnersRow = settings.find(
+        (s) => s.setting_name === SETTINGS_KEYS.CHAMPION_MVP_WINNERS,
+      );
+      if (winnersRow) {
+        try {
+          setAwardsWinners(JSON.parse(winnersRow.setting_value));
+        } catch (e) {}
+      }
 
       // Only keep series where prediction deadline has passed
       const closedSeries = seriesData.filter(
@@ -134,6 +145,14 @@ export default function AllPredictionsPage() {
           points={prediction.points_earned}
         />
       );
+    }
+
+    // For bonus predictions, check if winners have been declared
+    if (isBonusPredictionType(prediction.prediction_type)) {
+      if (awardsWinners) {
+        return <PredictionStatusBadge status="incorrect" />;
+      }
+      return <PredictionStatusBadge status="pending" />;
     }
 
     if (!seriesInfo || seriesInfo.status === "active") {
@@ -415,16 +434,7 @@ export default function AllPredictionsPage() {
                                         {prediction.points_earned || 0}
                                       </TableCell>
                                       <TableCell className="py-2 px-3 text-right">
-                                        <PredictionStatusBadge
-                                          status={
-                                            prediction.is_correct
-                                              ? "correct"
-                                              : "incorrect"
-                                          }
-                                          points={prediction.points_earned}
-                                          compact
-                                          className="text-xs"
-                                        />
+                                        {getStatusBadge(prediction, group.seriesInfo)}
                                       </TableCell>
                                     </TableRow>
                                   ))}
